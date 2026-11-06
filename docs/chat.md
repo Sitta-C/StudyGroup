@@ -85,8 +85,8 @@ Logout/EOF/Error ลบ Session ตาม Registry เดิม ไม่ส่�
   ถ้ารายชื่อสมาชิกของกลุ่มเดียวเกิน 1 MiB ต้องเพิ่ม Member pagination ก่อนรองรับขนาดนั้น
   การ Join ที่ทำให้ Response เกินขนาดจะ Rollback และ Connection ยังใช้ต่อได้
 - `HISTORY_GET`, `HISTORY_SEARCH`, Files และ AI ยังให้ `UNKNOWN_TYPE` หลัง Login
-  CP05 ตรวจ Live chat กับข้อมูลถาวรฝั่ง Server; หน้าจอและ Receive worker เป็น CP06
-  การตรวจสองเครื่องจริงยังต้องทำใน CP06
+  CP05 ตรวจ Live chat กับข้อมูลถาวรฝั่ง Server; CP06 เพิ่ม Tkinter และ Network worker แล้ว
+  การตรวจสองเครื่องจริงยังต้องทำ ดู [demo-checklist.md](demo-checklist.md)
 
 ```bash
 uv run --locked pytest tests/test_chat_integration.py -q

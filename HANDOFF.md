@@ -6,7 +6,7 @@ StudyGroup เป็นโปรแกรม Desktop สำหรับนัก
 
 **สถานะการพัฒนา:** มี Config, Socket Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล,
 TLS Server, Authentication, รายชื่อออนไลน์ และ Chat/Group handlers พร้อม Tests แล้ว
-ยังไม่มี Desktop entry point/GUI หรือการ Deploy
+มี Desktop entry point/GUI แบบ Focus แล้วใน CP06; การตรวจสองเครื่องและ Deploy ยังต้องทำต่อ
 ดูสถานะ checkpoint และผลทดสอบล่าสุดใน [DEVELOPMENT.md](DEVELOPMENT.md)
 สัญญา Chat/Group ที่ใช้จริงอยู่ใน [docs/chat.md](docs/chat.md)
 โค้ด HTML ใน Prototype เป็นแบบอ้างอิงหน้าจอ ไม่ใช่แอปที่พัฒนาเสร็จแล้ว
@@ -334,7 +334,7 @@ uv run --locked --env-file .env python -m client.main
 uv run --locked pytest
 ```
 
-เปิด `server.main` สำหรับ TLS/Auth ได้แล้ว ส่วน `client.main` ยังรอ CP06
+เปิด `server.main` และ `client.main` ได้แล้ว การตรวจรับ CP06 ดู docs/demo-checklist.md
 รัน `uv run --locked pytest` เพื่อตรวจ Config, Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล
 และ Authentication ผ่าน TCP/TLS จริงได้
 
