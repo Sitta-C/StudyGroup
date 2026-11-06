@@ -2,7 +2,7 @@ import { ClientError, Transport } from './transport'
 import { MAX_FILE_BYTES, fromBase64, sha256Hex, toBase64 } from './files'
 import type { Attachment, EventPacket, Message, Page, Room, State, Transfer, User } from './types'
 
-const empty = (): State => ({ phase: 'disconnected', authBusy: false, user: null, users: [], rooms: {}, messages: {}, history: {}, uploads: {}, downloads: {}, drafts: {}, unread: {}, notices: {}, sending: {}, activeRoom: null, groupsLoading: false, highlight: null, error: '', info: '' })
+const empty = (): State => ({ phase: 'disconnected', authBusy: false, user: null, users: [], rooms: {}, messages: {}, history: {}, ai: {}, uploads: {}, downloads: {}, drafts: {}, unread: {}, notices: {}, sending: {}, activeRoom: null, groupsLoading: false, highlight: null, error: '', info: '' })
 const errors: Record<string, string> = {
   AUTH_FAILED: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', USERNAME_TAKEN: 'ชื่อผู้ใช้นี้ถูกใช้แล้ว กรุณาเลือกชื่อใหม่',
   ALREADY_LOGGED_IN: 'บัญชีนี้เข้าสู่ระบบอยู่แล้ว กรุณาออกจากระบบที่เครื่องเดิมก่อน',
@@ -11,6 +11,7 @@ const errors: Record<string, string> = {
   FRAME_TOO_LARGE: 'ข้อมูลมีขนาดใหญ่เกินไป กรุณาลองโหลดใหม่',
   CONNECTION: 'การเชื่อมต่อขาดหาย หรือเชื่อมต่อ Server ไม่ได้', TIMEOUT: 'Server ไม่ตอบกลับภายในเวลาที่กำหนด',
   PROTOCOL: 'ข้อมูลการเชื่อมต่อไม่สมบูรณ์ กรุณาเข้าสู่ระบบใหม่', BUSY: 'กำลังทำหลายรายการ กรุณารอสักครู่',
+  AI_UNAVAILABLE: 'AI สรุปไม่สำเร็จหรือยังไม่พร้อมใช้งาน แชตยังใช้ได้ตามปกติ ลองใหม่ภายหลัง',
   NOT_FOUND: 'ไม่พบไฟล์นี้บน Server', FILE_TOO_LARGE: 'ไฟล์ต้องมีขนาดไม่เกิน 5 MB',
   FILE_CORRUPT: 'ไฟล์ที่ได้รับไม่ตรงกับ SHA-256 จึงไม่บันทึกไฟล์นี้', FILE_REJECTED: 'Server ไม่รับไฟล์นี้ กรุณาตรวจชื่อไฟล์หรือลองส่งใหม่',
 }
@@ -20,6 +21,7 @@ export function roomTitle(state: State, room: Room) { return room.kind === 'grou
 const uncertain = 'ยังยืนยันการส่งไม่ได้ ข้อความอาจถูกบันทึกแล้ว เก็บร่างไว้ให้ตรวจสอบก่อนส่งใหม่'
 // File requests get a longer timeout and a small window, so a slow link (~3 KB/s)
 // does not hit the transport timeout that ends the whole session.
+const AI_TIMEOUT = 75000
 const PAGE = 50, UPLOAD_WINDOW = 4, DOWNLOAD_WINDOW = 2, DOWNLOAD_CHUNK = 128 * 1024, JUMP_PAGES = 40, FILE_TIMEOUT = 60000
 export type SearchFilters = { query?: string; from?: string; to?: string; kind?: 'file' }
 // Mark a pipelined request as handled now; awaiting it later still throws.
@@ -66,7 +68,7 @@ export class ChatController {
       const retained = this.state.user?.id === result.user.id ? this.state : empty()
       // Drafts survive a re-login; messages are reloaded from Server history so
       // nothing missed while disconnected leaves a gap in the transcript.
-      this.state = { ...retained, messages: {}, history: {}, unread: {}, uploads: {}, downloads: {}, highlight: null }
+      this.state = { ...retained, messages: {}, history: {}, ai: {}, unread: {}, uploads: {}, downloads: {}, highlight: null }
       this.patch({ user: result.user, authBusy: false, phase: 'authenticated', users: [], error: '', info: '' })
       void this.loadUsers(epoch)
       void this.refreshGroups()
@@ -206,6 +208,18 @@ export class ChatController {
     if (epoch !== this.epoch) return
     if (this.state.messages[room]?.[message]) this.patch({ highlight: message })
     else if (this.state.phase === 'authenticated') this.patch({ error: 'ข้อความนี้อยู่ไกลเกินไปในประวัติ ลองค้นด้วยช่วงวันที่ที่แคบลง หรือกดโหลดข้อความก่อนหน้า' })
+  }
+  /** Group-only AI summary of the latest ≤50 messages this user may read (CP09). */
+  async summarize(room: number) {
+    if (this.state.phase !== 'authenticated' || this.state.ai[room]?.loading) return
+    const epoch = this.epoch, previous = this.state.ai[room]?.result ?? null
+    this.patch({ ai: { ...this.state.ai, [room]: { loading: true, error: '', result: previous } } })
+    try {
+      const result = await this.transport.request('AI_SUMMARIZE', { room_id: room }, AI_TIMEOUT)
+      if (epoch === this.epoch) this.patch({ ai: { ...this.state.ai, [room]: { loading: false, error: '', result } } })
+    } catch (error) {
+      if (epoch === this.epoch) this.patch({ ai: { ...this.state.ai, [room]: { loading: false, error: errorText(error), result: previous } } })
+    }
   }
   clearHighlight() { if (this.state.highlight !== null) this.patch({ highlight: null }) }
   private acceptRoom(room: Room, select: boolean) {
@@ -364,7 +378,8 @@ export class ChatController {
     for (const room of Object.keys(this.state.sending)) notices[Number(room)] = uncertain
     const cut = (record: Record<number, Transfer>, text: string) => Object.fromEntries(Object.entries(record).map(([key, value]) => [key, value.error ? value : { ...value, error: text }]))
     const history = Object.fromEntries(Object.entries(this.state.history).map(([key, value]) => [key, { ...value, loading: false }]))
-    this.patch({ phase: 'disconnected', authBusy: false, users: [], groupsLoading: false, sending: {}, notices, history,
+    const ai = Object.fromEntries(Object.entries(this.state.ai).map(([key, value]) => [key, value.loading ? { ...value, loading: false, error: errorText(error) } : value]))
+    this.patch({ phase: 'disconnected', authBusy: false, users: [], groupsLoading: false, sending: {}, notices, history, ai,
       uploads: cut(this.state.uploads, 'การเชื่อมต่อขาดหาย ไฟล์นี้ยังไม่ถูกส่ง'), downloads: cut(this.state.downloads, 'การเชื่อมต่อขาดหาย ดาวน์โหลดไม่สำเร็จ'),
       error: intentional ? '' : errorText(error) })
   }

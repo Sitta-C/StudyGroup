@@ -5,7 +5,7 @@ export class ClientError extends Error {
 }
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: ClientError) => void; timer: ReturnType<typeof setTimeout> }
-const idKeys = new Set(['id', 'room_id', 'message_id', 'sender_id', 'created_by', 'next_after_id', 'next_before_id', 'attachment_id'])
+const idKeys = new Set(['id', 'room_id', 'message_id', 'sender_id', 'created_by', 'next_after_id', 'next_before_id', 'attachment_id', 'first_message_id', 'last_message_id'])
 function safeIds(value: unknown, depth = 0): void {
   if (depth > 64) throw new ClientError('PROTOCOL', true)
   if (!value || typeof value !== 'object') return

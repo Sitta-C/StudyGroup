@@ -9,7 +9,9 @@ from dataclasses import dataclass
 
 from server.config import ServerConfig
 from server.connection import ClientConnection
+from server.ai_service import DEFAULT_TIMEOUT, build_provider
 from server.database import Database
+from server.handlers.ai import AIHandlers
 from server.handlers.auth import AuthHandlers
 from server.handlers.chat import ChatHandlers
 from server.handlers.files import FileHandlers
@@ -67,7 +69,9 @@ class TLSServer:
         self.router = Router(AuthHandlers(
             self.registry, Passwords(), self.limiter,
             threading.BoundedSemaphore(self.limits.hash_workers),
-        ), chat, HistoryHandlers(), self.files)
+        ), chat, HistoryHandlers(), self.files, AIHandlers(self.database, build_provider(
+            self.config.ai_provider or ("anthropic" if self.config.ai_api_key else None),
+            self.config.ai_model, self.config.ai_api_key, DEFAULT_TIMEOUT)))
         family, socktype, proto, _, address = socket.getaddrinfo(
             self.config.host, self.config.port, type=socket.SOCK_STREAM,
         )[0]

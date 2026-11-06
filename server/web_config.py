@@ -1,6 +1,7 @@
 """Browser server configuration, independent of the legacy TCP/TLS client."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import math
 import os
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -17,6 +18,11 @@ class WebConfig:
     origins: tuple[str, ...]
     tls_cert: Path | None = None
     tls_key: Path | None = None
+    # CP09: server-only AI settings. The key is never logged or sent to clients.
+    ai_provider: str | None = None
+    ai_model: str | None = None
+    ai_api_key: str | None = field(default=None, repr=False)
+    ai_timeout: float = 45.0
 
     @property
     def database_path(self):
@@ -51,6 +57,7 @@ class WebConfig:
                 valid = False
             if not valid or "*" in origin:
                 raise ConfigError("STUDYGROUP_WEB_ORIGINS: expected explicit http(s) origins separated by commas")
+        ai_provider, ai_model, ai_key, ai_timeout = read_ai(source)
         return cls(
             host, port,
             read_data_dir(source.get("STUDYGROUP_DATA_DIR", "data"), base_dir),
@@ -58,4 +65,26 @@ class WebConfig:
             origins,
             read_file(cert, "STUDYGROUP_WEB_TLS_CERT", base_dir) if cert else None,
             read_file(key, "STUDYGROUP_WEB_TLS_KEY", base_dir) if key else None,
+            ai_provider, ai_model, ai_key, ai_timeout,
         )
+
+
+def read_ai(source):
+    """STUDYGROUP_AI_PROVIDER: anthropic | mock | empty (anthropic when a key is set)."""
+    key = source.get("STUDYGROUP_AI_API_KEY", "").strip() or None
+    provider = source.get("STUDYGROUP_AI_PROVIDER", "").strip().lower() or ("anthropic" if key else None)
+    if provider not in (None, "anthropic", "mock"):
+        raise ConfigError("STUDYGROUP_AI_PROVIDER: expected anthropic, mock or empty")
+    if provider == "anthropic" and not key:
+        raise ConfigError("STUDYGROUP_AI_API_KEY: required when STUDYGROUP_AI_PROVIDER=anthropic")
+    model = source.get("STUDYGROUP_AI_MODEL", "").strip() or None
+    if model is not None and (len(model) > 100 or not model.replace("-", "").replace(".", "").replace("_", "").isalnum()):
+        raise ConfigError("STUDYGROUP_AI_MODEL: expected a model name such as claude-haiku-5-5")
+    raw_timeout = source.get("STUDYGROUP_AI_TIMEOUT", "").strip() or "45"
+    try:
+        timeout = float(raw_timeout)
+    except ValueError:
+        timeout = math.nan
+    if not (math.isfinite(timeout) and 5 <= timeout <= 120):
+        raise ConfigError("STUDYGROUP_AI_TIMEOUT: expected seconds between 5 and 120")
+    return provider, model, key, timeout

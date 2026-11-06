@@ -11,10 +11,10 @@ from shared.validation import ProtocolError
 
 
 class Router:
-    def __init__(self, auth, chat, history=None, files=None):
+    def __init__(self, auth, chat, history=None, files=None, ai=None):
         self.auth = auth
         self.chat = chat
-        self.features = [handler for handler in (history, files) if handler is not None]
+        self.features = [handler for handler in (history, files, ai) if handler is not None]
 
     def dispatch(self, connection, db, request):
         if request["type"] not in RequestType:

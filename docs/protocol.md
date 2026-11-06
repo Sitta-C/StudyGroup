@@ -5,7 +5,7 @@
 ใช้กับ Blocking TCP Socket และ Socket ที่หุ้ม TLS แล้วใน CP04
 Server/Router และ Auth handlers ใช้สัญญารายฟีเจอร์ใน [authentication.md](authentication.md)
 Chat/Groups handlers ใช้สัญญาใน [chat.md](chat.md) ตาม CP05
-History/Search และ Files handlers ใช้สัญญาใน [history-files.md](history-files.md) ตาม CP07–CP08; AI ยังเป็นงาน CP09
+History/Search และ Files handlers ใช้สัญญาใน [history-files.md](history-files.md) ตาม CP07–CP08; AI ใช้ [ai.md](ai.md) ตาม CP09
 
 ## WebSocket transport (ค่าเริ่มต้นปัจจุบัน)
 

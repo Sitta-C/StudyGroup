@@ -18,11 +18,12 @@ uv run --locked --env-file .env python -m server.web
 มีออนไลน์/แชตส่วนตัว/สร้างกลุ่ม/ดูสมาชิก/Join เอง/ข้อความสด/Draft และแจ้งเมื่อหลุดแล้ว
 ผู้ใช้ตรวจรับ CP06 แล้ว CP07 โหลดประวัติหลังเปิดใหม่/โหลดหน้าเก่า/ค้นหาด้วยคำและวันที่
 และ CP08 ส่ง-ดาวน์โหลดไฟล์ ≤ 5 MB แบบ Chunk พร้อมตรวจ SHA-256 ใช้งานได้แล้ว (ผ่านการทดสอบ Local)
-AI และ Cloud เป็น CP09–CP10 ปุ่ม AI แสดงตามแบบและยังปิดใช้งาน
+CP09 สรุปบทสนทนากลุ่มด้วย AI (Anthropic) ใช้ได้เมื่อใส่ `STUDYGROUP_AI_API_KEY` ใน `.env` ดู [docs/ai.md](docs/ai.md)
+Cloud เป็น CP10
 รายละเอียดหลักฐานสองเครื่องสำหรับเดโมเก็บต่อใน CP11
 
 - [วิธีติดตั้ง รัน พัฒนา React และตั้งค่า HTTPS/WSS](docs/setup.md)
-- [สถาปัตยกรรม](docs/architecture.md) · [Protocol](docs/protocol.md) · [ประวัติ/ค้นหา/ไฟล์](docs/history-files.md)
+- [สถาปัตยกรรม](docs/architecture.md) · [Protocol](docs/protocol.md) · [ประวัติ/ค้นหา/ไฟล์](docs/history-files.md) · [AI](docs/ai.md)
 - [Checklist R1–R11 และการตรวจสองเครื่อง](docs/demo-checklist.md)
 - [Checkpoint และผลทดสอบล่าสุด](DEVELOPMENT.md) · [ข้อกำหนด](HANDOFF.md)
 - [ต้นแบบ Focus/Workspace](docs/prototypes/README.md)

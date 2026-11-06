@@ -89,7 +89,8 @@ Body 12px, Secondary 10–11px, accent #6056d7 และ outgoing #6258cf
 Browser ใช้ toolbar ของตัวเอง ไม่มี title bar จำลองในหน้าเว็บ
 มือถือใช้ sidebar drawer; Enter ส่ง, Shift+Enter ขึ้นบรรทัดใหม่ และไม่ส่งระหว่าง IME composition
 
-Search/history (CP07) และ Attachments/แท็บไฟล์ (CP08) ใช้งานจริงแล้ว; AI ยังปิดไว้จนถึง CP09 ไม่มีผลจำลอง
+Search/history (CP07), Attachments/แท็บไฟล์ (CP08) และแผงสรุปด้วย AI ในห้องกลุ่ม (CP09, [ai.md](ai.md)) ใช้งานจริงแล้ว
+Server เรียก Anthropic API ผ่าน HTTPS ใน Worker แยก; Browser ไม่เห็น Key และไม่เรียก AI เอง
 Cloud จริงเป็น CP10 เอกสาร config ไม่ใช่หลักฐาน Deploy
 โค้ด Tkinter/TCP เดิมยังอยู่เพื่อ compatibility/tests แต่ไม่ใช่ entry point หลัก
 อย่ารัน `server.main` และ `server.web` พร้อมกันกับ DB เดียว เพราะ registry แยกกัน

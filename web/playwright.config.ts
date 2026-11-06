@@ -16,6 +16,8 @@ export default defineConfig({
     command: 'uv run --locked python web/e2e/server.py', cwd: repo,
     url: 'http://127.0.0.1:8765/health', reuseExistingServer: false, timeout: 30000,
     env: { UV_CACHE_DIR: '/private/tmp/studygroup-uv-cache', STUDYGROUP_TEST_CONTROL: control,
-           STUDYGROUP_WEB_HOST: '127.0.0.1', STUDYGROUP_WEB_PORT: '8765', STUDYGROUP_WEB_ORIGINS: 'http://127.0.0.1:8765' },
+           STUDYGROUP_WEB_HOST: '127.0.0.1', STUDYGROUP_WEB_PORT: '8765', STUDYGROUP_WEB_ORIGINS: 'http://127.0.0.1:8765',
+           // Browser tests never call the paid API: the labelled mock provider only.
+           STUDYGROUP_AI_PROVIDER: 'mock', STUDYGROUP_AI_API_KEY: '' },
   },
 })
