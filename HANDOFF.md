@@ -1,26 +1,28 @@
 # StudyGroup Development Handoff
 
-อัปเดต 2 พฤศจิกายน 2026 · สำหรับ Codex ที่จะพัฒนาแอปต่อจากการออกแบบ
+อัปเดต 6 พฤศจิกายน 2026 · ผู้ใช้เลือกย้ายเป็น React Web App โดยคง Python backend
 
-StudyGroup เป็นโปรแกรม Desktop สำหรับนักศึกษาคุยงานกลุ่ม ใช้ Python, Tkinter และ TCP Socket โดยมี Server และ SQLite อยู่บน Cloud เครื่องเดียวกัน ฟีเจอร์พิเศษ 4 ข้อคือ AI สรุปบทสนทนา ส่งไฟล์ ประวัติแชตที่ค้นหาได้ และ Cloud deployment
+StudyGroup เป็น Web App สำหรับนักศึกษาคุยงานกลุ่ม ใช้ React → WebSocket → Python Server → SQLite โดยเป้าหมาย Cloud ให้ Server และ SQLite อยู่บนเครื่องเดียวกัน ฟีเจอร์พิเศษ 4 ข้อคือ AI สรุปบทสนทนา ส่งไฟล์ ประวัติแชตที่ค้นหาได้ และ Cloud deployment
 
 **สถานะการพัฒนา:** มี Config, Socket Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล,
 TLS Server, Authentication, รายชื่อออนไลน์ และ Chat/Group handlers พร้อม Tests แล้ว
-มี Desktop entry point/GUI แบบ Focus แล้วใน CP06; การตรวจสองเครื่องและ Deploy ยังต้องทำต่อ
+มี React Web App แบบ Focus และ WebSocket adapter แล้ว ผู้ใช้ตรวจรับ CP06 แล้ว
+งานถัดไป CP07 ประวัติ/ค้นหา; หลักฐานรายอุปกรณ์สองเครื่องเก็บต่อสำหรับ CP11 และ Cloud เป็น CP10
 ดูสถานะ checkpoint และผลทดสอบล่าสุดใน [DEVELOPMENT.md](DEVELOPMENT.md)
 สัญญา Chat/Group ที่ใช้จริงอยู่ใน [docs/chat.md](docs/chat.md)
 โค้ด HTML ใน Prototype เป็นแบบอ้างอิงหน้าจอ ไม่ใช่แอปที่พัฒนาเสร็จแล้ว
 
 **อัปเดต Environment:** เตรียม Local environment ด้วย **uv** ตามคำขอผู้ใช้แล้ว
-ใช้ Python 3.14.10 พร้อม Tkinter, `argon2-cffi`, `pytest`, `.env.example`
+ใช้ Python 3.14.10, `websockets`, `argon2-cffi`, `pytest`, React/TypeScript/Vite และ `.env.example`
 และสคริปต์สร้าง Local TLS ดู [docs/setup.md](docs/setup.md)
 ใช้ `pyproject.toml` และ `uv.lock` แทน `requirements.txt` ในแผนเดิม
-การอ่าน Environment และตรวจ Config เริ่มที่ `client/config.py`, `server/config.py`
-และ `shared/config.py`
+Web config เริ่มที่ `server/web_config.py` ส่วน `client/config.py`, `server/config.py`
+เป็นของ Tkinter/TCP เดิมที่ยังเก็บเพื่อ compatibility
 
 สัญญา Protocol ที่พัฒนาแล้วและขอบเขต Validation อยู่ใน [docs/protocol.md](docs/protocol.md)
-ใช้ `PacketConnection` เดียวต่อ Socket; TLS ฝั่ง Server ให้ Worker เจ้าของ Connection
-ทำ I/O เพียงรายเดียว ส่วน Thread อื่นส่งผ่าน Outbound queue
+WebSocket ใช้ JSON text envelope หนึ่งรายการต่อ message ไม่เติม TCP header
+Server handler thread dispatch และส่งผ่าน bounded outbox ใช้ Auth/Chat/SQLite logic เดิม
+Legacy TCP ใช้ `PacketConnection` และ length header เดิม แยก entry point
 
 Schema, Transaction และ Permission API ที่พัฒนาแล้วอยู่ใน
 [docs/database.md](docs/database.md) โดย Handler ต้องผูก Actor กับ Connection ที่ Login
@@ -40,7 +42,7 @@ Schema, Transaction และ Permission API ที่พัฒนาแล้�
 4. ตรวจ [โจทย์ต้นฉบับ](docs/reference/socket-programming-assignment.pdf) โดยเฉพาะ R1–R11 และ Part 3
 5. พัฒนาตามลำดับในส่วน 11 โดยเริ่มจาก Protocol, Database และ Authentication แล้วทำแชตพื้นฐานให้ครบ
 
-ใช้ชื่อ **StudyGroup** ในชื่อหน้าต่าง เอกสาร ฐานข้อมูล ตัวอย่าง Environment และข้อความใน UI ทั้งหมด ชื่อ Database ที่แนะนำคือ `studygroup.db` โฟลเดอร์โปรเจกต์ปัจจุบันคือ `/Users/testmacbook/cp/network/StudyGroup`
+ใช้ชื่อ **StudyGroup** ในชื่อหน้าต่าง เอกสาร ฐานข้อมูล ตัวอย่าง Environment และข้อความใน UI ทั้งหมด ชื่อ Database คือ `studygroup.db` อยู่ใน `STUDYGROUP_DATA_DIR` ฝั่ง Python
 
 ไม่ต้องสร้าง Chat หรือ Codex Thread ใหม่เพื่อเริ่มพัฒนา ไฟล์ส่งต่อนี้มีบริบทที่จำเป็นอยู่แล้ว
 
@@ -49,14 +51,16 @@ Schema, Transaction และ Permission API ที่พัฒนาแล้�
 ### สิ่งที่ผู้ใช้ระบุในบทสนทนา
 
 - เปลี่ยนชื่อโปรเจกต์เป็น StudyGroup
-- แอปจริงเป็น Desktop Program ไม่ใช่ Web-based Application
+- คำสั่งล่าสุด 6 พ.ย. 2026: ใช้ `React → WebSocket → Python Server → SQLite` แทน Desktop/Tkinter ที่เลือกไว้เดิม
+- ใช้ branch ที่ไม่มี prefix `codex/` ตามคำสั่งผู้ใช้ (งาน migration อยู่ `feat/react-websocket`)
 - ทำ Part 3 Special Points ครบ 4 ฟีเจอร์ โดยรวม AI อย่างน้อย 1 ฟีเจอร์
 - ส่งต่อ Project Structure และ Prototype ให้ Codex พัฒนาได้
 
 ### แนวทางที่ออกแบบร่วมกัน
 
-- Python + Tkinter สำหรับ Desktop GUI
-- TCP Socket หุ้ม TLS สำหรับการติดต่อ Client–Server ทั้งข้อความและคำขอฟีเจอร์ต่าง ๆ
+- React + TypeScript + CSS สำหรับ Focus UI ใช้ Browser เป็น Client
+- WebSocket (`wss://` เมื่อใช้ HTTPS) สำหรับข้อความและคำขอฟีเจอร์ต่าง ๆ
+- Python เสิร์ฟ build ของ React และ `/ws` บนพอร์ตเดียว ใช้ SQLite/Auth/Chat handlers เดิม
 - Cloud VM/VPS หนึ่งเครื่องรัน Server และเก็บ SQLite พร้อมไฟล์แนบในพื้นที่ถาวร
 - Username + Password โดย Server ตรวจรหัสผ่านและผูกตัวตนกับ Socket
 - เรียก AI API จาก Server เพื่อสรุปข้อความในห้องกลุ่ม ไม่ต้องฝึกโมเดลเอง
@@ -98,21 +102,20 @@ Part 3 เปิดให้เลือกฟีเจอร์เอง ไม
 | AI สรุปบทสนทนา | ปุ่มในห้องกลุ่มเรียกโมเดลจริงผ่าน API แล้วสรุปประเด็น ข้อตกลง ผู้รับผิดชอบ และกำหนดส่งจากข้อมูลที่มีสิทธิ์อ่าน |
 | ส่งไฟล์ | ผู้ใช้ส่งและดาวน์โหลดไฟล์จริงผ่าน Socket ได้ มีเพียงผู้มีสิทธิ์ในห้องที่เข้าถึงได้ |
 | ประวัติและการค้นหา | ปิดแล้วเปิดแอปใหม่ยังพบข้อความเดิม ค้นหาด้วยคำและวันที่ในห้องที่มีสิทธิ์ได้ เป็นความสามารถเกินกว่าหน้าต่างข้อความ R6 |
-| Cloud deployment | Server ใช้งานบน Cloud จริง พร้อมข้อมูลถาวร และ Desktop Clients คนละเครือข่ายสื่อสารกันได้ |
+| Cloud deployment | Server ใช้งานบน Cloud จริง พร้อมข้อมูลถาวร และ Browser Clients คนละเครือข่ายสื่อสารกันได้ |
 
 Authentication และ TLS เป็นส่วนพื้นฐานของการออกแบบนี้ ไม่ให้นับแทนฟีเจอร์พิเศษที่ตกลงไว้
 
 ## 4. สถาปัตยกรรม
 
 ```text
-Desktop Client A ── TCP + TLS ──┐
-                               │
-Desktop Client B ── TCP + TLS ──┼── Cloud VM / VPS
-                               │   ├── Python Chat Server
-Desktop Client C ── TCP + TLS ──┘   ├── SQLite: data/studygroup.db
-                                   └── Files: data/uploads/
-                                            │
-                                   Server ── HTTPS ── AI API
+React Browser A ── WebSocket / WSS ──┐
+React Browser B ── WebSocket / WSS ──┼── Python Server (HTTP assets + /ws)
+React Browser C ── WebSocket / WSS ──┘      ├── Router → Auth / Chat
+                                          ├── SQLite: data/studygroup.db
+                                          └── Files: data/uploads/ (CP08)
+                                                   │
+                                          Server → HTTPS → AI API (CP09)
 ```
 
 Client ไม่เข้าถึง SQLite และไม่เรียก AI API โดยตรง Server ตรวจตัวตน ตรวจสิทธิ์ อ่าน/เขียนข้อมูล และกระจาย Event ไปยังผู้รับที่ถูกต้อง การใช้ HTTPS จาก Server ไป AI เป็นคนละส่วนกับข้อความแชต Client–Server ที่ใช้ Socket
@@ -134,7 +137,12 @@ StudyGroup/
 ├── .python-version
 ├── .env.example
 ├── .gitignore
-├── client/
+├── web/                       # React frontend + npm lock
+│   ├── src/                   # App, controller, transport, CSS, DTOs
+│   ├── public/                # Local fonts / favicon
+│   ├── e2e/                   # Real Browser + temporary Python/SQLite tests
+│   └── dist/                  # Build generated by npm (ignored)
+├── client/                    # Legacy Tkinter, kept for compatibility
 │   ├── __init__.py
 │   ├── main.py                  # Entry point ของ Desktop Client
 │   ├── app.py                   # หน้าจอและวงจรการทำงานของแอป
@@ -155,7 +163,9 @@ StudyGroup/
 │   └── assets/icons/
 ├── server/
 │   ├── __init__.py
-│   ├── main.py                  # Bind/listen และรับ Client
+│   ├── web.py                   # HTTP assets + WebSocket entry point
+│   ├── web_config.py            # Web host/port/origins/TLS/static/data
+│   ├── main.py                  # Legacy TCP/TLS listener และ limits ที่ใช้ร่วมกัน
 │   ├── config.py               # Environment ฝั่ง Server
 │   ├── connection.py           # ตัวตนต่อ Socket, cleanup และล็อกการเขียน
 │   ├── router.py               # Dispatch คำขอไป Handler
@@ -218,7 +228,7 @@ StudyGroup/
 - Hash Password ด้วย Argon2id ผ่าน `argon2-cffi` ให้ Library สร้าง Salt และตรวจ Hash ฝั่ง Server ห้ามเก็บ Password ตรง ๆ หรือใช้ SHA-256 อย่างเดียว
 - Password ยาว 8–128 Unicode characters ไม่เกิน 512 UTF-8 bytes และไม่มี NUL;
   ไม่ Trim/Normalize และ Confirm ต้องตรงกัน สมัครแล้ว Login แยกตามสัญญา CP04
-- ส่ง Credentials หลัง TLS handshake และตรวจ Certificate chain/Hostname ของ Server แล้วเท่านั้น สำหรับ Local ให้เชื่อถือ CA ทดสอบอย่างชัดเจน ไม่ปิด Certificate verification
+- ส่ง Credentials หลัง TLS handshake และตรวจ Certificate chain/Hostname ของ Server แล้วเท่านั้น LAN/production ให้ Browser เชื่อถือ CA/certificate อย่างชัดเจน ไม่ข้าม Certificate warning; HTTP/WS อนุญาตเฉพาะ loopback development
 - ก่อน Login อนุญาตเฉพาะคำขอที่จำเป็น เช่น REGISTER และ LOGIN หลัง Login ผูก `user_id` กับ Connection Object ไม่เชื่อ `sender_id` หรือ Username ที่ Client อ้างมาในคำขอแชต
 - ปฏิเสธการ Login ซ้อนของบัญชีเดียวกันโดยไม่ตัด Session เดิม การตรวจและลงทะเบียน Session ต้องทำอย่างเป็นอะตอม ภายใต้ Lock
 - Logout, Socket EOF และ Error ต้อง Cleanup Session และแจ้งรายชื่อออนไลน์ใหม่ ล้าง Registry เฉพาะเมื่อยังอ้างถึง Connection เดียวกัน ป้องกัน Cleanup เก่าไปล้าง Session ใหม่
@@ -248,9 +258,9 @@ StudyGroup/
 
 ## 8. Protocol และงานพร้อมกัน
 
-ใช้ TCP แบบมี Framing: **Header 4 bytes แบบ unsigned big-endian ระบุจำนวน bytes ของ JSON UTF-8 ตามด้วย Body** กำหนดขนาด Frame สูงสุด เช่น 1 MiB และปฏิเสธค่าที่เกินก่อน Allocate Buffer
+WebSocket ใช้ **JSON text หนึ่ง envelope ต่อ message** จำกัด 1 MiB และให้ library จัดการ WebSocket framing/fragmentation ไม่เติม TCP header 4 bytes ใน Browser
 
-ต้องมี `recv_exact(n)` รับ Header/Body ให้ครบ รองรับข้อความที่ถูกแบ่งหลาย `recv()` และหลาย Frame ที่มาติดกัน ห้ามถือว่า `recv()` หนึ่งครั้งเท่ากับข้อความหนึ่งรายการ ใช้ `sendall()` และมี Lock หรือ Writer Queue ต่อ Connection เพื่อไม่ให้ Packet จากหลาย Thread แทรกกัน
+Legacy TCP adapter/tests ยังใช้ unsigned big-endian length header 4 bytes, `recv_exact` และ bounded writer queue ตาม CP02 ทั้งสอง transport ใช้ validation/envelope และ Auth/Chat handlers ร่วมกัน
 
 ตัวอย่างคำขอ:
 
@@ -281,7 +291,7 @@ StudyGroup/
 | AI | AI_SUMMARIZE |
 | Events | USERS_UPDATED, GROUPS_UPDATED, MESSAGE_NEW |
 
-Client ใช้ Receive Worker และ `queue.Queue` ส่งผลเข้า Tkinter ผ่าน `after()` แก้ไข Widget ใน Main Thread เท่านั้น งาน Network, File และ AI ต้องไม่ทำให้ GUI ค้าง Server รองรับหลาย Client และแยกงาน AI ที่อาจช้าออกจากวงจรรับคำขอด้วย Worker ที่จำกัดจำนวน
+React ใช้ Browser WebSocket แบบ asynchronous ส่งผล/Event เข้า controller แล้ว render ด้วย state updates งาน Network, File และ AI ต้องไม่ทำให้ UI ค้าง Server รองรับหลาย Client และแยกงาน AI ที่อาจช้าออกจากวงจรรับคำขอด้วย Worker ที่จำกัดจำนวน
 
 ## 9. รายละเอียดฟีเจอร์พิเศษ
 
@@ -293,7 +303,7 @@ Client ใช้ Receive Worker และ `queue.Queue` ส่งผลเข้
 
 **ประวัติและค้นหา:** เก็บข้อความก่อนตอบรับสำเร็จ ค้นหาในห้องปัจจุบันตามคำและช่วงวันที่ รองรับ Pagination โดยใช้ Message ID/เวลา แปลงวันที่ของผู้ใช้เป็นช่วง UTC ก่อน Query และใช้เงื่อนไขสิทธิ์เดียวกับประวัติปกติ
 
-**Cloud:** เตรียม Dockerfile และ Compose สำหรับ Server เปิด TCP Port ที่กำหนด เช่น 5000 รองรับ TLS และ Mount `data/` ถาวร SQLite อยู่เครื่องเดียวกับ Server ภายใน Volume ไม่มี Database Port สาธารณะ Deploy จริงเมื่อมี Provider/เครื่อง/Domain/Certificate และสิทธิ์ที่จำเป็น การมีไฟล์ Deploy อย่างเดียวยังไม่ถือว่าทำฟีเจอร์ Cloud สำเร็จ
+**Cloud:** เตรียม Dockerfile และ Compose สำหรับ Python + React build เสิร์ฟ HTTP/WebSocket พอร์ต 8000 หลัง HTTPS/WSS reverse proxy หรือ TLS ตรง และ Mount `data/` ถาวร SQLite อยู่เครื่องเดียวกับ Server ภายใน Volume ไม่มี Database Port สาธารณะ Deploy จริงเมื่อมี Provider/เครื่อง/Domain/Certificate และสิทธิ์ที่จำเป็น การมีไฟล์ Deploy อย่างเดียวยังไม่ถือว่าทำฟีเจอร์ Cloud สำเร็จ
 
 ## 10. GUI ที่ต้องพัฒนา
 
@@ -302,21 +312,21 @@ Client ใช้ Receive Worker และ `queue.Queue` ส่งผลเข้
 - **Focus:** Sidebar ซ้ายเป็นผู้ใช้ออนไลน์/กลุ่ม ตรงกลางเป็นห้องแชต AI เปิดเมื่อกดและแสดงเป็นแผงในห้อง เป็นแบบเริ่มต้น
 - **Workspace:** Sidebar + Chat + AI ด้านขวา เป็นแบบเปรียบเทียบสำหรับหน้าต่างกว้าง
 - ใช้สีม่วงเป็น Accent พื้นหลังเรียบ ตัวอักษรอ่านง่าย อวตารย่อชื่อ ปุ่มมี Label/Tooltip และสถานะเชื่อมต่อชัดเจน
-- หน้าต่างจริงใช้ Native title bar ของ OS ไม่ต้องวาดปุ่มปิด/ย่อปลอมตามภาพ Prototype
+- ใช้ toolbar ของ Browser ไม่วาด title bar หรือปุ่มปิด/ย่อปลอมในหน้าเว็บ
 - แยก Private/Group room ทุกห้องมีช่องพิมพ์และข้อความเข้า–ออก Enter ส่ง, Shift+Enter ขึ้นบรรทัดใหม่
 - รายชื่อผู้ใช้ออนไลน์รวมตนเอง รายชื่อกลุ่มแสดงสมาชิก ปุ่มสร้างกลุ่มไม่มีช่องเพิ่มสมาชิกอัตโนมัติ
 - Tab แชต/ไฟล์ ปุ่มค้นหา ปุ่ม AI และ Dialog สมาชิก/สร้างกลุ่ม/เข้าร่วม/รายละเอียดไฟล์
-- เพิ่ม Login/Register และการตั้งค่า Server ก่อนหน้าจอแชต เพราะสองหน้า Auth ยังไม่มีอยู่ใน Prototype เดิม
+- เพิ่ม Login/Register ที่ใช้ origin เดียวกับหน้าเว็บ ไม่ให้ผู้ใช้กรอก Host/Port/CA; ตั้งค่า Server ที่ deployment/environment
 - UI ต้องมี Loading, Empty, Error, Reconnecting/Disconnected, Progress รับ–ส่งไฟล์ และสถานะ AI ไม่พร้อม
 - ขณะ Disconnect ห้ามแสดงว่าข้อความส่งสำเร็จและห้ามส่งซ้ำเงียบ ๆ หลังต่อใหม่ รักษา Draft ให้ผู้ใช้ตัดสินใจส่งใหม่
 - ภาษา UI หลักเป็นไทย ใช้ชื่อเทคนิคอังกฤษเมื่อเหมาะสม รองรับข้อความไทย/Unicode จริง
-- ไม่ฝัง HTML นี้ใน WebView เพื่อแทนการทำ Tkinter การเปิด HTML ใน Browser เป็นเพียงวิธีตรวจแบบก่อนพัฒนา Desktop
+- ใช้ React จริงแยกจาก Prototype ที่มีข้อมูลจำลอง ห้ามนำ mock history/files/AI มาแสดงว่าใช้งานจริง
 
 ## 11. ลำดับพัฒนาและการตรวจรับ
 
 1. **รากฐาน:** สร้าง Packages, Config, Protocol และ SQLite Schema ทดสอบ TCP Framing ที่แตก/รวม Frame รวมถึง EOF กลาง Frame และขนาดเกิน
 2. **Auth:** ทำ TLS, Register/Login/Logout และ Online Registry ทดสอบชื่อซ้ำแบบ Case-insensitive, รหัสผ่านผิด, Login ซ้อน และ Cleanup เมื่อหลุด
-3. **แชตพื้นฐาน:** เชื่อม Tkinter กับ Server ทำ Private room, Group create/list/join, Membership check และ Live Events ให้ R1–R11 ครบก่อนฟีเจอร์พิเศษ
+3. **แชตพื้นฐาน:** เชื่อม React กับ Python ผ่าน WebSocket ทำ Private room, Group create/list/join, Membership check และ Live Events ให้ R1–R11 ครบก่อนฟีเจอร์พิเศษ
 4. **ประวัติและค้นหา:** โหลดข้อความหลัง Login ใหม่ เก็บ Draft/UI ไม่ค้าง และตรวจว่าคนนอก/สมาชิกที่ยังไม่ถึงขอบเขตประวัติอ่านข้อมูลไม่ได้
 5. **ไฟล์:** ทดสอบส่งและดาวน์โหลดจริง Hash ตรงกัน ตรวจขนาด ไฟล์ไม่ครบ และการเดา Attachment ID ของห้องอื่น
 6. **AI:** ทดสอบ Adapter ด้วย Mock ที่แยกชัดเจน จากนั้นสาธิต API จริง ตรวจ Timeout, ขอบเขตข้อความและผลที่ไม่มีการแต่งผู้รับผิดชอบ/วันส่ง
@@ -329,26 +339,32 @@ Client ใช้ Receive Worker และ `queue.Queue` ส่งผลเข้
 คำสั่งเป้าหมายหลังพัฒนาเสร็จ จาก Root โปรเจกต์:
 
 ```bash
-uv run --locked --env-file .env python -m server.main
-uv run --locked --env-file .env python -m client.main
+npm --prefix web ci
+npm --prefix web run build
+uv run --locked --env-file .env python -m server.web
 uv run --locked pytest
 ```
 
-เปิด `server.main` และ `client.main` ได้แล้ว การตรวจรับ CP06 ดู docs/demo-checklist.md
+เปิด Browser ที่ http://127.0.0.1:8000 หลังรัน `server.web` การตรวจรับ CP06 ดู docs/demo-checklist.md
 รัน `uv run --locked pytest` เพื่อตรวจ Config, Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล
 และ Authentication ผ่าน TCP/TLS จริงได้
 
-Environment ฝั่ง Server ที่ควรเตรียม: `STUDYGROUP_HOST`, `STUDYGROUP_PORT`, `STUDYGROUP_DATA_DIR`, `STUDYGROUP_TLS_CERT`, `STUDYGROUP_TLS_KEY`, `STUDYGROUP_AI_PROVIDER`, `STUDYGROUP_AI_MODEL`, `STUDYGROUP_AI_API_KEY` และ Timeout/Limit ตามจำเป็น ส่วน Client มีเพียง Host, Port และ Trust configuration ไม่มี AI Key หรือ Server private key
+Environment ฝั่ง Web ใช้ `STUDYGROUP_WEB_HOST/PORT/ORIGINS/STATIC_DIR`, optional
+`STUDYGROUP_WEB_TLS_CERT/KEY` และ `STUDYGROUP_DATA_DIR`; Browser รับ URL เดียว
+ไม่มี AI Key หรือ server private key ดูค่าทั้งหมดใน docs/setup.md
+
 
 ## 12. คำสั่งเริ่มต้นสำหรับ Codex รอบพัฒนา
 
-> อ่าน DEVELOPMENT.md เพื่อดูงานถัดไป แล้วอ่าน HANDOFF.md และ docs/prototypes/README.md จากนั้นพัฒนา StudyGroup เป็น Python Desktop Application ด้วย Tkinter และ TCP Socket + TLS ตามข้อกำหนด R1–R11 และฟีเจอร์พิเศษทั้ง 4 ใช้ Focus เป็นแบบเริ่มต้น เก็บ SQLite และไฟล์บน Server ใช้ Argon2id สำหรับ Password และตรวจสิทธิ์ทุกคำขอ เริ่มทำส่วนที่ทดสอบ Local ได้ก่อน แยก Prototype/Mock ออกจากการทำงานจริง อัปเดตเอกสารตามผลจริงและบันทึก checkpoint/งานต่อใน DEVELOPMENT.md เมื่อจบ session ระบุเฉพาะข้อมูลบริการภายนอกที่ยังต้องการจากผู้ใช้ อย่าเปลี่ยนเป็น Web App หรือแทน Socket ด้วย REST สำหรับการส่งแชต
+> อ่าน DEVELOPMENT.md, HANDOFF.md และ docs/prototypes/README.md แล้วพัฒนา StudyGroup ด้วย React → WebSocket → Python Server → SQLite ตาม R1–R11 และฟีเจอร์พิเศษทั้ง 4 ใช้ Focus เป็นแบบเริ่มต้น เก็บ SQLite/ไฟล์ที่ Server ตรวจสิทธิ์ทุกคำขอ ใช้ Argon2id สำหรับ Password ไม่ใช้ REST แทน WebSocket สำหรับแชต แยก Prototype/Mock จากของจริง อัปเดต checkpoint และผลทดสอบตามจริง งานปัจจุบันใช้ feat/react-websocket; ไม่ตั้ง branch prefix codex/
+
 
 ## 13. แหล่งอ้างอิงทางเทคนิค
 
 - [Python Socket Programming HOWTO](https://docs.python.org/3/howto/sockets.html) — Stream และ Framing
 - [Python ssl](https://docs.python.org/3/library/ssl.html) — TLS และการตรวจใบรับรอง
-- [Python Tkinter](https://docs.python.org/3/library/tkinter.html) — GUI และ Event loop
+- [React](https://react.dev/) และ [Vite](https://vite.dev/guide/) — Browser UI และ build
+- [websockets sync server](https://websockets.readthedocs.io/en/stable/reference/sync/server.html) — WebSocket adapter
 - [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html) และ [argon2-cffi](https://argon2-cffi.readthedocs.io/en/stable/api.html)
 - [OWASP Authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) และ [Authorization](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html)
 

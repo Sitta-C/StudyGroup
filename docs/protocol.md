@@ -7,7 +7,18 @@ Server/Router และ Auth handlers ใช้สัญญารายฟีเ
 Chat/Groups handlers ใช้สัญญาใน [chat.md](chat.md) ตาม CP05
 History/Files/AI handlers ยังเป็นงาน checkpoint ถัดไป
 
-## Frame
+## WebSocket transport (ค่าเริ่มต้นปัจจุบัน)
+
+React ส่ง envelope ด้านล่างเป็น JSON UTF-8 **text message หนึ่งรายการต่อ message** ไป `/ws`
+ไม่เติม header 4 bytes; WebSocket จัดขอบเขต message ให้แล้ว `server/web.py` ใช้
+strict codec/validation ร่วมกับ TCP เดิมและจำกัด body 1 MiB เช่นเดิม ไม่รับ binary
+Request ID, Response/Error และ Events ใช้ contract เดียวกันทั้งหมด
+Production ใช้ WSS และ Origin allowlist ดู [setup.md](setup.md)
+ตัวเลข ID ฝั่ง Python รองรับ 64-bit แต่ Browser ปฏิเสธ ID ที่ไม่ใช่ JavaScript safe integer
+(เกิน `2**53 - 1`) เพื่อไม่เปิดห้องผิดจากการปัดเศษ ต้องเปลี่ยน contract เป็น string
+ก่อนรองรับข้อมูลระดับนั้นจริง
+
+## Legacy TCP frame
 
 ```text
 4 bytes: unsigned big-endian length N | N bytes: JSON encoded as UTF-8
@@ -67,7 +78,8 @@ Transport ไม่ใช่ตัวตรวจสมาชิกห้อง�
 
 ## ตัวอย่าง Request / Response / Event
 
-ตัวอย่างด้านล่างแสดง Body; ส่งจริงต้องมี Header ตามจำนวน UTF-8 bytes ด้านหน้า
+ตัวอย่างด้านล่างคือ JSON text ที่ส่งผ่าน WebSocket ได้โดยตรง
+Legacy TCP เท่านั้นที่ต้องเติม Header ตามจำนวน UTF-8 bytes ด้านหน้า
 
 ```json
 {"v":1,"id":"req-42","type":"MESSAGE_SEND","data":{"room_id":12,"text":"ประชุมตอนสองทุ่มนะ 👋"}}

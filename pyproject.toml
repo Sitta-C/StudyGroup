@@ -1,11 +1,12 @@
 [project]
 name = "studygroup"
 version = "0.1.0"
-description = "Desktop group chat using Tkinter and TCP sockets with TLS"
+description = "React and WebSocket group chat with a Python server and SQLite"
 readme = "README.md"
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "argon2-cffi>=25.1.0",
+    "websockets>=17.3,<18",
 ]
 
 [tool.uv]

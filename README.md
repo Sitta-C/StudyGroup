@@ -1,35 +1,37 @@
 # StudyGroup
 
-โปรเจกต์ Desktop Chat สำหรับงานกลุ่มนักศึกษา ใช้ Python, Tkinter และ TCP Socket พร้อม AI สรุปบทสนทนา ส่งไฟล์ ค้นหาประวัติ และ Cloud Server
-
-**สถานะ:** มี Config, Socket Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล,
-TLS Server, Register/Login/Logout, รายชื่อออนไลน์ และแชตส่วนตัว/กลุ่ม พร้อม Desktop Client Tkinter แบบ Focus แล้ว
-การตรวจรับ CP06 ยังต้องทดสอบบนคอมพิวเตอร์จริงสองเครื่อง ดู DEVELOPMENT.md
-
-**Environment:** เตรียม Local environment ด้วย **uv** แล้ว ใช้ Python 3.14.10,
-Tkinter, `argon2-cffi` และ `pytest` พร้อม `uv.lock` ดู
-[วิธี setup และคำสั่งใช้งาน](docs/setup.md)
+แอปแชตกลุ่มนักศึกษา **React → WebSocket → Python Server → SQLite**
+ใช้หน้าตา Focus ตามต้นแบบ ภาษาไทย และเปิดจาก Browser ได้ทั้งคอมพิวเตอร์และมือถือ
+Python ดูแล Login/Register, สิทธิ์สมาชิกและการบันทึกข้อมูลเหมือนเดิม
 
 ```bash
 uv sync --locked
-uv run --locked python -m tkinter
-uv run --locked --env-file .env python -m server.main
-# เปิด Terminal ใหม่สำหรับแต่ละ Client:
-uv run --locked --env-file .env python -m client.main
+npm --prefix web ci
+npm --prefix web run build
+uv run --locked --env-file .env python -m server.web
 ```
 
-สำหรับเครื่องใหม่ให้เตรียม Python/Tkinter ตามคู่มือก่อน `uv sync`
+เปิด **http://127.0.0.1:8000** — checkout ใหม่ที่ไม่มี `.env` ให้คัดลอกจาก `.env.example` ก่อน
+บัญชีและข้อความอยู่ที่ `data/studygroup.db` ฝั่ง Python ใช้ข้อมูลเดิมได้
+ไม่ต้องกรอกที่อยู่ Server ในหน้า Login
 
-- [สถาปัตยกรรม Desktop/Network](docs/architecture.md) — หน้าที่แต่ละ Thread และวงจรส่งข้อความ
-- [รายการตรวจรับและการตั้งค่า LAN](docs/demo-checklist.md) — R1–R11 และหลักฐาน Local
-- [แผนพัฒนาและ checkpoint กลาง](DEVELOPMENT.md) — อ่านก่อนเริ่มแต่ละ session และอัปเดตความคืบหน้าเมื่อจบ
-- [ข้อกำหนดใน HANDOFF.md](HANDOFF.md) — Project Structure สถาปัตยกรรม Auth/Database/Protocol และเกณฑ์ส่งงาน
-- [สัญญา Socket Protocol](docs/protocol.md) — Framing, Request/Response/Event, Validation และการใช้ API
-- [SQLite และสิทธิ์เข้าถึงข้อมูล](docs/database.md) — Schema, Connection/Transaction และขอบเขตประวัติของสมาชิก
-- [TLS และ Authentication](docs/authentication.md) — เปิด Server, Auth contract, Session lifecycle และ Limits
-- [Chat Server](docs/chat.md) — ห้องส่วนตัว/กลุ่ม, สมาชิก, การส่งข้อความและสิทธิ์ Live Events
-- [เปิด Prototype GUI](docs/prototypes/studygroup-desktop.html) — เปิดไฟล์นี้ใน Browser เพื่อทดลองหน้าตา Desktop
-- [รายละเอียด Prototype](docs/prototypes/README.md) — วิธีใช้งานและส่วนที่ยังจำลองอยู่
-- [โจทย์ Term Project](docs/reference/socket-programming-assignment.pdf)
+มีออนไลน์/แชตส่วนตัว/สร้างกลุ่ม/ดูสมาชิก/Join เอง/ข้อความสด/Draft และแจ้งเมื่อหลุดแล้ว
+ผู้ใช้ตรวจรับ CP06 แล้ว ประวัติหลังเปิดใหม่/ค้นหา, ไฟล์, AI และ Cloud เป็น CP07–CP10
+รายละเอียดหลักฐานสองเครื่องสำหรับเดโมเก็บต่อใน CP11
+ปุ่มฟีเจอร์เหล่านี้แสดงตามแบบและยังปิดใช้งาน
 
-Prototype เป็น HTML เพื่อทดลองหน้าจอเท่านั้น แอปที่ต้องพัฒนาจริงเป็น Desktop ด้วย Tkinter การส่งแชตใช้ Socket และ Database อยู่บน Cloud เดียวกับ Server
+- [วิธีติดตั้ง รัน พัฒนา React และตั้งค่า HTTPS/WSS](docs/setup.md)
+- [สถาปัตยกรรม](docs/architecture.md) · [Protocol](docs/protocol.md)
+- [Checklist R1–R11 และการตรวจสองเครื่อง](docs/demo-checklist.md)
+- [Checkpoint และผลทดสอบล่าสุด](DEVELOPMENT.md) · [ข้อกำหนด](HANDOFF.md)
+- [ต้นแบบ Focus/Workspace](docs/prototypes/README.md)
+
+```bash
+uv run --locked pytest -q --tb=short -W error
+npm --prefix web run build
+npm --prefix web run test:e2e
+```
+
+ใช้ Python 3.14 + uv, Node.js 22.12+ หรือ 24 LTS และ Chrome สำหรับ Browser tests
+Tkinter/TCP Client เดิมเก็บไว้สำหรับ compatibility; วิธีรันเก่าอยู่ใน
+[legacy-desktop.md](docs/legacy-desktop.md)

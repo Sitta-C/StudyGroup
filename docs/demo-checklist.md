@@ -1,111 +1,82 @@
-# CP06 — Desktop demo checklist
+# CP06 — React Web demo checklist
 
-CP06 ยังเป็น `IN_PROGRESS` หลักฐานด้านล่างเป็นการตรวจ Local บน macOS เครื่องเดียว
-ยังไม่ใช่การตรวจรับคอมพิวเตอร์จริงสองเครื่องหรือ Cloud
+CP06 เป็น `DONE` ตามผู้ใช้ยืนยันตรวจรับเมื่อ 6 พ.ย. 2026 หลังเปิดเว็บผ่าน HTTPS บน LAN
+ผลตรวจอัตโนมัติเป็น localhost บน macOS เครื่องเดียว; หลักฐานรายอุปกรณ์/ภาพ R1–R11
+ยังต้องเก็บสำหรับเดโม CP11 ตารางที่ระบุรอตรวจหมายถึงยังไม่มีผลรายข้อบันทึกไว้
+หลาย Browser contexts ไม่แทนคอมพิวเตอร์จริงสองเครื่องตาม R1
+เปลี่ยน UI เป็น React ตามคำสั่งผู้ใช้ 6 พ.ย. 2026 ใช้ Python/SQLite และสิทธิ์เดิม
 
 ## เริ่มรัน
 
-เตรียม Environment ตาม [setup.md](setup.md) แล้วเปิดสอง Terminal:
+เตรียม [setup.md](setup.md) แล้ว:
 
 ```bash
-uv run --locked --env-file .env python -m server.main
+npm --prefix web run build
+uv run --locked --env-file .env python -m server.web
 ```
 
-```bash
-uv run --locked --env-file .env python -m client.main
-```
+เปิด http://127.0.0.1:8000 ด้วย Browser profiles/Incognito แยก A/B/C คนละบัญชี
+สมัครแล้ว Login ไม่กรอก Server ในหน้า Login หนึ่งบัญชีมี Session ออนไลน์ได้ตัวเดียว
 
-เปิด Client เพิ่มจาก Terminal ใหม่ ใช้บัญชี A/B/C คนละบัญชี
-สมัครสมาชิกแล้ว Login แยก กรอก Server และ CA ในหน้า Login ได้ ค่าที่แก้ใน UI ไม่เขียนทับ `.env`
+## R1–R11
 
-## ผล Local และรายการตรวจรับ R1–R11
-
-| ข้อ | วิธีตรวจ | หลักฐาน Local | สองเครื่องจริง |
+| ข้อ | วิธีตรวจใน Browser | หลักฐาน Local | สองเครื่องจริง |
 | --- | --- | --- | --- |
-| R1 | อธิบายสถาปัตยกรรม; Client A/B อยู่คนละคอมพิวเตอร์ | มี architecture.md; ยังไม่ได้เดโมสองเครื่อง | รอตรวจ |
-| R2 | ส่งข้อความผ่าน TCP Socket + TLS | Client integration และ GUI ใช้ TLSServer จริง | รอตรวจ |
-| R3 | สมัครชื่อซ้ำ รวมตัวพิมพ์เล็ก/ใหญ่ แล้ว Login | Auth/TLS tests เดิม และ GUI สมัคร/Login จริง | รอตรวจ |
-| R4 | A/B/C Login; รายชื่อรวมตนเอง; B Logout/หลุด แล้วรายชื่ออัปเดต | Client integration และ GUI | รอตรวจ |
-| R5 | เปิด A–B, A–C และหลายกลุ่ม; สลับแล้วไม่ปนห้อง | Server tests เดิม, Client integration และ GUI สลับห้อง | รอตรวจ |
-| R6 | แต่ละห้องมีช่องพิมพ์/ข้อความเข้าออก; ไทย/Emoji/หลายบรรทัด | GUI และภาพ private-chat.png | รอตรวจ |
-| R7 | A ส่งหา B; C ต้องไม่เห็นข้อความ/Private metadata | Client A/B/C ผ่าน TLS จริง | รอตรวจ |
-| R8 | A สร้างมากกว่าหนึ่งกลุ่ม; เริ่มมี A คนเดียว | Client integration และ GUI สร้างกลุ่ม | รอตรวจ |
-| R9 | C เห็นทุกกลุ่มและสมาชิก ทั้งที่ยังไม่ Join | Client integration รวม Pagination; GUI Dialog สมาชิก | รอตรวจ |
-| R10 | C เลือกกลุ่มที่ยังไม่เป็นสมาชิก; ช่องพิมพ์ปิด; กด Join เอง | GUI ตรวจปุ่ม Join และการเปิดช่องพิมพ์หลังสำเร็จ | รอตรวจ |
-| R11 | A/B ส่งในกลุ่ม; C ไม่ Join ต้องไม่เห็น; สมาชิกใหม่ไม่เห็นข้อความก่อน Join | Client integration และสิทธิ์ฝั่ง Server | รอตรวจ |
+| R1 | A/B อยู่คนละคอมพิวเตอร์ อธิบาย React → WS → Python → SQLite | architecture.md และ Browser tests บนเครื่องเดียว | รอตรวจ |
+| R2 | Network `/ws` เป็น 101 แล้วแชตส่งผ่าน Socket | WebSocket/WSS integration + Browser จริง | รอตรวจ |
+| R3 | สมัครชื่อซ้ำ/ต่าง case และ Login ซ้อน | Auth tests เดิม, Browser ตรวจ duplicate login | รอตรวจ |
+| R4 | A/B/C เห็นตนเอง/กันและกัน B Logout/ปิดแท็บแล้วหาย | Browser presence/cleanup และ WS integration | รอตรวจ |
+| R5 | A–B, A–C และหลายกลุ่ม สลับแล้วข้อความ/ร่างไม่ปน | Browser drafts/private rooms + Server tests | รอตรวจ |
+| R6 | ทุกห้องมีช่องพิมพ์และข้อความ ไทย/Emoji/หลายบรรทัด | Browser Enter/Shift+Enter, 4,000 emoji, ภาพ Focus | รอตรวจ |
+| R7 | A ส่งหา B; C ไม่เห็นเนื้อหา/Private metadata | A/B/C Browser contexts และ WS permission tests | รอตรวจ |
+| R8 | สร้างหลายกลุ่ม ผู้สร้างเป็นสมาชิกคนแรกเพียงคนเดียว | Browser create/member dialog + Server tests | รอตรวจ |
+| R9 | C เห็นทุกกลุ่ม/สมาชิกก่อน Join | Browser directory + Server pagination tests | รอตรวจ |
+| R10 | C เลือกกลุ่ม ช่องพิมพ์ไม่แสดง จนกด Join เอง | Browser join flow และ WS integration | รอตรวจ |
+| R11 | A/B สมาชิกคุยได้ C ไม่ได้เนื้อหา สมาชิกใหม่ไม่เห็นก่อน Join | Browser/WS join boundary + permission tests | รอตรวจ |
 
-ภาพ [private-chat.png](evidence/cp06/private-chat.png) จับจากหน้าต่าง Tkinter จริง
-บัญชี Alice/Bob/Carol และ SQLite เป็นข้อมูลทดสอบใน Temporary directory
-ภาพแสดงภาษาไทยที่ส่งและคำตอบผ่าน Server จริงในเครื่องเดียว ไม่ใช่ Prototype HTML
+## หลักฐานหน้าเว็บ
 
-ภาพหลังปรับสไตล์ตาม Focus: [focus-style.png](evidence/cp06/focus-style.png)
-จับจาก Native Tkinter ที่รับข้อมูลผ่าน TLS Server และ SQLite ชั่วคราวจริง โดยใช้
-บัญชี/ข้อความตัวอย่าง Anan/Ploy/Mek เพื่อเทียบสัดส่วนกับภาพต้นแบบ ไม่มีการ Seed
-ตัวอย่างเข้าแอปปกติหรือฐานข้อมูลจริง ภาพไม่มีไฟล์แนบเพราะ CP08 ยังไม่เปิดใช้งาน
+- [Focus desktop](evidence/cp06-web/focus-desktop.png) และ [Focus mobile](evidence/cp06-web/focus-mobile.png)
+  จับจาก React build ที่ใช้ Python WebSocket Server/SQLite จริง
+- บัญชี Anan/Ploy/Mek และข้อความในภาพเป็นข้อมูลทดสอบแยกใน Temporary directory
+  ไม่ seed ข้อมูลตัวอย่างเข้า runtime จริง วันเวลาเป็นเวลาที่ Server สร้าง
+- เทียบกับ Focus prototype โดยเอา title bar จำลองออก สี/spacing/typography ใช้ CSS ตามแบบ
+  ปุ่ม Files/Search/AI/Attachment ยัง disabled ตาม scope ไม่สร้างไฟล์/ผล AI ปลอม
+- ภาพเดิมใน `evidence/cp06/` เป็นหลักฐาน Tkinter ก่อน migration ไม่ใช่เว็บปัจจุบัน
 
-## คำสั่งตรวจซ้ำ
+## Connection / UI checks
 
-```bash
-uv run --locked pytest -q --tb=short
-# ต้องมี Desktop/Display และสิทธิ์ TCP Loopback:
-uv run --locked pytest tests/gui_checks.py -q --tb=short -W error
-```
+- [x] Login/Register จริง, รายชื่อออนไลน์และสมาชิก
+- [x] Sender response/event echo แสดงเพียงครั้งเดียวด้วย message ID
+- [x] Draft แยกห้อง และเก็บไว้เมื่อ socket หลุด ไม่ reconnect/replay เอง
+- [x] หลัง Commit แล้วตัดก่อน Ack: SQLite เพิ่มหนึ่งข้อความ UI เก็บร่าง/แจ้งยังยืนยันไม่ได้
+  Login ใหม่ไม่ส่งข้อความนั้นซ้ำ
+- [x] เปลี่ยนบัญชี/Logout ล้าง state บัญชีเก่า; re-login บัญชีเดิมในแท็บเดิมรักษาร่าง
+- [x] React แสดง HTML เป็นข้อความ ไม่ execute; CSP สำหรับ production assets
+- [x] มือถือ 390×844, ชื่อกลุ่ม 100 ตัว, ข้อความ 4,000 emoji ไม่ล้นแนวนอน
+- [x] Synthetic IME composition ไม่ส่งเมื่อกด Enter ขณะประกอบอักษร
+- [ ] Thai IME จริงและ OS copy/paste บนเครื่องเดโมทั้งสองเครื่อง
+- [ ] สลับ App/Browser, mobile soft keyboard และ zoom บนอุปกรณ์จริง
+- [ ] หยุด Server/ตัด Wi-Fi บน LAN จริง แล้วตรวจ online cleanup/draft/ข้อความไม่ replay
+- [ ] HTTPS/WSS, certificate/trust และ Firewall บนสองเครื่องจริง
 
-`gui_checks.py` ไม่ถูกเก็บในชุด Headless ปกติ ต้องเรียกเจาะจง
-ทดสอบ Widgets จริง ไม่ Skip เมื่อไม่มี Display ผู้รันต้องจัด Environment ให้พร้อม
-ครอบคลุมขนาด 850×700 / 1120×800, Register/Login, เลือกห้อง, Enter/Shift+Enter,
-Draft แยกห้อง, สร้าง/Join กลุ่ม, Dialog สมาชิก, Disconnect/Re-login, Logout, สำรวจกลุ่ม, ข้อความ Unicode ยาวที่สุด และชื่อกลุ่มยาวไม่ล้น Header
+## เตรียมสองเครื่อง
 
-รายการผิดปกติที่ต้องตรวจเพิ่มด้วยคน:
+1. เลือก Server และ DNS/IP ที่ Client ทั้งสองเข้าถึงได้ ตั้ง HTTPS/WSS ตาม [setup.md](setup.md)
+2. ตั้ง Origin allowlist ให้ตรง URL ที่เปิดจริง ไม่ใช้ wildcard และไม่ข้าม TLS warning
+3. เปิดเฉพาะพอร์ต Web/HTTPS ที่ใช้ ไม่เปิด SQLite หรือส่ง keys/.env ให้ Client
+4. ให้ A/B เปิดคนละคอมพิวเตอร์ C เป็น Browser profile แยกสำหรับตรวจคนนอก
+5. ไล่ R1–R11 บันทึกผลและภาพจากทั้งสองเครื่อง ตรวจ `/ws` Upgrade/ข้อความใน Network
+6. ข้อมูล/บัญชียังอยู่หลัง restart; UI โหลดข้อความเก่าหลังเปิดใหม่ยังเป็น CP07
+7. ลงวันที่/OS/Browser/เครื่อง/เครือข่าย/URL/ผล TLS และภาพไว้ใน DEVELOPMENT สำหรับ CP11
 
-- พิมพ์ด้วย Thai IME จริง รวมวรรณยุกต์ และ Copy/Paste ของ OS
-- ลองชื่อซ้ำ รหัสผ่านผิด Login ซ้อน และ Host/Port/CA ผิด หน้าจอต้องอธิบายข้อผิดพลาด
-- ตัด Wi-Fi/หยุด Server ระหว่างส่ง: ห้ามแสดงสำเร็จโดยไม่ได้รับคำยืนยัน
-  ร่างยังอยู่ ไม่ส่งใหม่เอง หลัง Login บัญชีเดิมให้ตรวจข้อความก่อนส่งซ้ำ
-- สลับบัญชี/Server: ไม่เห็นข้อความและร่างของ Session เดิม
-- Resize, Scroll และหน้าจอเล็กบน OS ที่จะใช้เดโมจริง
+| ข้อมูลตรวจจริง | ผล |
+| --- | --- |
+| วันที่ / ผู้ตรวจ | 6 พ.ย. 2026 / ผู้ใช้ยืนยันรับงานในแชต |
+| Server OS / URL / TLS issuer | รอ |
+| เครื่อง A: OS / Browser / เครือข่าย | รอ |
+| เครื่อง B: OS / Browser / เครือข่าย | รอ |
+| Client C / บัญชีคนนอก | รอ |
+| R1–R11 / IME / disconnect / ภาพ | รอ |
 
-## เตรียม LAN สำหรับคอมพิวเตอร์สองเครื่อง
-
-1. ให้ Server และ Client อยู่ในเครือข่ายที่ถึงกันได้ เลือก IP/ชื่อจริงของ Server
-   ตัวอย่างต่อไปใช้ `192.168.1.20` ต้องเปลี่ยนให้ตรงกับเครื่องจริง
-2. หลังมี Local CA จาก `generate-dev-certs.sh` แล้ว ออกใบรับรองเพิ่ม:
-
-```bash
-bash scripts/generate-lan-cert.sh IP:192.168.1.20
-# เพิ่ม DNS:studygroup.local ได้เมื่อชื่อนั้น resolve ถึง Server จริง
-```
-
-สคริปต์สร้าง `certs/lan/server.crt` และ `server.key` ด้วย CA เดิม
-ไม่แทนไฟล์ Localhost เดิม และหยุดถ้า `certs/lan` มีอยู่แล้ว
-
-3. เปิด Server โดย Bind ทุก Interface ด้วยใบรับรอง LAN:
-
-```bash
-STUDYGROUP_HOST=0.0.0.0 \
-STUDYGROUP_TLS_CERT=certs/lan/server.crt \
-STUDYGROUP_TLS_KEY=certs/lan/server.key \
-uv run --locked --env-file .env python -m server.main
-```
-
-4. ติดตั้ง Python/Tkinter/uv และ Sync โปรเจกต์บน Client อีกเครื่อง
-   คัดลอก **เฉพาะ `ca.crt`** ไปเครื่องนั้น เปิดแอปได้โดยไม่ต้องมี Server `.env`:
-
-```bash
-uv run --locked python -m client.main
-```
-
-ในหน้า Login ตั้ง Host เป็น `192.168.1.20`, Port เป็น `5000`, เลือก CA ที่คัดลอกมา
-ไม่ใช้ `0.0.0.0` เป็นที่อยู่ Client และไม่ปิด Hostname/Certificate verification
-Client ไม่ต้องมี Server key, CA key หรือ AI key
-
-5. หาก Firewall ถาม ให้ผู้ดูแลอนุญาต TCP Port ของ Server เฉพาะเครือข่ายที่ใช้เดโม
-6. ใช้ Client A/B คนละคอมพิวเตอร์จริง และ C อีกหน้าต่างเพื่อทดสอบคนนอกห้อง
-
-## หลักฐานที่ยังต้องเติมก่อนปิด CP06
-
-- [ ] บันทึกวันเวลา รุ่น/OS ของเครื่อง A/B และตำแหน่ง Server
-- [ ] บันทึกเครือข่าย, Host/Port และ SAN ที่ใช้จริง โดยไม่แนบ Private keys
-- [ ] เดโม R1–R11 ทีละข้อ พร้อมผลและภาพจากเครื่อง A/B/C
-- [ ] ตรวจ TLS ชื่อผิด/CA ผิดและการหลุดบน LAN จริง
-- [ ] อัปเดต DEVELOPMENT.md เป็น DONE เมื่อเกณฑ์ครบ แล้วเริ่ม CP07
+History/search (CP07), files (CP08), AI จริง (CP09), Cloud (CP10) ยังไม่ตรวจรับ
