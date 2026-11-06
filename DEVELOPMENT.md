@@ -14,7 +14,8 @@
 - งานปัจจุบัน: **CP06 Tkinter และตรวจรับ R1–R11 — IN_PROGRESS**
 - สถานะโค้ด: มี Config, Socket Protocol, SQLite Schema/Transaction/สิทธิ์ร่วม,
   TLS Server, Router, Auth/Chat handlers และ Online registry พร้อม Desktop Client Tkinter
-  แบบ Focus, Register/Login/Server settings, Private/Group chat, Draft และ Disconnect/Re-login
+  แบบ Focus ที่ปรับสไตล์ตามภาพต้นแบบแล้ว, Register/Login/Server settings, Private/Group chat,
+  Draft และ Disconnect/Re-login
   ชุดทดสอบหลัก 378 กรณีผ่าน (ชุดเดิม 352 + Client integration 21 + LAN certificate 5)
   และตรวจ GUI จริงแยกอีก 3 กรณีผ่าน ดูบันทึก CP06 ด้านล่าง
 - สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
@@ -57,7 +58,7 @@
 | CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | DONE | Database 51 + Permissions 31 passed ด้วย Temporary SQLite; Constraints/Reopen/Rollback/Join contention ผ่าน ดู docs/database.md และบันทึก CP03 |
 | CP04 | TLS และ Authentication | CP03 | DONE | Auth 19 + TLS integration 60 passed ผ่าน TCP/TLS จริง รวม CA/Hostname/Expired cert, Login ซ้อน, Cleanup และ CLI; ดู docs/authentication.md และบันทึก CP04 |
 | CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | DONE | Chat integration 39 passed ผ่าน TCP/TLS จริงด้วย Clients A/B/C; Private/Group/Join boundary/Actor spoofing/Event isolation/Restart ผ่าน ดู docs/chat.md และบันทึก CP05 |
-| CP06 | Tkinter และตรวจรับ R1–R11 | CP05 | IN_PROGRESS | Desktop Client/Worker และ GUI checks ผ่าน Local; มี architecture/demo-checklist/ภาพจริง; ยังรอ R1–R11 บนสองเครื่องจริง |
+| CP06 | Tkinter และตรวจรับ R1–R11 | CP05 | IN_PROGRESS | Desktop Client/Worker/สไตล์ Focus และ GUI checks ผ่าน Local; มีภาพเทียบต้นแบบ; ยังรอ R1–R11 บนสองเครื่องจริง |
 | CP07 | ประวัติและการค้นหา | CP06 | TODO | ฟีเจอร์พิเศษข้อ 1 |
 | CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | TODO | ฟีเจอร์พิเศษข้อ 2 |
 | CP09 | AI สรุปบทสนทนา | CP08 | TODO | ทำ Adapter/Mock ก่อน แล้วตรวจ API จริง |
@@ -726,6 +727,49 @@ uv run --locked --env-file .env python -m client.main
   Thai IME และ OS Copy/Paste บนเครื่องเดโม พร้อมรายละเอียดเครื่อง/เครือข่ายและภาพ A/B/C
 - งานแรก Session ถัดไป: เปิด docs/demo-checklist.md เตรียม LAN SAN ให้ตรง Server จริง
   รัน Client A/B คนละเครื่องและ C เป็นคนนอกห้อง เติมหลักฐานแล้วจึงปิด CP06/เริ่ม CP07
+
+### Session CP06 — ปรับ Native UI ให้ตรงสไตล์ Focus
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok)
+- Branch ปัจจุบัน: `feat/cp06-tkinter-client`; เริ่มจาก Working tree สะอาดที่ b0dd1fc
+  (ชื่อ Branch ถูกเปลี่ยนจากรอบก่อนแล้ว จึงทำต่อบน Branch ปัจจุบัน)
+- เป้าหมาย: แก้ความต่างด้านสไตล์ที่ผู้ใช้ทัก เทียบกับ Focus PNG และ CSS จริง
+  สถานะ CP06 ยัง IN_PROGRESS จนกว่าจะตรวจสองเครื่องครบ
+- สิ่งที่เปลี่ยน:
+  - ใช้ Tokens จาก Prototype: พื้นหลัง/เส้น/สีม่วง, Sidebar 218px, Header 83px,
+    Tab bar 40px, Avatar 31px, Icon 39px และ Typography 10–19px
+  - แก้สาเหตุฟอนต์ใหญ่: Tk Positive font size เป็น Point จึงเปลี่ยนเป็น Pixel
+    บน macOS ใช้ Thonburi เทียบ Width ข้อความกับภาพอ้างอิง และรวม Noto Sans Thai
+    แบบ OFL เป็น fallback แบบ Process-private สำหรับเครื่องที่ไม่มีฟอนต์นี้
+    ต้อง Register ก่อน Tk root ถูกสร้าง ไม่ติดตั้งฟอนต์ลง OS
+  - เปลี่ยน Treeview เป็นแถว Avatar/Online dot, กลุ่มและรายชื่อสมาชิก,
+    Rounded selected state และ Join badge ตามต้นแบบ พร้อมรักษา Private rooms ของคน Offline
+  - เพิ่ม Rounded buttons/panels และ Vector line icons ด้วย Canvas ไม่มี Dependency เพิ่ม
+    Header/แท็บ/ช่องพิมพ์/Account footer ใช้ระยะและมุมโค้งตาม Focus
+  - กล่องข้อความเข้ามี Avatar และขอบบาง ออกใช้ม่วงพร้อมมุมด้านขวาบนเหลี่ยม
+    มีชื่อ/เวลา เส้นแบ่งวันตามเวลาจริง Scrollbar บางและแสดงเมื่อจำเป็น
+  - ย้าย Logout/Connection เข้า Account menu/Connection row; สำรวจกลุ่มเปิดรายชื่อจริง
+    Keyboard focus + Enter/Space ยังใช้งานได้ และมี Tooltip สำหรับชื่อ/สมาชิกที่ยาว
+  - วาง Files/Search/AI/Attachment ตามตำแหน่งในแบบ แต่ Disabled พร้อม Tooltip
+    ไม่ส่ง Request ของฟีเจอร์อนาคตและไม่สร้างผลลัพธ์ปลอม
+  - Login/Register และ Dialog ใช้ Typography/ปุ่มโค้งชุดเดียวกัน
+- หลักฐานและผลตรวจ (ใช้ UV_CACHE_DIR=/private/tmp/studygroup-uv-cache):
+  - `uv run --locked pytest -q --tb=short -W error` — **378 passed** ใน 39.48 วินาที
+    ไม่มี Failure/Skip/Warning
+  - `uv run --locked pytest tests/gui_checks.py -q --tb=short -W error` — **3 passed**
+    รอบสุดท้าย 4.77 วินาที ไม่มี Tk callback error/Warning
+    ครอบคลุม Flow เดิม พร้อม Unicode สูงสุด 4,000 ตัว/16,000 bytes ไม่ล้น Canvas,
+    Directory จริง, ปุ่มอนาคตไม่ส่ง Request, ชื่อกลุ่ม 100 ตัวไม่ทับปุ่มใน Header
+  - ตรวจ Native window จริงและเทียบภาพที่ความกว้าง 1048px กับ Reference
+    ภาพใหม่ docs/evidence/cp06/focus-style.png เป็นข้อมูลตัวอย่างผ่าน TLS/SQLite ชั่วคราว
+    ไม่มีการ Seed เข้า Runtime จริง ส่วนภาพ private-chat.png เก็บเป็นหลักฐานรอบก่อน
+  - ภาพต้นแบบมี Native-window mock 39px ส่วนแอปใช้ Title bar ของ OS ตาม HANDOFF
+    ข้อมูลวันเวลา/ห้อง/ข้อความแสดงจาก Server จริง ภาพนี้ไม่มี Attachment ของ CP08
+  - `git diff --check` — ผ่าน; ไม่เปลี่ยน Server/Auth/Schema, pyproject.toml หรือ uv.lock
+- ไม่แตะ `.env`, certs เดิม, data/ จริง หรือแอป StudyGroup เดิมที่เปิดใช้งานอยู่
+  การตรวจภาพใช้ชื่อแอป Preview แยกและหยุด Temporary server เมื่อเก็บภาพเสร็จ
+- งานค้าง: ตรวจ Thai IME/OS Clipboard และการแสดงผลบนเครื่องเดโมจริงสองเครื่อง
+  ตาม docs/demo-checklist.md ก่อนปิด CP06 แล้วเริ่ม CP07
 
 ### แบบบันทึกสำหรับ session ถัดไป
 

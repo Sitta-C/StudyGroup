@@ -83,8 +83,29 @@ Logout และปิดแอปล้างข้อมูลในหน่�
 รองรับภาษาไทย/Unicode, Enter ส่ง, Shift+Enter ขึ้นบรรทัดใหม่ และ Draft แยกห้อง
 
 ประวัติหลังเปิดแอปใหม่/ค้นหา (CP07), ไฟล์ (CP08), AI (CP09), Cloud (CP10)
-ยังไม่เปิดเป็นปุ่มใช้งานในรอบนี้ แม้ Prototype HTML จะมีตัวอย่าง ฟีเจอร์เหล่านี้ไม่ได้ส่ง
-คำขอปลอมเพื่อแสดงผลสำเร็จ เวลาแสดงใน UI แปลงจาก UTC เป็น Timezone ของเครื่อง
+วางตำแหน่งแท็บ/ปุ่มตาม Prototype แต่ปิดใช้งาน พร้อม Tooltip อธิบายว่ายังไม่เปิดใช้
+การกดไม่ส่งคำขอไป Server และไม่แสดงผลสำเร็จจำลอง
+เวลาแสดงใน UI แปลงจาก UTC เป็น Timezone ของเครื่อง
+
+## สไตล์ตาม Focus
+
+ใช้ค่าสีและระยะจาก `docs/prototypes/studygroup-desktop.fragment.html` โดยตรง:
+Sidebar 218px, Header 83px, Tabs 40px, Avatar 31px, Room icon 39px,
+Body text 12px, Secondary text 10–11px และสีม่วง #6056d7 / ข้อความส่ง #6258cf
+ขนาดฟอนต์ Tk ใช้หน่วย Pixel (Negative sizes) เพื่อไม่ให้ 12pt กลายเป็น 16px
+
+`client/ui/widgets.py` วาด Rounded surfaces, Buttons, Avatar และ Line icons ด้วย Tk Canvas
+Sidebar ใช้แถวอวตารแทน Treeview กล่องข้อความมีมุมโค้งตามทิศทางผู้ส่ง พร้อมเส้นแบ่งวัน
+Scrollbars แสดงเป็นแถบบางเฉพาะเมื่อเนื้อหาล้น และมี Focus/Enter/Space สำหรับปุ่ม/แถว
+ข้อความยาวตัดบรรทัด ชื่อห้องยาวตัดด้วย Ellipsis และเปิดชื่อเต็มผ่าน Tooltip
+
+บน macOS ใช้ Thonburi เพื่อให้ความกว้างข้อความตรงภาพอ้างอิง เครื่องที่ไม่มีฟอนต์นี้
+ใช้ Noto Sans Thai ที่รวมมาพร้อมสิทธิ์ OFL โดยลงทะเบียนเฉพาะ Process ก่อนสร้าง Tk root
+ไม่มีการติดตั้งฟอนต์ลงระบบหรือโหลดฟอนต์จาก Network ตอนเปิดแอป
+ยังต้องตรวจการแสดงผลจริงบน OS ของเครื่องเดโมอีกครั้ง
+
+Title bar ใช้ของ OS ตามข้อกำหนดเดิม จึงไม่มีการวาดปุ่มปิด/ย่อปลอมตาม HTML
+Login/Register และ Dialog ใช้ Design tokens/ปุ่มโค้งชุดเดียวกับหน้า Focus
 
 หลักฐานตรวจ Local และงานค้างสองเครื่องอยู่ใน [demo-checklist.md](demo-checklist.md)
 สถานะและผลทดสอบล่าสุดอยู่ใน [DEVELOPMENT.md](../DEVELOPMENT.md)

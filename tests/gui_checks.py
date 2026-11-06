@@ -14,6 +14,8 @@ import pytest
 from client.app import Application
 from client.config import ClientConfig
 from client.controller import ClientController
+from client.ui.widgets import ActionButton
+from client.ui.sidebar import SidebarRow
 from shared.message_types import RequestType as R
 
 PASSWORD = "gui check password🔑"
@@ -104,12 +106,12 @@ def test_real_widgets_private_group_drafts_disconnect_and_account_switch(desktop
         assert not app.auth.winfo_ismapped()
         root.geometry("850x700")
         root.update()
-        for widget in (app.chat.send_button, app.sidebar.logout_button):
+        for widget in (app.chat.send_button, app.sidebar.account_button):
             assert widget.winfo_rooty() + widget.winfo_height() <= root.winfo_rooty() + root.winfo_height()
             assert widget.winfo_rootx() + widget.winfo_width() <= root.winfo_rootx() + root.winfo_width()
 
         bob, carol = peers
-        app.sidebar.tree.selection_set(f'user:{bob.state.user["id"]}')
+        app.sidebar.rows[f'user:{bob.state.user["id"]}'].invoke()
         wait_for(root, lambda: app.controller.state.active_room is not None, *peers)
         private_id = app.controller.state.active_room
         composer = app.chat.composer
@@ -130,6 +132,19 @@ def test_real_widgets_private_group_drafts_disconnect_and_account_switch(desktop
         assert len(app.controller.state.messages[private_id]) == 1
         assert not carol.state.messages
 
+        # The Canvas transcript must wrap the largest accepted Unicode message
+        # without drawing outside the room or freezing Tk's event loop.
+        app.controller.send(private_id, "🙂" * 4000)
+        wait_for(root, lambda: not app.controller.pending_sends, *peers)
+        root.update()
+        bounds = app.chat.canvas.bbox("all")
+        assert 0 <= bounds[0] < bounds[2] <= app.chat.canvas.winfo_width()
+        callbacks = set(app.controller._callbacks)
+        for unavailable in (app.chat.ai_button, app.chat.files_button,
+                            app.chat.search_button, app.chat.attach_button):
+            unavailable.invoke()
+        assert set(app.controller._callbacks) == callbacks
+
         composer.insert("1.0", "ร่างห้องส่วนตัว")
         root.update()
         app.sidebar.create.invoke()
@@ -138,18 +153,18 @@ def test_real_widgets_private_group_drafts_disconnect_and_account_switch(desktop
         frame = dialog.winfo_children()[0]
         entry = next(widget for widget in frame.winfo_children() if isinstance(widget, ttk.Entry))
         entry.insert(0, "กลุ่มงานภาษาไทย")
-        next(widget for widget in frame.winfo_children() if isinstance(widget, ttk.Button)).invoke()
+        next(widget for widget in frame.winfo_children() if isinstance(widget, ActionButton)).invoke()
         wait_for(root, lambda: app.controller.state.active_room != private_id and len(carol.state.rooms) == 1, *peers)
         own_group = app.controller.state.active_room
         assert len(app.controller.state.rooms[own_group]["members"]) == 1
-        app.sidebar.tree.selection_set(f"room:{private_id}")
+        app.sidebar.room_row(private_id).invoke()
         wait_for(root, lambda: app.controller.state.active_room == private_id, *peers)
         assert composer.get("1.0", "end-1c") == "ร่างห้องส่วนตัว"
 
         carol.create_group("กลุ่มของ Carol")
         wait_for(root, lambda: len(app.controller.state.rooms) == 3, *peers)
         other_group = carol.state.active_room
-        app.sidebar.tree.selection_set(f"room:{other_group}")
+        app.sidebar.room_row(other_group).invoke()
         wait_for(root, lambda: app.controller.state.active_room == other_group, *peers)
         assert app.chat.join_button.winfo_ismapped()
         assert str(composer.cget("state")) == "disabled"
@@ -163,6 +178,27 @@ def test_real_widgets_private_group_drafts_disconnect_and_account_switch(desktop
         listing = next(widget for widget in members_dialog.winfo_children()[0].winfo_children() if isinstance(widget, tk.Listbox))
         assert set(listing.get(0, "end")) == {"Alice", "Carol"}
         members_dialog.destroy()
+
+        app.sidebar.directory.invoke()
+        root.update()
+        directory = next(widget for widget in app.sidebar.winfo_children() if isinstance(widget, tk.Toplevel))
+        def descendants(widget):
+            for child in widget.winfo_children():
+                yield child
+                yield from descendants(child)
+        cards = [widget for widget in descendants(directory) if isinstance(widget, SidebarRow)]
+        assert {row.title for row in cards} == {"กลุ่มงานภาษาไทย", "กลุ่มของ Carol"}
+        next(row for row in cards if row.title == "กลุ่มของ Carol").invoke()
+        root.update()
+        assert not directory.winfo_exists()
+
+        previous = app.controller.state.active_room
+        long_name = "ก" * 100
+        app.controller.create_group(long_name)
+        wait_for(root, lambda: app.controller.state.active_room != previous, *peers)
+        assert app.chat.title.cget("text").endswith("…")
+        assert long_name in app.chat.title_hint.text
+        assert app.chat.title.winfo_rootx() + app.chat.title.winfo_width() <= app.chat.members.winfo_rootx()
 
         composer.insert("1.0", "ร่างก่อนหลุด")
         root.update()
@@ -179,7 +215,7 @@ def test_real_widgets_private_group_drafts_disconnect_and_account_switch(desktop
         app.auth.submit_button.invoke()
         wait_for(root, lambda: app.controller.authenticated and not app.controller.groups_loading, *peers)
         assert composer.get("1.0", "end-1c") == "ร่างก่อนหลุด"
-        app.sidebar.logout_button.invoke()
+        app.sidebar.account_menu.invoke("ออกจากระบบ")
         wait_for(root, lambda: app.controller.state.user is None, *peers)
         assert app.auth.winfo_ismapped()
         assert not app.controller.state.drafts

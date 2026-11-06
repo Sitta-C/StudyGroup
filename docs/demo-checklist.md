@@ -38,6 +38,11 @@ uv run --locked --env-file .env python -m client.main
 บัญชี Alice/Bob/Carol และ SQLite เป็นข้อมูลทดสอบใน Temporary directory
 ภาพแสดงภาษาไทยที่ส่งและคำตอบผ่าน Server จริงในเครื่องเดียว ไม่ใช่ Prototype HTML
 
+ภาพหลังปรับสไตล์ตาม Focus: [focus-style.png](evidence/cp06/focus-style.png)
+จับจาก Native Tkinter ที่รับข้อมูลผ่าน TLS Server และ SQLite ชั่วคราวจริง โดยใช้
+บัญชี/ข้อความตัวอย่าง Anan/Ploy/Mek เพื่อเทียบสัดส่วนกับภาพต้นแบบ ไม่มีการ Seed
+ตัวอย่างเข้าแอปปกติหรือฐานข้อมูลจริง ภาพไม่มีไฟล์แนบเพราะ CP08 ยังไม่เปิดใช้งาน
+
 ## คำสั่งตรวจซ้ำ
 
 ```bash
@@ -49,7 +54,7 @@ uv run --locked pytest tests/gui_checks.py -q --tb=short -W error
 `gui_checks.py` ไม่ถูกเก็บในชุด Headless ปกติ ต้องเรียกเจาะจง
 ทดสอบ Widgets จริง ไม่ Skip เมื่อไม่มี Display ผู้รันต้องจัด Environment ให้พร้อม
 ครอบคลุมขนาด 850×700 / 1120×800, Register/Login, เลือกห้อง, Enter/Shift+Enter,
-Draft แยกห้อง, สร้าง/Join กลุ่ม, Dialog สมาชิก, Disconnect/Re-login และ Logout
+Draft แยกห้อง, สร้าง/Join กลุ่ม, Dialog สมาชิก, Disconnect/Re-login, Logout, สำรวจกลุ่ม, ข้อความ Unicode ยาวที่สุด และชื่อกลุ่มยาวไม่ล้น Header
 
 รายการผิดปกติที่ต้องตรวจเพิ่มด้วยคน:
 

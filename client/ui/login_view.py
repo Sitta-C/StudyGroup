@@ -6,6 +6,7 @@ from tkinter import filedialog, ttk
 
 from client.config import ClientConfig
 from client.ui import theme
+from client.ui.widgets import ActionButton
 from shared.message_types import RequestType as R
 
 
@@ -70,15 +71,15 @@ class AuthView(ttk.Frame):
             entry = ttk.Entry(settings, textvariable=variable, width=30)
             entry.grid(row=row, column=1, sticky="ew", pady=3)
             self.settings_entries.append(entry)
-        self.browse = ttk.Button(settings, text="เลือกไฟล์", command=self.choose_ca)
+        self.browse = ActionButton(settings, text="เลือกไฟล์", width=76, command=self.choose_ca)
         self.browse.grid(row=2, column=2, padx=(8, 0))
         ttk.Label(settings, text="เว้น CA ว่างเพื่อใช้ใบรับรองที่ระบบเชื่อถือ", style="Muted.TLabel").grid(
             row=3, column=0, columnspan=3, sticky="w", pady=(6, 0))
         self.message = ttk.Label(card, text="", wraplength=490)
         self.message.grid(row=8, column=0, columnspan=2, sticky="w", pady=(0, 12))
-        self.submit_button = ttk.Button(card, text="เข้าสู่ระบบ", style="Accent.TButton", command=self.submit)
+        self.submit_button = ActionButton(card, text="เข้าสู่ระบบ", kind="primary", height=38, command=self.submit)
         self.submit_button.grid(row=9, column=0, columnspan=2, sticky="ew")
-        self.switch_button = ttk.Button(card, text="ยังไม่มีบัญชี? สมัครสมาชิก", command=self.toggle)
+        self.switch_button = ActionButton(card, text="ยังไม่มีบัญชี? สมัครสมาชิก", kind="link", command=self.toggle)
         self.switch_button.grid(row=10, column=0, columnspan=2, sticky="ew", pady=(8, 0))
         self._apply_mode()
 

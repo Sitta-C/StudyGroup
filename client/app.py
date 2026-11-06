@@ -8,14 +8,15 @@ from client.ui.chat_view import ChatView
 from client.ui.login_view import AuthView
 from client.ui.sidebar import Sidebar
 from client.ui.theme import apply_theme
+from client.ui.widgets import ActionButton
 
 
 class Application:
     def __init__(self, root):
         self.root = root
         self.root.title("StudyGroup")
-        self.root.geometry("1120x800")
-        self.root.minsize(850, 700)
+        self.root.geometry("1048x770")
+        self.root.minsize(850, 650)
         self.family = apply_theme(root)
         self.controller = ClientController(self.refresh)
         self._auth_requested = False
@@ -27,6 +28,7 @@ class Application:
         self.auth.grid(row=0, column=0, sticky="nsew")
         self.main = ttk.Frame(root)
         self.main.grid(row=0, column=0, sticky="nsew")
+        self.main.columnconfigure(0, minsize=218)
         self.main.columnconfigure(1, weight=1)
         self.main.rowconfigure(1, weight=1)
         self.sidebar = Sidebar(self.main, self.controller, self.create_group, self.show_auth, self.controller.logout)
@@ -97,7 +99,7 @@ class Application:
             dialog.destroy()
             return "break"
 
-        ttk.Button(frame, text="สร้างกลุ่ม", style="Accent.TButton", command=submit).pack(fill="x")
+        ActionButton(frame, text="สร้างกลุ่ม", kind="primary", command=submit, height=38).pack(fill="x")
         entry.bind("<Return>", submit)
         dialog.bind("<Escape>", lambda event: dialog.destroy())
         dialog.grab_set()
