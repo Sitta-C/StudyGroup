@@ -10,8 +10,8 @@
 - อัปเดตล่าสุด: 6 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
   CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล, CP04 TLS/Authentication
-  และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม
-- งานปัจจุบัน: **CP06 React Web App / WebSocket และตรวจรับ R1–R11 — IN_PROGRESS**
+  และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม; CP06 React Web App ผู้ใช้ตรวจรับแล้ว
+- งานล่าสุด: **CP06 — DONE ตามคำยืนยันตรวจรับของผู้ใช้**; งานถัดไป **CP07 ประวัติและค้นหา — TODO**
 - คำสั่งผู้ใช้ 6 พ.ย. 2026 เปลี่ยนจาก Tkinter เป็น `React → WebSocket → Python → SQLite`
   ใช้ branch `feat/react-websocket` ไม่มี prefix `codex/`
 - สถานะโค้ด: React/TypeScript/Vite แบบ Focus, WebSocket adapter, Python HTTP assets,
@@ -24,10 +24,12 @@
   `uv run --locked --env-file .env python -m server.web` แล้วเปิด http://127.0.0.1:8000
 - สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
 - สิ่งที่ยังต้องเตรียมภายหลัง: AI Key/งบใช้งาน, เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
-  และคอมพิวเตอร์จริงอย่างน้อย 2 เครื่องสำหรับตรวจรับ
-- งานถัดไปเพื่อปิด CP06: ทำ docs/demo-checklist.md บนคอมพิวเตอร์จริงสองเครื่อง
-  ตั้ง HTTPS/WSS และ Origin ให้ตรง URL เก็บหลักฐาน R1–R11, Thai IME/Copy-Paste,
-  mobile keyboard และการหลุดบนเครือข่ายจริง แล้วเริ่ม CP07 history/search
+  และรายละเอียดเครื่อง/ภาพหลักฐาน R1–R11 สำหรับเดโม CP11
+- ผู้ใช้ยืนยันเปิดเว็บผ่าน HTTPS บน LAN ได้และให้ผ่าน CP06 ในแชต 6 พ.ย. 2026
+  ปิด checkpoint ตามการตรวจรับนี้; รายละเอียดอุปกรณ์/ผลรายข้อสองเครื่องจริงยังไม่ได้บันทึก
+  คงรายการเก็บหลักฐานไว้ใน docs/demo-checklist.md สำหรับ CP11
+- งานถัดไป: CP07 โหลดข้อความย้อนหลังหลัง Login/Refresh, pagination, ค้นคำ/วันที่
+  และตรวจสิทธิ์ห้อง/ขอบเขตสมาชิกใหม่ โดยยังไม่ทำไฟล์/AI/Cloud
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
 พร้อมกัน ไม่คัดลอกสถานะไปดูแลหลายชุดใน README หรือ HANDOFF
@@ -62,7 +64,7 @@
 | CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | DONE | Database 51 + Permissions 31 passed ด้วย Temporary SQLite; Constraints/Reopen/Rollback/Join contention ผ่าน ดู docs/database.md และบันทึก CP03 |
 | CP04 | TLS และ Authentication | CP03 | DONE | Auth 19 + TLS integration 60 passed ผ่าน TCP/TLS จริง รวม CA/Hostname/Expired cert, Login ซ้อน, Cleanup และ CLI; ดู docs/authentication.md และบันทึก CP04 |
 | CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | DONE | Chat integration 39 passed ผ่าน TCP/TLS จริงด้วย Clients A/B/C; Private/Group/Join boundary/Actor spoofing/Event isolation/Restart ผ่าน ดู docs/chat.md และบันทึก CP05 |
-| CP06 | React WebSocket และตรวจรับ R1–R11 | CP05 | IN_PROGRESS | React Focus + Python WebSocket; Python 400 และ Browser 6 passed; ภาพ Desktop/Mobile; ยังรอสองเครื่องจริง |
+| CP06 | React WebSocket และตรวจรับ R1–R11 | CP05 | DONE | ผู้ใช้ตรวจรับผ่านหลังเปิด HTTPS บน LAN; Python 400 / Browser 6 passed; รายละเอียดหลักฐานสองเครื่องเก็บเพิ่มสำหรับ CP11 |
 | CP07 | ประวัติและการค้นหา | CP06 | TODO | ฟีเจอร์พิเศษข้อ 1 |
 | CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | TODO | ฟีเจอร์พิเศษข้อ 2 |
 | CP09 | AI สรุปบทสนทนา | CP08 | TODO | ทำ Adapter/Mock ก่อน แล้วตรวจ API จริง |
@@ -824,6 +826,21 @@ Browser tests: `npm --prefix web run test:e2e` ใช้ Chrome และ SQLite
   OS clipboard/mobile keyboard และ LAN/TLS; CP07–CP10 ยังไม่ทำ history/search/files/AI/Cloud
 - งานแรก session ถัดไป: ทำ docs/demo-checklist.md บนสองเครื่องจริงแล้วเก็บหลักฐาน
   จากนั้นปิด CP06 และเริ่ม CP07; ยังไม่ Deploy Cloud หรือเปิด PR ใหม่ในรอบ migration นี้
+
+### Session CP06 — ผู้ใช้ตรวจรับและส่ง PR
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok)
+- ผู้ใช้ยืนยันว่าเปิดเว็บได้หลังใช้ HTTPS และแจ้ง “งั้นผ่าน ใช้ได้แล้ว commit แล้ว pr เลย”
+  เปลี่ยน CP06 เป็น DONE ตามคำยืนยันรับงาน; งานถัดไป CP07 ประวัติ/ค้นหา
+- ตรวจ HTTPS `/health` ของ Server LAN จริงได้ HTTP 200 และตรวจ certificate ด้วย CA
+  ของโปรเจกต์ผ่าน ไม่แก้ `.env`, certificates, trust store หรือข้อมูลจริงในการตรวจนี้
+- คำยืนยันผู้ใช้เป็นหลักฐานการรับงาน ส่วนรุ่น OS/Browser/จำนวนคอมพิวเตอร์และภาพ R1–R11
+  ยังไม่ได้ระบุรายอุปกรณ์ จึงคง checklist หลักฐานเดโมไว้สำหรับ CP11 และไม่กรอกผลสมมติ
+- ผู้ใช้รับทราบว่า SQLite บันทึกข้อความแล้ว แต่ CP06 ยังไม่โหลดแชตเก่าหลัง Refresh/Login
+  การโหลดประวัติ/ค้นหาเป็น CP07; ไฟล์/AI/Cloud ยังอยู่ CP08–CP10
+- Code commit `529e225` มีผลตรวจ Python 400 passed, Browser 6 passed และ production build
+  ไม่มี code เปลี่ยนหลังผลตรวจนั้น รอบนี้แก้เอกสารการตรวจรับและตรวจ `git diff --check`
+- ส่ง branch `feat/react-websocket` เข้า PR เทียบ `main` ตามคำสั่งผู้ใช้ ไม่ merge PR อัตโนมัติ
 
 ### แบบบันทึกสำหรับ session ถัดไป
 
