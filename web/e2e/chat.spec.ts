@@ -101,7 +101,10 @@ test('public group rosters, self join, join boundary, member-only live delivery 
   await expect(c.getByRole('dialog')).toContainText(group)
   await expect(c.getByRole('dialog')).toContainText(bn)
   await c.getByRole('button', { name: 'ปิดหน้าต่าง' }).click()
-  for (const role of ['ค้นหาข้อความ', 'ไฟล์', 'สรุปด้วย AI']) await expect(a.getByRole(role === 'ไฟล์' ? 'tab' : 'button', { name: role, exact: true })).toBeDisabled()
+  // CP07/CP08 enabled search and files; AI stays disabled until CP09.
+  await expect(a.getByRole('button', { name: 'สรุปด้วย AI', exact: true })).toBeDisabled()
+  await expect(a.getByRole('button', { name: 'ค้นหาข้อความ', exact: true })).toBeEnabled()
+  await expect(a.getByRole('tab', { name: 'ไฟล์', exact: true })).toBeEnabled()
 })
 
 test('real socket interruption preserves drafts, explicit re-login, no replay, account isolation', async ({ browser, request }) => {
@@ -173,7 +176,8 @@ test('commit without acknowledgement keeps the draft and never replays on re-log
   await page.getByRole('button', { name: 'เข้าสู่ระบบใหม่', exact: true }).click()
   await login(page, user)
   await expect(page.getByRole('textbox', { name: 'ข้อความแชต' })).toHaveValue(text)
-  await expect(page.locator('.ss-bubble')).toHaveCount(0)
+  // CP07 loads the one committed row from Server history; the client never resent it.
+  await expect(page.locator('.ss-bubble').filter({ hasText: text })).toHaveCount(1)
   expect(await count()).toBe(before + 1)
 })
 

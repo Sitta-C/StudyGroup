@@ -11,9 +11,10 @@ from shared.validation import ProtocolError
 
 
 class Router:
-    def __init__(self, auth, chat):
+    def __init__(self, auth, chat, history=None, files=None):
         self.auth = auth
         self.chat = chat
+        self.features = [handler for handler in (history, files) if handler is not None]
 
     def dispatch(self, connection, db, request):
         if request["type"] not in RequestType:
@@ -25,8 +26,15 @@ class Router:
                 raise AuthError(ErrorCode.AUTH_REQUIRED, "Login required")
             if kind in (RequestType.REGISTER, RequestType.LOGIN, RequestType.LOGOUT, RequestType.USERS_LIST):
                 self.auth.handle(connection, db, request)
+                if kind == RequestType.LOGOUT:
+                    # The socket may stay open; unfinished uploads end with the session.
+                    for handler in self.features:
+                        if hasattr(handler, "connection_closed"):
+                            handler.connection_closed(connection)
             elif kind in self.chat.TYPES:
                 self.chat.handle(connection, db, request)
+            elif handler := next((h for h in self.features if kind in h.TYPES), None):
+                handler.handle(connection, db, request)
             else:
                 raise AuthError(ErrorCode.UNKNOWN_TYPE, "Request handler is not available yet")
         except (AuthError, ChatError, AccessDenied) as error:

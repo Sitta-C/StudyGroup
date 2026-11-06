@@ -413,3 +413,35 @@ def test_restart_retains_rooms_members_boundaries_and_messages(server, clients, 
             assert [m["id"] for m in get_messages(db, bob.user["id"], room["id"])] == [new["message_id"]]
             assert [m["id"] for m in get_messages(db, alice.user["id"], room["id"])] == [old["message_id"], new["message_id"]]
             assert [m["id"] for m in get_messages(db, bob.user["id"], dm["id"])] == [direct["message_id"]]
+
+
+def test_legacy_tls_framing_serves_history_search_and_file_transfer(server, clients):
+    """CP07/CP08 handlers are transport-neutral: the same commands over TCP/TLS frames."""
+    import base64
+    import hashlib
+
+    alice, bob, carol = clients
+    room = group(alice)["id"]
+    bob.ok(RequestType.GROUP_JOIN, {"room_id": room})
+    sent = send(alice, room, "TLS history ไทย")
+    assert bob.ok(RequestType.HISTORY_GET, {"room_id": room}) == {"messages": [sent], "next_before_id": None}
+    assert bob.ok(RequestType.HISTORY_SEARCH, {"room_id": room, "query": "tls"})["messages"] == [sent]
+    content = bytes(range(256)) * 200  # 51,200 bytes: one full 32 KiB chunk and a remainder.
+    begin = alice.ok(RequestType.FILE_BEGIN, {"room_id": room, "name": "tls.bin", "size": len(content),
+                                              "sha256": hashlib.sha256(content).hexdigest()})
+    for index in range(begin["chunks"]):
+        piece = content[index * begin["chunk_size"]:(index + 1) * begin["chunk_size"]]
+        alice.ok(RequestType.FILE_CHUNK, {"transfer_id": begin["transfer_id"], "index": index,
+                                          "data": base64.b64encode(piece).decode()})
+    attachment = alice.ok(RequestType.FILE_END, {"transfer_id": begin["transfer_id"]})["message"]["attachment"]
+    received, offset = b"", 0
+    while True:
+        chunk = bob.ok(RequestType.FILE_GET, {"attachment_id": attachment["id"], "offset": offset})
+        received += base64.b64decode(chunk["data"])
+        offset = len(received)
+        if chunk["done"]:
+            break
+    assert hashlib.sha256(received).hexdigest() == attachment["sha256"] and received == content
+    carol.error(RequestType.FILE_GET, {"attachment_id": attachment["id"]}, ErrorCode.FORBIDDEN)
+    assert [event["attachment"]["id"] for event in bob.drain(EventType.MESSAGE_NEW) if "attachment" in event] == [attachment["id"]]
+    assert carol.drain(EventType.MESSAGE_NEW) == []

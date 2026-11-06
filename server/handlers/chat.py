@@ -53,6 +53,29 @@ def _room(db, room_id):
     return dict(row) | {"members": [dict(member) for member in members]}
 
 
+def message_dto(row):
+    """Wire Message for responses, history and MESSAGE_NEW (text shape unchanged).
+
+    File messages carry text null plus attachment metadata; the server-side
+    stored name never leaves the server.
+    """
+    message = {"message_id": row["id"], "room_id": row["room_id"], "sender_id": row["sender_id"],
+               "text": row["text"], "created_at": row["created_at"]}
+    if row["kind"] == "file":
+        message["attachment"] = {"id": row["attachment_id"], "name": row["attachment_name"],
+                                 "size": row["attachment_size"], "sha256": row["attachment_sha256"]}
+    return message
+
+
+def room_dto(db, room_id):
+    return _room(db, room_id)
+
+
+def sized_response(request_id, result):
+    """A response that must fit one frame; clients retry with a smaller page."""
+    return _response(request_id, result)
+
+
 def _response(request_id, result):
     response = make_response(request_id, result)
     try:
@@ -70,10 +93,11 @@ class ChatHandlers:
         self.registry = registry
         # Serialize commit -> enqueue, including join boundaries. No socket I/O
         # occurs under this lock. Each worker still owns its SQLite connection.
-        self._lock = threading.Lock()
+        # FileHandlers publishes file messages under this same lock.
+        self.publish_lock = threading.Lock()
 
     def handle(self, connection, db, request):
-        with self._lock:
+        with self.publish_lock:
             self._handle(connection, db, request)
 
     def _handle(self, connection, db, request):
@@ -132,8 +156,7 @@ class ChatHandlers:
         room_id, text = positive_id(data["room_id"]), _text(data["text"])
         with transaction(db):
             row = add_text_message(db, actor, room_id, text)
-            message = {"message_id": row["id"], "room_id": row["room_id"],
-                       "sender_id": row["sender_id"], "text": row["text"], "created_at": row["created_at"]}
+            message = message_dto(row)
             # Reuse the history/file visibility predicate, including the
             # private pair guard and the member's join boundary.
             recipients = message_recipient_ids(db, row["id"])

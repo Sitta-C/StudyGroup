@@ -18,11 +18,15 @@ class FixtureServer(WebServer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.drop_next_send = threading.Event()
+        self.stall_file_chunks = threading.Event()
         original = self.router
         owner = self
 
         class ControlledRouter:
             def dispatch(self, connection, db, packet):
+                if (packet["type"] == "FILE_CHUNK" and owner.stall_file_chunks.is_set()
+                        and packet["data"].get("index", 0) >= 2):
+                    return  # Leave the upload half-finished until the test drops the socket.
                 original.dispatch(connection, db, packet)
                 if packet["type"] == "MESSAGE_SEND" and owner.drop_next_send.is_set():
                     owner.drop_next_send.clear()
@@ -40,6 +44,12 @@ class FixtureServer(WebServer):
             if request.path == "/__test__/drop-next-send":
                 self.drop_next_send.set()
                 return response(HTTPStatus.OK, "Armed")
+            if request.path == "/__test__/stall-file-chunks":
+                self.stall_file_chunks.set()
+                return response(HTTPStatus.OK, "Armed")
+            if request.path == "/__test__/partial-count":
+                partial = self.config.uploads_dir / ".partial"
+                return response(HTTPStatus.OK, str(len(list(partial.glob("*.part")))))
             if request.path == "/__test__/message-count":
                 with self.database.connect() as db:
                     count = db.execute("SELECT count(*) FROM messages").fetchone()[0]
@@ -48,6 +58,7 @@ class FixtureServer(WebServer):
                 return response(HTTPStatus.NOT_FOUND, "Not found")
             with self._lock:
                 connections = list(self._connections)
+            self.stall_file_chunks.clear()
             for client in connections:
                 client.websocket.close(1012, "Test connection interruption")
             return response(HTTPStatus.OK, "Disconnected")

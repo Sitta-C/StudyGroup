@@ -70,7 +70,8 @@ Browser connect timeout 10 วินาที, request timeout 15 วินา�
 
 ข้อมูล React อยู่ในหน่วยความจำของแท็บ ไม่มีการบันทึก password, drafts หรือข้อความลง
 localStorage/sessionStorage Refresh/ปิดแท็บล้างข้อมูล UI ต้อง Login ใหม่
-SQLite ยังเก็บบัญชี/ห้อง/ข้อความถาวร การโหลดประวัติเป็น CP07
+SQLite เก็บบัญชี/ห้อง/ข้อความถาวร และไฟล์แนบอยู่ใน `data/uploads/` หลัง Login React โหลด
+Private rooms (`PRIVATE_ROOM_LIST`) และหน้าล่าสุดของห้องที่เปิด (`HISTORY_GET`) ตาม [history-files.md](history-files.md)
 
 ## ส่งข้อความ / หลุดระหว่างทาง
 
@@ -78,7 +79,7 @@ Draft แยกห้อง รอ server acknowledgement ก่อนลบ ถ
 Response และ `MESSAGE_NEW` echo รวมด้วย `message_id` ไม่แสดงซ้ำ แต่ละห้องส่งรอผลครั้งละหนึ่งรายการ
 หาก Commit แล้วหลุดก่อน Ack ข้อความอาจบันทึกแล้ว แสดงว่ายังยืนยันไม่ได้และเก็บร่างไว้
 ไม่มี reconnect/retry/replay อัตโนมัติ กด Login ใหม่เอง บัญชีเดิมคืนสถานะในแท็บเดิมได้
-Logout/เปลี่ยนบัญชีล้าง state เก่า การเปิดหน้าใหม่ยังไม่โหลดประวัติ
+Logout/เปลี่ยนบัญชีล้าง state เก่า Login ใหม่ล้างข้อความในหน่วยความจำแล้วโหลดจาก Server (คงร่างไว้)
 
 ## UI และขอบเขต CP06
 
@@ -88,7 +89,7 @@ Body 12px, Secondary 10–11px, accent #6056d7 และ outgoing #6258cf
 Browser ใช้ toolbar ของตัวเอง ไม่มี title bar จำลองในหน้าเว็บ
 มือถือใช้ sidebar drawer; Enter ส่ง, Shift+Enter ขึ้นบรรทัดใหม่ และไม่ส่งระหว่าง IME composition
 
-Search/history, attachments และ AI ยังปิดไว้ตาม CP07–CP09 ไม่มีผลจำลอง
+Search/history (CP07) และ Attachments/แท็บไฟล์ (CP08) ใช้งานจริงแล้ว; AI ยังปิดไว้จนถึง CP09 ไม่มีผลจำลอง
 Cloud จริงเป็น CP10 เอกสาร config ไม่ใช่หลักฐาน Deploy
 โค้ด Tkinter/TCP เดิมยังอยู่เพื่อ compatibility/tests แต่ไม่ใช่ entry point หลัก
 อย่ารัน `server.main` และ `server.web` พร้อมกันกับ DB เดียว เพราะ registry แยกกัน

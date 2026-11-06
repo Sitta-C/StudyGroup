@@ -18,6 +18,8 @@ from websockets.sync.server import serve
 from server.database import Database
 from server.handlers.auth import AuthHandlers
 from server.handlers.chat import ChatHandlers
+from server.handlers.files import FileHandlers
+from server.handlers.history import HistoryHandlers
 from server.main import ServerLimits
 from server.passwords import Passwords
 from server.rate_limit import AuthRateLimiter
@@ -54,6 +56,9 @@ def response(status, body, content_type="text/plain; charset=utf-8", *, cache="n
         body = body.encode("utf-8")
     return Response(status.value, status.phrase, Headers([
         ("Content-Type", content_type), ("Content-Length", str(len(body))),
+        # The WebSocket server closes plain HTTP connections after one response;
+        # say so, or keep-alive clients may reuse a closed socket (ECONNRESET).
+        ("Connection", "close"),
         ("Cache-Control", cache), ("X-Content-Type-Options", "nosniff"),
         ("Referrer-Policy", "same-origin"),
         ("Content-Security-Policy", "default-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self'; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"),
@@ -116,8 +121,12 @@ class WebConnection:
             logging.getLogger(__name__).error("WebSocket connection closed after an internal error")
         finally:
             self.request_close()
-            self.server.registry.logout(self)
-            self.websocket.close()
+            try:
+                self.server.registry.logout(self)
+            finally:
+                # Unfinished uploads never publish; delete their partial files.
+                self.server.files.connection_closed(self)
+                self.websocket.close()
 
 
 class WebServer:
@@ -126,9 +135,11 @@ class WebServer:
         self.limits = limits or ServerLimits()
         self.database = Database(config.database_path)
         self.registry = SessionRegistry()
+        chat = ChatHandlers(self.registry)
+        self.files = FileHandlers(self.registry, config.uploads_dir, chat)
         self.router = Router(AuthHandlers(self.registry, Passwords(), limiter or AuthRateLimiter(),
                                          threading.BoundedSemaphore(self.limits.hash_workers)),
-                             ChatHandlers(self.registry))
+                             chat, HistoryHandlers(), self.files)
         self._slots = threading.BoundedSemaphore(self.limits.max_connections)
         self._connections = set()
         self._lock = threading.Lock()
@@ -185,6 +196,7 @@ class WebServer:
             context.minimum_version = ssl.TLSVersion.TLSv1_2
             context.load_cert_chain(self.config.tls_cert, self.config.tls_key)
         self.database.initialize()
+        self.files.prepare(self.database)
         self.http = serve(self.handle, self.config.host, self.config.port, ssl=context,
                           origins=self.config.origins, process_request=self.http_request,
                           compression=None, server_header=None, max_size=MAX_FRAME_BYTES,

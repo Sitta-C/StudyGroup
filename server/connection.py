@@ -121,6 +121,9 @@ class ClientConnection:
             self._stopping.set()
             try:
                 self.server.registry.logout(self)
+                files = getattr(self.server, "files", None)
+                if files is not None:
+                    files.connection_closed(self)
             finally:
                 self.socket.close()
                 self._wake_read.close()

@@ -11,15 +11,16 @@
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
   CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล, CP04 TLS/Authentication
   และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม; CP06 React Web App ผู้ใช้ตรวจรับแล้ว
-- งานล่าสุด: **CP06 — DONE ตามคำยืนยันตรวจรับของผู้ใช้**; งานถัดไป **CP07 ประวัติและค้นหา — TODO**
+- งานล่าสุด: **CP07 ประวัติ/ค้นหา และ CP08 ส่ง-ดาวน์โหลดไฟล์ — DONE (หลักฐาน Local)** บน branch
+  `feat/history-files`; งานถัดไป **CP09 AI สรุปบทสนทนา — TODO** (ต้องเลือก Provider/Model/Key)
 - คำสั่งผู้ใช้ 6 พ.ย. 2026 เปลี่ยนจาก Tkinter เป็น `React → WebSocket → Python → SQLite`
   ใช้ branch `feat/react-websocket` ไม่มี prefix `codex/`
 - สถานะโค้ด: React/TypeScript/Vite แบบ Focus, WebSocket adapter, Python HTTP assets,
   Login/Register, ออนไลน์, Private/Group chat, Join, Draft และ Disconnect/Re-login
   ใช้ Auth/Chat/permissions และ Database เดิม ไม่มี schema migration
-- Python tests **400 passed** (เดิม 378 + Web transport/config 22) และ Browser E2E **6 passed**
-  ผ่าน production build จริง รวมมือถือ/IME/HTML escaping/ตัดหลัง Commit ก่อน Ack/ไม่ Replay
-  หลักฐานหน้าเว็บใน docs/evidence/cp06-web/; Tkinter tests/ภาพเดิมเป็นประวัติก่อนย้าย UI
+- Python tests **462 passed** และ Browser E2E **10 passed** (CP06 6 + CP07/CP08 4)
+  ผ่าน production build จริง สัญญา History/Search/Files อยู่ใน docs/history-files.md
+  หลักฐานหน้าเว็บ CP06 ใน docs/evidence/cp06-web/; Tkinter tests/ภาพเดิมเป็นประวัติก่อนย้าย UI
 - วิธีเริ่ม: `npm --prefix web ci`, `npm --prefix web run build`,
   `uv run --locked --env-file .env python -m server.web` แล้วเปิด http://127.0.0.1:8000
 - สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
@@ -28,8 +29,9 @@
 - ผู้ใช้ยืนยันเปิดเว็บผ่าน HTTPS บน LAN ได้และให้ผ่าน CP06 ในแชต 6 พ.ย. 2026
   ปิด checkpoint ตามการตรวจรับนี้; รายละเอียดอุปกรณ์/ผลรายข้อสองเครื่องจริงยังไม่ได้บันทึก
   คงรายการเก็บหลักฐานไว้ใน docs/demo-checklist.md สำหรับ CP11
-- งานถัดไป: CP07 โหลดข้อความย้อนหลังหลัง Login/Refresh, pagination, ค้นคำ/วันที่
-  และตรวจสิทธิ์ห้อง/ขอบเขตสมาชิกใหม่ โดยยังไม่ทำไฟล์/AI/Cloud
+- งานถัดไป: CP09 ทำ AI Adapter + Mock ที่ติดป้ายชัด แล้วต่อ API จริงเมื่อผู้ใช้เลือก Provider/Key
+  ใช้ `search_messages()`/`get_messages()` เดิมเป็นฐานข้อมูลที่มีสิทธิ์ จำกัดกลุ่มและ 50 ข้อความ
+  เก็บผลตรวจ CP07–CP08 บนสองเครื่องจริงตาม docs/demo-checklist.md สำหรับ CP11
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
 พร้อมกัน ไม่คัดลอกสถานะไปดูแลหลายชุดใน README หรือ HANDOFF
@@ -65,8 +67,8 @@
 | CP04 | TLS และ Authentication | CP03 | DONE | Auth 19 + TLS integration 60 passed ผ่าน TCP/TLS จริง รวม CA/Hostname/Expired cert, Login ซ้อน, Cleanup และ CLI; ดู docs/authentication.md และบันทึก CP04 |
 | CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | DONE | Chat integration 39 passed ผ่าน TCP/TLS จริงด้วย Clients A/B/C; Private/Group/Join boundary/Actor spoofing/Event isolation/Restart ผ่าน ดู docs/chat.md และบันทึก CP05 |
 | CP06 | React WebSocket และตรวจรับ R1–R11 | CP05 | DONE | ผู้ใช้ตรวจรับผ่านหลังเปิด HTTPS บน LAN; Python 400 / Browser 6 passed; รายละเอียดหลักฐานสองเครื่องเก็บเพิ่มสำหรับ CP11 |
-| CP07 | ประวัติและการค้นหา | CP06 | TODO | ฟีเจอร์พิเศษข้อ 1 |
-| CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | TODO | ฟีเจอร์พิเศษข้อ 2 |
+| CP07 | ประวัติและการค้นหา | CP06 | DONE | History 34 tests + TLS 1 + Browser 2 passed; Restart process จริงแล้วประวัติอยู่ครบ ดู docs/history-files.md และบันทึก CP07–CP08 |
+| CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | DONE | Files 26 tests + Browser 2 passed; 5 MiB ไป-กลับ SHA-256 ตรง, เกินขนาด/ผิดลำดับ/Hash ผิด/Path traversal/หลุดกลางทาง/เดา ID ดูบันทึก CP07–CP08 |
 | CP09 | AI สรุปบทสนทนา | CP08 | TODO | ทำ Adapter/Mock ก่อน แล้วตรวจ API จริง |
 | CP10 | Cloud deployment | CP09 | TODO | เตรียมไฟล์ Deploy ได้ก่อนเมื่อส่วน Server พร้อม |
 | CP11 | เดโมครบระบบ | CP10 | TODO | ต้องมี 3 Clients บนอย่างน้อย 2 เครื่องจริง |
@@ -841,6 +843,37 @@ Browser tests: `npm --prefix web run test:e2e` ใช้ Chrome และ SQLite
 - Code commit `529e225` มีผลตรวจ Python 400 passed, Browser 6 passed และ production build
   ไม่มี code เปลี่ยนหลังผลตรวจนั้น รอบนี้แก้เอกสารการตรวจรับและตรวจ `git diff --check`
 - ส่ง branch `feat/react-websocket` เข้า PR เทียบ `main` ตามคำสั่งผู้ใช้ ไม่ merge PR อัตโนมัติ
+
+### Session CP07–CP08 — ประวัติ/ค้นหา และส่ง-ดาวน์โหลดไฟล์
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok) · Branch `feat/history-files` จาก `main` (`26e2ce8`)
+- สถานะ: CP07 TODO → DONE, CP08 TODO → DONE (หลักฐาน Local; การตรวจสองเครื่องจริงเก็บใน CP11)
+- Server: `server/handlers/history.py` (`PRIVATE_ROOM_LIST` ใหม่, `HISTORY_GET`, `HISTORY_SEARCH`),
+  `server/handlers/files.py` (`FILE_BEGIN/CHUNK/END/GET`), `search_messages()`/`add_file_message()`/
+  `list_private_rooms()` ใน `server/database.py`; Router/WebServer/TLSServer ต่อ handlers ใหม่
+  และลบ Transfers ตอน Logout/หลุด ไม่มี schema migration (ใช้ตาราง `attachments` เดิมของ CP03)
+  `Message` แบบข้อความเหมือนเดิม; ไฟล์มี `text: null` + `attachment` ไม่ส่ง `stored_name`
+  HTTP responses เพิ่ม `Connection: close` เพราะ WebSocket server ปิด HTTP connection หลังตอบ
+  (เดิม keep-alive client อาจได้ ECONNRESET ซึ่งทำให้ E2E บางครั้ง flaky)
+- React: โหลด Private rooms + หน้าล่าสุดหลัง Login, ปุ่มโหลดข้อความก่อนหน้า (คงตำแหน่ง Scroll),
+  Dialog ค้นหาคำ+ช่วงวันที่ (แปลงวันที่ local เป็น UTC), กดผลแล้วกระโดด/ไฮไลต์,
+  แนบไฟล์พร้อม Progress, การ์ดไฟล์ในแชต, แท็บไฟล์, ดาวน์โหลดพร้อมตรวจ SHA-256 (`web/src/files.ts`
+  มี SHA-256 fallback สำหรับ HTTP ที่ไม่ใช่ secure context ตรวจกับ Node crypto แล้ว)
+- คำสั่งตรวจและผล (Python 3.14.6 ใน container เพราะ uv ที่มีหา 3.14.10 ไม่ได้; ผลบน 3.14.10 ควรตรวจซ้ำบนเครื่องผู้ใช้):
+  - `uv run --locked pytest -q --tb=short -W error` — **462 passed**, ไม่มี fail/skip/warning
+    (เดิม 400 + History 34 + Files 26 + Legacy TLS history/file 1 + Auth-required ของ `PRIVATE_ROOM_LIST` 1)
+  - `npm --prefix web run build` ผ่าน · `npm --prefix web run test:e2e` — **10 passed** สองรอบติด
+    (Linux container ต้องตั้ง `LANG=C.UTF-8` ไม่เช่นนั้น Chrome ตั้งชื่อไฟล์ดาวน์โหลดภาษาไทยเป็น `download`)
+  - `uv lock --check` และ `git diff --check` ผ่าน
+  - Restart จริง: รัน `python -m server.web` ส่งข้อความ 2 + ไฟล์ 300,000 bytes แล้ว SIGINT ปิด process
+    เปิด process ใหม่บน data dir เดิม Login ใหม่ได้ประวัติครบ 3 รายการและดาวน์โหลด SHA-256 ตรง
+- Review แยก (ไม่เห็นข้อสรุปผู้พัฒนา): ไม่พบช่องโหว่สิทธิ์/Path traversal/รั่วข้ามห้อง แก้ตามข้อเสนอแล้ว:
+  Logout บน Socket ที่ยังเปิดลบ Transfers, `AccessDenied` ตอน `FILE_END` คืน `FORBIDDEN`,
+  sweep ตรวจซ้ำใต้ Lock, อายุ Transfer สูงสุด 600 วินาที, ตรวจพื้นที่ Disk, fsync โฟลเดอร์,
+  ลบไฟล์กำพร้าตอนเริ่ม, timeout `FILE_*` 60 วินาทีกับ window เล็กลง, กันความคืบหน้าดาวน์โหลดรอบเก่า,
+  แจ้งเมื่อผลค้นหาเก่าเกินจะกระโดดไป (ทุกข้อมี Test ยกเว้นส่วน UI timeout/attempt)
+- ข้อจำกัด: ไม่มีโควตาพื้นที่ต่อผู้ใช้/ห้อง; ค้นหาไม่แยกตัวพิมพ์เฉพาะ ASCII; กระโดดไปผลค้นหาโหลดได้ ~2,000 ข้อความ
+- งานแรก session ถัดไป: ผู้ใช้ลอง CP07–CP08 บนเครื่องจริง/LAN HTTPS แล้วเริ่ม CP09 (`server/ai_service.py`)
 
 ### แบบบันทึกสำหรับ session ถัดไป
 
