@@ -13,12 +13,18 @@
   และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม; CP06 React Web App ผู้ใช้ตรวจรับแล้ว
 - งานล่าสุด: **CP09 AI สรุปบทสนทนา — DONE** (Anthropic `claude-haiku-5-5`, เรียก API จริงแล้ว) บน branch
   `feat/ai-summary` ต่อจาก CP07–CP08 (`feat/history-files`); งานถัดไป **CP10 Cloud deployment — TODO**
+- UI ล่าสุด: ปรับแอปจริงตามต้นแบบ **Minimal** ที่ผู้ใช้เลือก บน branch
+  `style/studygroup-ui`; เก็บ UX review ทั้ง 8 ข้อแล้ว build และ Browser **14 tests** ผ่าน
+  ตรวจภาพ desktop/mobile แล้ว ดูบันทึก session Minimal / UX review ด้านล่าง
+- ภาพโปรไฟล์ล่าสุด: เปลี่ยนจากแผ่นปกตัวอย่างเป็นภาพเดี่ยวจากเว็บตูน 6 ภาพ
+  พร้อมกรอบใบหน้ารายภาพและลิงก์ต้นทาง; build และ Browser layout test ผ่านหลังเปลี่ยนภาพ
 - คำสั่งผู้ใช้ 6 พ.ย. 2026 เปลี่ยนจาก Tkinter เป็น `React → WebSocket → Python → SQLite`
   ใช้ branch `feat/react-websocket` ไม่มี prefix `codex/`
-- สถานะโค้ด: React/TypeScript/Vite แบบ Focus, WebSocket adapter, Python HTTP assets,
+- สถานะโค้ด: React/TypeScript/Vite แบบ Minimal, WebSocket adapter, Python HTTP assets,
   Login/Register, ออนไลน์, Private/Group chat, Join, Draft และ Disconnect/Re-login
   ใช้ Auth/Chat/permissions และ Database เดิม ไม่มี schema migration
-- Python tests **476 passed** และ Browser E2E **11 passed** (CP06 6 + CP07/CP08 4 + CP09 1)
+- Python tests ล่าสุดจากรอบก่อน **476 passed** และ Browser E2E รอบ UX **14 passed**
+  (CP06 6 + CP07/CP08 4 + CP09 1 + UX regression 3; รอบ UX แก้เฉพาะ frontend ไม่รัน Python ซ้ำ)
   ผ่าน production build จริง สัญญา History/Search/Files อยู่ใน docs/history-files.md, AI ใน docs/ai.md
   หลักฐานหน้าเว็บ CP06 ใน docs/evidence/cp06-web/; Tkinter tests/ภาพเดิมเป็นประวัติก่อนย้าย UI
 - วิธีเริ่ม: `npm --prefix web ci`, `npm --prefix web run build`,
@@ -894,6 +900,120 @@ Browser tests: `npm --prefix web run test:e2e` ใช้ Chrome และ SQLite
   - Browser จริงกับ Server ที่มี Key: แผงสรุปแสดงผลจากโมเดลจริงทั้ง desktop และมือถือ 390px ไม่มี horizontal overflow
 - ข้อจำกัด: ผลสรุปไม่เก็บถาวร (สร้างใหม่ทุกครั้ง); โมเดลอาจสรุปไม่ครบ ป้ายใน UI ให้ตรวจสอบก่อนใช้
 - งานแรก session ถัดไป: ใส่ Key ใน `.env` เครื่องจริงแล้วลองตาม docs/demo-checklist.md ข้อ 7 จากนั้นเริ่ม CP10
+
+### Session UI — Minimal ในแอปจริง
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok) · Branch `codex/minimal-studygroup-ui` จาก `main`
+  เริ่มจาก working tree สะอาด ไม่ merge/push และไม่เปลี่ยน checkpoint CP06–CP10
+- ปรับ `web/src/App.tsx` / `style.css` ตามต้นแบบ Minimal ล่าสุดที่ผู้ใช้เลือก:
+  ขาว/เทาอ่อน/ดำ เหลืองเฉพาะจุด, local Noto Sans Thai, sidebar กลุ่มก่อนรายชื่อออนไลน์,
+  bubble ฝั่งเราเข้ม, กรอบบาง ระยะโล่ง และ login/register สองคอลัมน์บน desktop
+  โปรไฟล์ fallback วงกลมใช้ภาพ Study Group ที่ผู้ใช้ส่งมา (ทั้ง 8 ตัวละคร)
+  จับคู่คงที่จาก username โดยไม่แก้ข้อมูลผู้ใช้หรือเพิ่มระบบตั้งค่าโปรไฟล์
+- ลายจุดจำกัดอยู่ในพื้นที่ว่างของ sidebar และขอบ header; ไม่มีลายหลังข้อความแชต
+  ใช้ภาพต้นฉบับใน `web/public/images/` ส่วน HTML/screenshots ของต้นแบบอยู่นอก repo
+  ปรับ favicon/theme-color ให้เข้ากับ UI ใหม่
+- รักษา authentication, online/offline, DM/group, join/create, draft/unread,
+  history/search, file transfer/progress/download และ AI ตามฟังก์ชัน CP06–CP09 จริง
+  ไม่เพิ่มบอร์ด ปักหมุด ธีมสลับ หรือข้อมูลจำลองจากต้นแบบลงแอป
+  AI ยังแสดง unavailable/error/mock ตามสถานะจริง ไม่เรียก paid API ในการตรวจ UI รอบนี้
+- เมนูมือถือมีปุ่มปิด, Escape, วน focus และคืน focus ให้ปุ่มเปิด
+  ปิด drawer เมื่อขยายกลับ desktop และคง draft; drawer ที่ซ่อนอยู่ไม่รับ focus
+  ปุ่มหลักบนมือถือมีพื้นที่กดอย่างน้อย 44px และ composer คงอยู่ใน viewport
+- ผลตรวจ:
+  - `npm --prefix web run build` — TypeScript + Vite production build ผ่าน
+  - `npm --prefix web run test:e2e` — **11 passed** (23.5 วินาที)
+    เพิ่มการตรวจ focus เมนูมือถือ, draft เมื่อ resize และตำแหน่งปุ่มส่งใน mobile test เดิม
+  - `UV_CACHE_DIR=/private/tmp/studygroup-uv-cache uv run --locked pytest -q --tb=short -W error`
+    — **476 passed** (59.23 วินาที)
+  - Chrome จริงกับ Python/WebSocket/SQLite ชั่วคราวแยกจากข้อมูลจริง:
+    ตรวจ login/register, group/join, members, search, files, AI (ติดป้าย Mock),
+    DM, disconnect/re-login และ draft; ไม่มี page error
+  - ตรวจภาพและวัด layout 1440×960, 1048×810, 768×1024, 390×844, 360×780,
+    320×568, 844×390 และ 390×500 ทั้งเปิด/ปิด AI: ไม่มี horizontal overflow
+    และปุ่มส่งอยู่ใน viewport ทุกขนาด; เก็บภาพตรวจนอก repo
+    Browser test เก็บภาพใหม่ใน ignored `web/test-results/`; หากตั้ง
+    `STUDYGROUP_CAPTURE_EVIDENCE=1` จะเก็บที่ `docs/evidence/minimal-web/`
+    แยกจากหลักฐาน Focus เดิม
+- ขอบเขตการตรวจ: ขนาด viewport ใน Chrome บนเครื่องเดียว; ยังไม่ใช่ผลตรวจ
+  keyboard/IME ของมือถือจริงหรือการตรวจ CP11 บนสองเครื่อง
+- งานถัดไป: ผู้ใช้ตรวจ UI บนเครื่องที่ใช้งานจริง แล้วทำ CP10 Cloud ตามแผนเดิม
+
+### Session UI — แก้ UX review ทั้ง 8 ข้อ
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok) · checkout ปัจจุบัน `style/studygroup-ui`
+  ต่อจาก source ที่ยังไม่ commit ของ Minimal รอบก่อน ไม่เปลี่ยน backend/checkpoint หรือข้อมูลจริง
+- AI บนมือถือเปิดเป็น native dialog เต็ม viewport มีพื้นที่เลื่อนเดียว ปิดด้วยปุ่ม/Escape
+  แล้วคืน focus ให้ปุ่ม AI; แชตข้างหลังคงขนาดและตำแหน่งเดิม
+  Desktop ใช้ ResizeObserver รักษาท้ายบทสนทนาหากอยู่ท้ายแชต และเก็บ message ID/offset
+  เพื่อรักษาข้อความที่กำลังอ่านหากเลื่อนย้อนประวัติ
+- เมนูห้องมือถือแสดงผลรวม unread ของห้องอื่นพร้อมจำนวนใน accessible name
+  เปิดห้องแล้ว badge หายตาม state จริง ไม่เพิ่ม popup
+- แยก `--control` และ `--focus` จาก `--line` ตกแต่ง: ขอบ input/ช่องพิมพ์
+  3.57:1 บนขาว (3.30:1 บนพื้น sidebar), focus 6.92:1 บนขาว
+  ห้องที่เลือกมีพื้น/กรอบ/แถบเข้ม/เครื่องหมายถูก แยกจาก hover และใช้ `aria-current`
+- ข้อความแชต 15px ข้อความรองที่ต้องอ่าน 12px; ข้อความผู้พูดเดิมต่อเนื่องภายใน 5 นาที
+  ของวันเดียวกันลดระยะจาก 20px เหลือ 6px และแสดง avatar/name/time เพียงชุดแรก
+  เวลาแต่ละข้อความยังมีให้โปรแกรมอ่านหน้าจอและ tooltip
+- DM ทั้งออนไลน์และออฟไลน์อยู่ในรายการแชตส่วนตัวเดิมด้วย room ID เดิม
+  รายชื่อออนไลน์แสดงคนที่ยังไม่มีบทสนทนาและตนเอง จึงไม่ซ้ำ peer ที่อยู่ใน DM
+  จำนวนออนไลน์รวมยังมาจาก state.users จริง
+- Modal ค้นหา focus ที่คำค้นหลังเปิด dialog และยุบวันที่ไว้หลัง “กรองตามวันที่”
+  แสดงวันที่ที่ใช้อยู่บนปุ่มแม้ยุบแล้ว; ค้นหา keyword/ช่วงวันที่/pagination/jump ยังทำงาน
+- ลดภาษาระบบใน auth/composer/ไฟล์; ชื่อไฟล์ ผู้ส่ง เวลา และขนาดอยู่ก่อน
+  SHA-256 เต็มย้ายเข้า disclosure “รายละเอียดไฟล์” โดยการตรวจ hash ตอนดาวน์โหลดยังคงเดิม
+- Avatar เก็บรูปต้นฉบับเดิม เพิ่มอักษรย่อและสีขอบคงที่ตาม username
+  ตรวจคู่ Nicha/UXReviewer ที่ได้ภาพเดียวกันแล้วแยกด้วย NI/UX ได้
+- ผลตรวจ:
+  - `npm --prefix web run build` — ผ่าน
+  - `npm --prefix web run test:e2e` — **14 passed** ใน 30.7 วินาที
+    เพิ่ม regression สำหรับ unread ข้ามห้อง/DM เมื่อ presence เปลี่ยน,
+    AI ที่ท้ายแชตและย้อนประวัติ, AI มือถือ/คืน focus/ค้นหาที่ซ่อนวันที่
+    และปรับ test ไฟล์ให้เปิดดู hash ผ่านรายละเอียดตาม flow ใหม่
+  - แก้ปัญหา focus ไม่กลับปุ่ม AI ที่พบจาก regression รอบแรก แล้วตรวจ targeted tests และ full suite ผ่าน
+  - Chrome กับ Python/WebSocket/SQLite ชั่วคราวแยกจากข้อมูลจริง ไม่มี page error
+    ตรวจ 1440×960, 1048×810, 768×1024, 390×844, 360×780, 320×568,
+    844×390 และ 390×500: ไม่ล้นแนวนอน ช่องพิมพ์อยู่ในจอ และ dialog AI เต็ม viewport มือถือ
+    ตรวจแท็บไฟล์ 390×844 เพิ่มว่าปุ่มส่งอยู่ในจอเช่นกัน
+  - ตรวจภาพจริง desktop/mobile ของแชต, AI (Mock ติดป้าย), unread, sidebar/DM offline,
+    login, search และ files/details; ภาพและรายงานวัดขนาดเก็บนอก repo
+  - `git diff --check` ผ่าน; ไม่มีการเรียก paid AI API หรือแก้ข้อมูลใช้งานจริง
+- ขอบเขต: ตรวจ Chrome บนเครื่องเดียว ไม่ใช่ผลทดสอบ physical mobile keyboard/VoiceOver
+  หรือเดโมสองเครื่องของ CP11; CP10 ยังคง TODO ตามเดิม
+
+### Session UI — คัดภาพตัวละครใหม่แทนภาพปกตัวอย่าง
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok) · Branch `style/studygroup-ui`
+- ผู้ใช้ระบุว่าภาพที่ส่งมาก่อนหน้าเป็นเพียงตัวอย่างคร่าว ๆ ให้หาภาพในเรื่องชุดใหม่
+  คัดภาพเดี่ยว Gamin, Hanwool, Jiwoo, Sehyun, Hankyeong และ Geonyeob จากเว็บตูน
+  เลือกใบหน้าชัด พื้นหลังไม่แน่น และจัดกรอบไม่ให้มีตัวอักษรติดในโปรไฟล์วงกลม
+- เพิ่ม `web/public/images/portraits/` 6 JPEG รวมประมาณ 574 KiB พร้อม `SOURCES.md`
+  ที่บันทึกหน้าอ้างอิง/URL ภาพ/เครดิตผู้สร้าง; Pinterest เป็นแหล่งค้นพบภาพ repost
+  ไม่อ้างว่าเป็น asset ที่ได้รับ licence ทางการ ภาพดาวน์โหลดเก็บต้นฉบับไม่แก้ pixel
+  ใช้ CSS กำหนดกรอบรายภาพ คงภาพแผ่นปกเดิมที่ผู้ใช้ให้ไว้
+- เปลี่ยนจำนวน fallback เป็น 6 ใน `App.tsx` และเปลี่ยนภาพ/กรอบใน `style.css`
+  โดยคงอักษรย่อ สีขอบ และการจับคู่ตาม username ไม่เปลี่ยนข้อมูลหรือระบบตั้งค่าโปรไฟล์
+- ตรวจภาพที่ 112px, 36px และ 28px พร้อมหน้า login/chat/sidebar/members ใน Chrome
+  ทั้ง desktop 1440×960 และ mobile 390×844; ไม่มีภาพโหลดผิดหรือ page error
+  ภาพตรวจเก็บนอก repo และใช้บัญชี/ข้อความใน SQLite ชั่วคราวแยกจากข้อมูลจริง
+- `npm --prefix web run build` ผ่าน;
+  `npm --prefix web run test:e2e -- --grep 'Minimal reference'` — **1 passed** (4.3 วินาที)
+  เป็นการตรวจ layout หลังแก้ asset; ผล full suite 14 passed จากรอบ UX ก่อนหน้ายังบันทึกแยกไว้
+- ไม่ commit/push/merge ในรอบนี้
+
+### Session UI — เตรียม commit และเปิด PR
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok) · Branch `style/studygroup-ui`
+- ผู้ใช้สั่งเปิด PR รวม Minimal UI, UX fixes และภาพโปรไฟล์ชุดใหม่
+  ตรวจ `origin/main` ตรงกับฐาน `eed46dd` และยังไม่มี PR เปิดของ branch นี้
+- เก็บ source ภาพปกตัวอย่างที่ไม่ได้ใช้แล้วไว้นอก repo โดยตรวจ bytes ตรงกันก่อนย้าย
+  ส่งขึ้น Git เฉพาะ portrait 6 ภาพที่แอปใช้ พร้อมเครดิต; prototype/screenshots ไม่รวมใน PR
+- ตรวจรอบก่อนส่งพบ race เมื่อปิด AI แล้ว scroll ย้อนก่อน ResizeObserver ทำงาน
+  แก้โดยเก็บ width/height/scrollTop และให้ตำแหน่งที่ผู้ใช้เลื่อนใหม่มาก่อนสถานะ pinned เดิม
+  ข้าม callback ของขนาดที่บันทึกไปแล้ว เพื่อไม่ดึงผู้ใช้กลับท้ายแชต
+- ผลตรวจ: production build ผ่าน; desktop AI scroll regression **5 passed** จากการรันซ้ำ 5 รอบ
+  และ Browser E2E ทั้งชุด **14 passed** บน source สุดท้าย; `git diff --check` ผ่าน
+- Commit และ push branch เพื่อเปิด PR เทียบ `main` ตามคำสั่งผู้ใช้ ไม่ merge เอง
 
 ### แบบบันทึกสำหรับ session ถัดไป
 
