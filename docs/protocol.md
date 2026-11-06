@@ -4,7 +4,8 @@
 `shared/message_types.py` และ `shared/validation.py` ตาม CP02
 ใช้กับ Blocking TCP Socket และ Socket ที่หุ้ม TLS แล้วใน CP04
 Server/Router และ Auth handlers ใช้สัญญารายฟีเจอร์ใน [authentication.md](authentication.md)
-Chat/Groups/History/Files/AI handlers ยังเป็นงาน checkpoint ถัดไป
+Chat/Groups handlers ใช้สัญญาใน [chat.md](chat.md) ตาม CP05
+History/Files/AI handlers ยังเป็นงาน checkpoint ถัดไป
 
 ## Frame
 

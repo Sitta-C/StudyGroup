@@ -5,9 +5,10 @@
 StudyGroup เป็นโปรแกรม Desktop สำหรับนักศึกษาคุยงานกลุ่ม ใช้ Python, Tkinter และ TCP Socket โดยมี Server และ SQLite อยู่บน Cloud เครื่องเดียวกัน ฟีเจอร์พิเศษ 4 ข้อคือ AI สรุปบทสนทนา ส่งไฟล์ ประวัติแชตที่ค้นหาได้ และ Cloud deployment
 
 **สถานะการพัฒนา:** มี Config, Socket Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล,
-TLS Server และ Authentication พร้อมรายชื่อออนไลน์และ Tests แล้ว
-ยังไม่มี Chat handlers, Desktop entry point/GUI หรือการ Deploy
+TLS Server, Authentication, รายชื่อออนไลน์ และ Chat/Group handlers พร้อม Tests แล้ว
+ยังไม่มี Desktop entry point/GUI หรือการ Deploy
 ดูสถานะ checkpoint และผลทดสอบล่าสุดใน [DEVELOPMENT.md](DEVELOPMENT.md)
+สัญญา Chat/Group ที่ใช้จริงอยู่ใน [docs/chat.md](docs/chat.md)
 โค้ด HTML ใน Prototype เป็นแบบอ้างอิงหน้าจอ ไม่ใช่แอปที่พัฒนาเสร็จแล้ว
 
 **อัปเดต Environment:** เตรียม Local environment ด้วย **uv** ตามคำขอผู้ใช้แล้ว

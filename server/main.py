@@ -11,6 +11,7 @@ from server.config import ServerConfig
 from server.connection import ClientConnection
 from server.database import Database
 from server.handlers.auth import AuthHandlers
+from server.handlers.chat import ChatHandlers
 from server.passwords import Passwords
 from server.rate_limit import AuthRateLimiter
 from server.router import Router
@@ -61,7 +62,7 @@ class TLSServer:
         self.router = Router(AuthHandlers(
             self.registry, Passwords(), self.limiter,
             threading.BoundedSemaphore(self.limits.hash_workers),
-        ))
+        ), ChatHandlers(self.registry))
         family, socktype, proto, _, address = socket.getaddrinfo(
             self.config.host, self.config.port, type=socket.SOCK_STREAM,
         )[0]

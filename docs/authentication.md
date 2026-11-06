@@ -11,7 +11,8 @@ uv run --locked --env-file .env python -m server.main
 
 Server ใช้ Host/Port, Certificate/Key และ Data directory จาก `ServerConfig`
 สร้างหรือเปิด SQLite เดิมเมื่อเริ่มทำงาน กด Ctrl+C เพื่อหยุด Listener และรอ Cleanup
-Workers ทั้งหมด ยังไม่มี Desktop entry point หรือ Chat handlers; งานเหล่านี้อยู่ใน CP05–CP06
+Workers ทั้งหมด Chat handlers ใช้สัญญาใน [chat.md](chat.md)
+ยังไม่มี Desktop entry point/GUI ซึ่งเป็นงาน CP06
 
 Client transport ที่ใช้ได้แล้ว:
 
@@ -58,7 +59,8 @@ Fields ภายใน `data` ต้องตรงตารางทั้ง�
   Session เดิมไม่ถูกตัด และ Connection ที่แพ้ยังใช้สมัคร/Login บัญชีอื่นได้
 - Logout ล้างตัวตนแต่คง TLS connection ไว้ สามารถ Login ใหม่ได้
 - คำขอชื่อที่ประกาศแล้วแต่ยังไม่มี Handler ให้ `AUTH_REQUIRED` ก่อน Login
-  และ `UNKNOWN_TYPE` หลัง Login ไม่ได้หมายความว่าฟีเจอร์แชต/กลุ่ม/ไฟล์พร้อมแล้ว
+  และ `UNKNOWN_TYPE` หลัง Login ปัจจุบัน Chat/Groups พร้อมใช้ตาม CP05
+  ส่วน History/Files/AI ยังไม่มี Handlers
 
 Error ที่ใช้งาน: `INVALID_INPUT`, `AUTH_REQUIRED`, `AUTH_FAILED`, `USERNAME_TAKEN`,
 `ALREADY_LOGGED_IN`, `RATE_LIMITED`, `UNKNOWN_TYPE`, `INTERNAL_ERROR`

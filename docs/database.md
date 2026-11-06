@@ -1,8 +1,8 @@
 # SQLite และสิทธิ์เข้าถึงข้อมูล
 
 CP03 ใช้ `server/schema.sql`, `server/database.py` และ `server/permissions.py`
-เป็นส่วนจัดเก็บข้อมูลฝั่ง Server ยังไม่มี Socket Handlers, Authentication,
-การรับส่งไฟล์ หรือ AI ที่เรียกใช้งานจริง ผลตรวจล่าสุดอยู่ใน
+เป็นส่วนจัดเก็บข้อมูลฝั่ง Server ปัจจุบัน Auth และ Chat handlers ใช้ API เหล่านี้แล้ว
+ยังไม่มีการรับส่งไฟล์หรือ AI ที่เรียกใช้งานจริง ผลตรวจล่าสุดอยู่ใน
 [DEVELOPMENT.md](../DEVELOPMENT.md)
 
 ## Connection และ Transaction
@@ -94,8 +94,9 @@ Library นี้ไม่ใช่ Authentication; Handler ต้องไม�
   CP08 ต้องตรวจขนาด/Hash, สร้างชื่อจัดเก็บเอง และ Publish แบบ Transaction
   หลังรับครบเท่านั้น ห้ามคืน `stored_name` หรือใช้ `original_name` เป็น Path ของ Client
 
-CP05 ต้องเลือกผู้รับ Live Events ด้วยสิทธิ์เดียวกันและส่ง Event หลัง Commit
-เท่านั้น การมี Permission helpers ยังไม่ใช่ผลตรวจการป้องกัน Event รั่วผ่าน Network
+CP05 ใช้ `message_recipient_ids()` เลือกผู้รับ Live Events ด้วย Join/Predicate เดียวกับ
+`VISIBLE_MESSAGES_FROM` ใน Query เดียว แล้วเข้าคิว Event หลัง Commit
+ดูสัญญาและการตรวจสิทธิ์ผ่าน Network ใน [chat.md](chat.md)
 
 ## การตรวจรับ
 

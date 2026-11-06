@@ -19,6 +19,19 @@ class SessionRegistry:
         with self._lock:
             return self._users()
 
+    def publish(self, packet, *, user_ids=None):
+        """Queue a public event or one for authorized IDs, only to live logins.
+
+        The handler must select content recipients using database permissions
+        after a successful write. Registry lookup and logout share this lock.
+        """
+        with self._lock:
+            recipients = self._sessions.keys() if user_ids is None else set(user_ids)
+            for user_id in recipients:
+                connection = self._sessions.get(user_id)
+                if connection is not None:
+                    connection.enqueue(packet)
+
     def _publish(self, extra=()):
         self._revision += 1
         packet = make_event(EventType.USERS_UPDATED, {

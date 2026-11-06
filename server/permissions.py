@@ -18,15 +18,26 @@ class AccessDenied(PermissionError):
 
 # Use this join for history, search, file access and future AI inputs. The pair
 # check also fails closed if a private membership was corrupted by manual SQL.
-VISIBLE_MESSAGES_FROM = """
+_MESSAGE_JOINS = """
     FROM messages AS m
     LEFT JOIN attachments AS a ON a.message_id = m.id
-    JOIN room_members AS rm ON rm.room_id = m.room_id AND rm.user_id = ?
+    JOIN room_members AS rm ON rm.room_id = m.room_id
     JOIN rooms AS r ON r.id = m.room_id
-    WHERE m.id > rm.visible_after_message_id
+"""
+_MESSAGE_VISIBILITY = """
+      m.id > rm.visible_after_message_id
       AND (r.kind = 'group' OR rm.user_id IN (r.private_user_low, r.private_user_high))
       AND (m.kind = 'text' OR a.status = 'ready')
 """
+VISIBLE_MESSAGES_FROM = _MESSAGE_JOINS + " WHERE rm.user_id = ? AND " + _MESSAGE_VISIBILITY
+
+
+def message_recipient_ids(conn: sqlite3.Connection, message_id: int) -> list[int]:
+    """Internal publication lookup using exactly the content-read predicate."""
+    return [row[0] for row in conn.execute(
+        "SELECT rm.user_id " + _MESSAGE_JOINS + " WHERE " + _MESSAGE_VISIBILITY + " AND m.id = ?",
+        (message_id,),
+    )]
 
 
 def require_user(conn: sqlite3.Connection, user_id: int) -> None:

@@ -9,16 +9,17 @@
 
 - อัปเดตล่าสุด: 6 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
-  CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล และ CP04 TLS/Authentication
-- งานถัดไป: **CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม** แล้วต่อ CP06 Tkinter
+  CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล, CP04 TLS/Authentication
+  และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม
+- งานถัดไป: **CP06 Tkinter และตรวจรับ R1–R11**
 - สถานะโค้ด: มี Config, Socket Protocol, SQLite Schema/Transaction/สิทธิ์ร่วม,
-  TLS Server entry point, Client TLS transport, Router, Auth handlers และ Online registry
-  พร้อม Tests รวม 313 กรณีผ่าน (Config 69 + Protocol 83 + Database 51 + Permissions 31
-  + Auth 19 + TLS integration 60) ยังไม่มี Chat handlers หรือหน้าจอแอป
+  TLS Server entry point, Client TLS transport, Router, Auth/Chat handlers และ Online registry
+  พร้อม Tests รวม 352 กรณีผ่าน (Config 69 + Protocol 83 + Database 51 + Permissions 31
+  + Auth 19 + TLS integration 60 + Chat integration 39) ยังไม่มีหน้าจอแอป
 - สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
 - สิ่งที่ยังต้องเตรียมภายหลัง: AI Key/งบใช้งาน, เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
   และคอมพิวเตอร์จริงอย่างน้อย 2 เครื่องสำหรับตรวจรับ
-- งาน Local ที่ทำต่อได้ตามลำดับ: CP05–CP06 ไม่ต้องรอบัญชี AI หรือ Cloud
+- งาน Local ที่ทำต่อได้: CP06 ไม่ต้องรอบัญชี AI หรือ Cloud
   ส่วนการตรวจรับ CP06 ให้ครบ R1 ต้องใช้คอมพิวเตอร์จริงสองเครื่อง
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
@@ -53,7 +54,7 @@
 | CP02 | Socket Protocol | CP01 | DONE | `tests/test_protocol.py`: 83 passed ผ่าน TCP loopback จริง; ดูสัญญาใน docs/protocol.md และบันทึก CP02 |
 | CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | DONE | Database 51 + Permissions 31 passed ด้วย Temporary SQLite; Constraints/Reopen/Rollback/Join contention ผ่าน ดู docs/database.md และบันทึก CP03 |
 | CP04 | TLS และ Authentication | CP03 | DONE | Auth 19 + TLS integration 60 passed ผ่าน TCP/TLS จริง รวม CA/Hostname/Expired cert, Login ซ้อน, Cleanup และ CLI; ดู docs/authentication.md และบันทึก CP04 |
-| CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | TODO | ยังไม่มี Handlers |
+| CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | DONE | Chat integration 39 passed ผ่าน TCP/TLS จริงด้วย Clients A/B/C; Private/Group/Join boundary/Actor spoofing/Event isolation/Restart ผ่าน ดู docs/chat.md และบันทึก CP05 |
 | CP06 | Tkinter และตรวจรับ R1–R11 | CP05 | TODO | ต้องมี GUI จริงและทดสอบสองเครื่อง |
 | CP07 | ประวัติและการค้นหา | CP06 | TODO | ฟีเจอร์พิเศษข้อ 1 |
 | CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | TODO | ฟีเจอร์พิเศษข้อ 2 |
@@ -585,6 +586,88 @@ uv run --locked --env-file .env python -m client.main
   และ Routing สำหรับ PRIVATE_ROOM_OPEN, GROUP_CREATE/LIST/JOIN, MESSAGE_SEND
   ด้วย Database/Permissions เดิม พร้อม Registry API ส่ง Event ถึงผู้มีสิทธิ์เท่านั้น
   ทดสอบ Clients A/B/C ผ่าน TLS จริงเพื่อยืนยันว่าคนนอกห้องไม่เห็นข้อมูลหรือ Events
+
+### Session วันที่ 6 พฤศจิกายน 2026 — CP05 Server สำหรับแชตส่วนตัวและกลุ่ม
+
+- เป้าหมาย: เพิ่ม Chat/Group handlers บน TLS/Authentication เดิม และตรวจสิทธิ์
+  ของผลตอบกลับกับ Live Events ผ่านหลาย Connections จริงตามเกณฑ์ CP05
+- สถานะ: CP05 `TODO` → `IN_PROGRESS` → `DONE`; CP06–CP12 ยังเป็น `TODO`
+- สิ่งที่ทำสำเร็จ:
+  - เพิ่ม Routing/Handlers สำหรับ `PRIVATE_ROOM_OPEN`, `GROUP_CREATE`, `GROUP_LIST`,
+    `GROUP_JOIN`, `MESSAGE_SEND`; `USERS_LIST` และ Presence ใช้ CP04 เดิม
+    ทุกคำขอยึด Actor จาก `connection.user` และไม่รับ Fields อ้าง Sender/Actor/สมาชิกเพิ่ม
+  - ห้อง Private ใช้ห้องเดิมทั้งสองทิศทางและเมื่อเปิดพร้อมกัน มีเพียงคู่สนทนา
+    สร้างกลุ่มได้หลายกลุ่ม มีเพียงผู้สร้างเป็นสมาชิกคนแรก คนอื่น Join ด้วยตนเอง
+    ทุกผู้ Login เห็นรายชื่อกลุ่ม/สมาชิก แต่ไม่เห็น Private rooms หรือเนื้อหาผ่าน Listing
+  - รายชื่อกลุ่มมี Pagination ด้วย `after_id`/`limit` พร้อม `next_after_id`
+    คัดเลือก Fields ตอบกลับอย่างชัดเจน ไม่ส่ง Password hash หรือข้อมูลสิทธิ์ภายใน
+    จำกัด ID เป็น Integer 64-bit จริง ชื่อกลุ่ม 100 characters ข้อความ 4,000 characters/
+    16,000 UTF-8 bytes ไม่รับ NUL/ข้อความว่าง โดยคงช่องว่างและ Unicode ของแชต
+  - Registry ส่ง Public group invalidation หรือส่ง Message event ถึงเฉพาะ IDs ที่มีสิทธิ์
+    และยัง Login อยู่ ไม่เขียน TLS จาก Thread อื่น ไม่ส่งให้ผู้ Logout/ยังไม่ Login
+    `GROUPS_UPDATED` มีเพียง Room ID ให้ Client โหลด Listing ใหม่
+  - เพิ่ม `message_recipient_ids()` โดยใช้ Join/Predicate เดียวกับการอ่านข้อความ/ไฟล์
+    ใน SQL Query เดียว รวม Private pair guard และ `visible_after_message_id`
+    ป้องกันคนนอกห้องและสมาชิกใหม่ได้รับข้อความก่อนเข้าร่วม
+  - ใช้ Chat lock ร่วมตั้งแต่ Transaction จนถึงเข้าคิว Response/Event ให้ลำดับ
+    Commit/Message ID/Join boundary สอดคล้องกัน โดยไม่มี Socket I/O ภายใต้ Lock
+    Commit ก่อนตอบสำเร็จหรือส่ง Event เสมอ Transaction ผิดพลาด Rollback ไม่ประกาศ Event
+    Join ซ้ำไม่เปลี่ยนขอบเขตหรือส่ง Group event ซ้ำ
+  - ตรวจขนาด Room responses ก่อนเข้าคิว หากเกิน Frame limit คืน `FRAME_TOO_LARGE`
+    และ Connection ยังใช้ต่อได้ การ Join ที่ Response เกินขนาด Rollback สมาชิกด้วย
+  - ย้าย Fixtures ของ Temporary TLS certificates/Server ไป `tests/conftest.py`
+    ใช้ร่วมระหว่าง CP04/CP05 และปรับ Auth spoof test ให้ตรงกับ Handler ที่พร้อมแล้ว
+- ไฟล์สำคัญ: `server/handlers/chat.py`, `server/permissions.py`, `server/sessions.py`,
+  `server/router.py`, `server/main.py`, `tests/test_chat_integration.py`,
+  `tests/conftest.py`, `tests/test_tls_integration.py`, `docs/chat.md`,
+  docs/protocol/authentication/database, README, HANDOFF และ DEVELOPMENT
+- Dependencies: ไม่เพิ่ม Dependency ไม่เปลี่ยน Schema, Environment variables,
+  `pyproject.toml` หรือ `uv.lock`
+- คำสั่งตรวจและผลจริง (ใช้ `UV_CACHE_DIR=/private/tmp/studygroup-uv-cache`
+  นำหน้าคำสั่ง uv):
+  - ชุดเดิมหลังเชื่อม Routing: `uv run --locked pytest -q --tb=short` — **313 passed**
+  - Chat รอบแรก: `uv run --locked pytest tests/test_chat_integration.py -q --tb=short`
+    — **36 passed** ก่อนเพิ่มกรณีขนาด Frame/ข้อความสูงสุดและ Restart
+  - `uv run --locked pytest tests/test_chat_integration.py tests/test_permissions.py tests/test_database.py -q --tb=short`
+    — **121 passed** (Chat 39 + Permissions 31 + Database 51)
+  - รอบสุดท้าย `uv run --locked pytest -q --tb=short` — **352 passed, 0 failed, 0 skipped**
+    ใช้เวลา 31.77 วินาที รวมชุดเดิม 313 และ Chat integration 39
+  - `uv lock --check` และ `uv sync --locked` — ผ่าน; Resolved 11 packages, Checked 9 packages
+  - `git diff --check` — ผ่าน
+  - Network tests ใช้สิทธิ์ Local TCP เพราะ Sandbox ปกติปฏิเสธ `bind()` เช่น CP02–CP04
+    ไม่ Skip หรือใช้ Mock แทน Network ใช้ `127.0.0.1` กับพอร์ตชั่วคราว,
+    CA/Keys และ SQLite ใน Temporary directories เท่านั้น
+  - A/B/C ตรวจ Room ID probing, Sender/Actor spoofing, หลายกลุ่มและ Self-join,
+    Group pagination, Unicode/Emoji สูงสุด 16,000 bytes, Response ก่อน Sender echo,
+    Logout/Offline/Re-login และ Private metadata/ข้อความไม่รั่วไป C
+  - ส่งพร้อมกันจากสอง Connections รวม 24 ข้อความ ผู้มีสิทธิ์ได้ลำดับเดียวกันตาม ID
+    คนนอกไม่ได้รับ Event; Join/Send ทั้งสองลำดับใช้ Gates ให้ Worker อีกตัวมาถึง
+    Handler ขณะ Transaction แรกยังไม่จบ แล้วตรวจทั้ง Live Events และขอบเขตใน SQLite
+  - จำลอง Failure หลัง INSERT ภายใน Transaction จริง ยืนยัน Rollback/ไม่มี Event;
+    ตรวจ Publication ด้วย SQLite Connection อีกตัวว่าข้อมูล Commit แล้ว
+    ตรวจ Restart เปิด Database เดิม ห้อง/สมาชิก/ข้อความ/Join boundary อยู่ครบ
+    และ Connection ใหม่ต้อง Login อีกครั้ง
+- ขอบเขตและการตัดสินใจ:
+  - Wire contract และ Limits อยู่ใน `docs/chat.md`; Group events เป็น Invalidation
+    ไม่ใช่ Snapshot Client ต้องโหลด `GROUP_LIST` หลัง Login และเมื่อได้รับ Event
+  - ไม่มี Replay/Retry อัตโนมัติ ส่งตอนคู่สนทนา Offline ยังคงบันทึกข้อความ
+    หากหลุดหลัง Commit อาจไม่ได้รับ Response ห้ามถือว่า Request ID ทำให้ Exactly-once
+    CP06 ต้องรวม Response กับ Sender echo ด้วย Message ID เพื่อไม่แสดงซ้ำ
+  - แต่ละ Room ส่งรายชื่อสมาชิกใน Frame เดียว รายการกลุ่มใหญ่ลด Page size ได้
+    หากสมาชิกกลุ่มเดียวเกิน 1 MiB ต้องเพิ่ม Member pagination ก่อนรองรับขนาดนั้น
+    มี Test ลด Frame cap เพื่อทดสอบ Error/Recover/Join rollback ผ่าน TLS จริง
+  - `HISTORY_GET`/`HISTORY_SEARCH`, Files และ AI หลัง Login ยังให้ `UNKNOWN_TYPE`
+    ประวัติใน Session นี้ตรวจข้อมูลถาวรผ่าน Database; Network history/search เป็น CP07
+  - ผลเป็น Server tests บนเครื่องเดียว ยังไม่มี GUI และยังไม่ตรวจสองเครื่องจริง/Cloud
+    CP06 ต้องตรวจ R1–R11 พร้อม GUI ตามเงื่อนไขเดิม
+- สภาพ Workspace: เริ่มจาก Git working tree สะอาด; ไม่แก้ `.env`, `certs/`
+  หรือข้อมูลจริงใน `data/`; ยังไม่ได้ Commit
+- งานที่ยังค้าง: CP06–CP12; AI Provider/Model/Key และ Cloud ยังไม่เลือก
+- งานแรกของ Session ถัดไป: เปลี่ยน CP06 เป็น `IN_PROGRESS` อ่าน Prototype Focus,
+  `docs/authentication.md` และ `docs/chat.md` แล้วเริ่ม Tkinter entry point,
+  Login/Register/Server settings และ Network worker เจ้าของ TLS I/O เพียง Thread เดียว
+  จับคู่ Pending requests และส่งผล/Event เข้า Main thread ผ่าน `queue.Queue`/`after()`
+  จากนั้นต่อ Sidebar ออนไลน์/กลุ่มและหน้าห้องแชต พร้อมเริ่ม docs/architecture/demo-checklist
 
 ### แบบบันทึกสำหรับ session ถัดไป
 
