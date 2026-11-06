@@ -3,8 +3,8 @@
 โปรเจกต์ Desktop Chat สำหรับงานกลุ่มนักศึกษา ใช้ Python, Tkinter และ TCP Socket พร้อม AI สรุปบทสนทนา ส่งไฟล์ ค้นหาประวัติ และ Cloud Server
 
 **สถานะ:** มี Config, Socket Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล,
-TLS Server, Register/Login/Logout, รายชื่อออนไลน์ และแชตส่วนตัว/กลุ่มพร้อม Tests แล้ว
-งานถัดไปคือหน้าจอแอป Tkinter
+TLS Server, Register/Login/Logout, รายชื่อออนไลน์ และแชตส่วนตัว/กลุ่ม พร้อม Desktop Client Tkinter แบบ Focus แล้ว
+การตรวจรับ CP06 ยังต้องทดสอบบนคอมพิวเตอร์จริงสองเครื่อง ดู DEVELOPMENT.md
 
 **Environment:** เตรียม Local environment ด้วย **uv** แล้ว ใช้ Python 3.14.10,
 Tkinter, `argon2-cffi` และ `pytest` พร้อม `uv.lock` ดู
@@ -14,10 +14,14 @@ Tkinter, `argon2-cffi` และ `pytest` พร้อม `uv.lock` ดู
 uv sync --locked
 uv run --locked python -m tkinter
 uv run --locked --env-file .env python -m server.main
+# เปิด Terminal ใหม่สำหรับแต่ละ Client:
+uv run --locked --env-file .env python -m client.main
 ```
 
 สำหรับเครื่องใหม่ให้เตรียม Python/Tkinter ตามคู่มือก่อน `uv sync`
 
+- [สถาปัตยกรรม Desktop/Network](docs/architecture.md) — หน้าที่แต่ละ Thread และวงจรส่งข้อความ
+- [รายการตรวจรับและการตั้งค่า LAN](docs/demo-checklist.md) — R1–R11 และหลักฐาน Local
 - [แผนพัฒนาและ checkpoint กลาง](DEVELOPMENT.md) — อ่านก่อนเริ่มแต่ละ session และอัปเดตความคืบหน้าเมื่อจบ
 - [ข้อกำหนดใน HANDOFF.md](HANDOFF.md) — Project Structure สถาปัตยกรรม Auth/Database/Protocol และเกณฑ์ส่งงาน
 - [สัญญา Socket Protocol](docs/protocol.md) — Framing, Request/Response/Event, Validation และการใช้ API

@@ -6,8 +6,8 @@ StudyGroup ใช้ **uv** จัดการ Python environment และ depe
 
 Environment รอบนี้ใช้ CPython **3.14.10** ตาม `.python-version` พร้อม Tcl/Tk
 มี `argon2-cffi` สำหรับ Argon2id และ `pytest` ในกลุ่ม `dev`
-มี Packages และ Config แยก Client/Server พร้อม Tests แล้ว
-ยังไม่มี Entry points, Socket Server หรือหน้าจอ Tkinter ของแอป
+มี Packages และ Config แยก Client/Server พร้อม Tests, TLS Chat Server
+และ Desktop Client Tkinter แล้ว ดูสถานะการตรวจรับใน DEVELOPMENT.md
 
 ตรวจบนเครื่องพัฒนาแล้ว: สร้างหน้าต่าง Tkinter ได้, Hash/Verify ด้วย Argon2id ได้,
 SQLite ในหน่วยความจำทำงาน และ TLS handshake ผ่านเมื่อเชื่อถือ Local CA และใช้
@@ -153,17 +153,29 @@ uv add --dev <development-package>
 
 Tests ปัจจุบันรันได้ด้วย `uv run --locked pytest` และต้องใช้ OpenSSL CLI
 เพื่อสร้างใบรับรองทดสอบชั่วคราว รวมทั้งอนุญาตเปิด TCP Loopback บนเครื่อง
-เปิด TLS/Auth Server และหยุดด้วย Ctrl+C ได้แล้ว:
+เปิด TLS Chat Server และหยุดด้วย Ctrl+C ได้แล้ว:
 
 ```bash
 uv run --locked --env-file .env python -m server.main
+# เปิด Terminal อีกหน้าสำหรับ Client แต่ละบัญชี
+uv run --locked --env-file .env python -m client.main
 uv run --locked pytest
 ```
 
 uv ไม่โหลด `.env` ให้อัตโนมัติ จึงระบุ `--env-file .env` เมื่อคำสั่งต้องใช้ Config
 อย่าส่ง AI Key หรือ Server private key ไปกับ Client
 สัญญา Register/Login/Logout, Client transport และ Limits อยู่ใน
-[authentication.md](authentication.md) ยังไม่มี `client.main`/GUI และ Chat handlers
+[authentication.md](authentication.md) และ Chat contract ใน [chat.md](chat.md)
+Desktop Client มีหน้า Register/Login/Server settings และ Focus chat แล้ว
+ตั้งค่า Host/Port/CA ใน UI ได้โดยไม่เขียนทับ `.env` ไม่เก็บ Password หรือ Retry ข้อความเอง
+ดู [architecture.md](architecture.md) และ [demo-checklist.md](demo-checklist.md)
+สำหรับการตรวจ GUI และตั้งค่า LAN บนสองเครื่องจริง
+
+ตรวจหน้าต่างจริงเพิ่มเติม (ต้องมี Desktop/Display):
+
+```bash
+uv run --locked pytest tests/gui_checks.py -q --tb=short -W error
+```
 
 ให้นำ `pyproject.toml`, `uv.lock`, `.python-version`, `.env.example` และสคริปต์เข้า Git
 ส่วน `.venv/`, `.env`, `certs/`, `data/` ถูก exclude ใน `.gitignore` แล้ว

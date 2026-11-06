@@ -12,7 +12,8 @@ uv run --locked --env-file .env python -m server.main
 Server ใช้ Host/Port, Certificate/Key และ Data directory จาก `ServerConfig`
 สร้างหรือเปิด SQLite เดิมเมื่อเริ่มทำงาน กด Ctrl+C เพื่อหยุด Listener และรอ Cleanup
 Workers ทั้งหมด Chat handlers ใช้สัญญาใน [chat.md](chat.md)
-ยังไม่มี Desktop entry point/GUI ซึ่งเป็นงาน CP06
+เปิด Desktop Client อีก Terminal ด้วย `uv run --locked --env-file .env python -m client.main`
+ดูวงจร GUI/Worker และการเชื่อมต่อใหม่ใน [architecture.md](architecture.md)
 
 Client transport ที่ใช้ได้แล้ว:
 
@@ -32,8 +33,9 @@ with connect(ClientConfig.from_env()) as connection:
 สำเร็จเท่านั้น ใช้ `ssl.create_default_context()` และ TLS 1.2 ขึ้นไป ไม่มีตัวเลือกปิด
 Verification; CA ว่างใน Config ใช้ System trust store ค่าเริ่มต้นใช้ Local CA
 อย่าส่ง Credentials ผ่าน Plain TCP หรือคัดลอก Server key/CA key ไป Client
-Transport นี้ยังเป็น Blocking API ให้ผู้เรียกเดียวทำ I/O; Receive worker, Event queue
-และ Pending request dispatch สำหรับ GUI เป็นงาน CP06 ไม่มีการเก็บ Password ลงไฟล์หรือ Retry อัตโนมัติ
+Transport `connect()` ยังเป็น Blocking API สำหรับผู้เรียกเดียว
+Desktop ใช้ `NetworkWorker` ซึ่งเชื่อมต่อเบื้องหลังและใช้ nonblocking TLS ใน Thread เจ้าของ
+ส่งผลผ่าน Event queue ให้ Main thread จับคู่ Pending requests ไม่มีการเก็บ Password ลงไฟล์หรือ Retry อัตโนมัติ
 
 ## สัญญาคำขอ
 

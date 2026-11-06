@@ -11,16 +11,18 @@
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
   CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล, CP04 TLS/Authentication
   และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม
-- งานถัดไป: **CP06 Tkinter และตรวจรับ R1–R11**
+- งานปัจจุบัน: **CP06 Tkinter และตรวจรับ R1–R11 — IN_PROGRESS**
 - สถานะโค้ด: มี Config, Socket Protocol, SQLite Schema/Transaction/สิทธิ์ร่วม,
-  TLS Server entry point, Client TLS transport, Router, Auth/Chat handlers และ Online registry
-  พร้อม Tests รวม 352 กรณีผ่าน (Config 69 + Protocol 83 + Database 51 + Permissions 31
-  + Auth 19 + TLS integration 60 + Chat integration 39) ยังไม่มีหน้าจอแอป
+  TLS Server, Router, Auth/Chat handlers และ Online registry พร้อม Desktop Client Tkinter
+  แบบ Focus, Register/Login/Server settings, Private/Group chat, Draft และ Disconnect/Re-login
+  ชุดทดสอบหลัก 378 กรณีผ่าน (ชุดเดิม 352 + Client integration 21 + LAN certificate 5)
+  และตรวจ GUI จริงแยกอีก 3 กรณีผ่าน ดูบันทึก CP06 ด้านล่าง
 - สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
 - สิ่งที่ยังต้องเตรียมภายหลัง: AI Key/งบใช้งาน, เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
   และคอมพิวเตอร์จริงอย่างน้อย 2 เครื่องสำหรับตรวจรับ
-- งาน Local ที่ทำต่อได้: CP06 ไม่ต้องรอบัญชี AI หรือ Cloud
-  ส่วนการตรวจรับ CP06 ให้ครบ R1 ต้องใช้คอมพิวเตอร์จริงสองเครื่อง
+- งานถัดไปเพื่อปิด CP06: ทำตาม docs/demo-checklist.md บนคอมพิวเตอร์จริงสองเครื่อง
+  เก็บหลักฐาน R1–R11 พร้อมตรวจ Thai IME/Copy-Paste และการหลุดบน LAN จริง
+  เตรียม LAN certificate ด้วย scripts/generate-lan-cert.sh ได้แล้ว ไม่ต้องรอบัญชี AI หรือ Cloud
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
 พร้อมกัน ไม่คัดลอกสถานะไปดูแลหลายชุดใน README หรือ HANDOFF
@@ -55,7 +57,7 @@
 | CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | DONE | Database 51 + Permissions 31 passed ด้วย Temporary SQLite; Constraints/Reopen/Rollback/Join contention ผ่าน ดู docs/database.md และบันทึก CP03 |
 | CP04 | TLS และ Authentication | CP03 | DONE | Auth 19 + TLS integration 60 passed ผ่าน TCP/TLS จริง รวม CA/Hostname/Expired cert, Login ซ้อน, Cleanup และ CLI; ดู docs/authentication.md และบันทึก CP04 |
 | CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | DONE | Chat integration 39 passed ผ่าน TCP/TLS จริงด้วย Clients A/B/C; Private/Group/Join boundary/Actor spoofing/Event isolation/Restart ผ่าน ดู docs/chat.md และบันทึก CP05 |
-| CP06 | Tkinter และตรวจรับ R1–R11 | CP05 | TODO | ต้องมี GUI จริงและทดสอบสองเครื่อง |
+| CP06 | Tkinter และตรวจรับ R1–R11 | CP05 | IN_PROGRESS | Desktop Client/Worker และ GUI checks ผ่าน Local; มี architecture/demo-checklist/ภาพจริง; ยังรอ R1–R11 บนสองเครื่องจริง |
 | CP07 | ประวัติและการค้นหา | CP06 | TODO | ฟีเจอร์พิเศษข้อ 1 |
 | CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | TODO | ฟีเจอร์พิเศษข้อ 2 |
 | CP09 | AI สรุปบทสนทนา | CP08 | TODO | ทำ Adapter/Mock ก่อน แล้วตรวจ API จริง |
@@ -668,6 +670,62 @@ uv run --locked --env-file .env python -m client.main
   Login/Register/Server settings และ Network worker เจ้าของ TLS I/O เพียง Thread เดียว
   จับคู่ Pending requests และส่งผล/Event เข้า Main thread ผ่าน `queue.Queue`/`after()`
   จากนั้นต่อ Sidebar ออนไลน์/กลุ่มและหน้าห้องแชต พร้อมเริ่ม docs/architecture/demo-checklist
+
+### Session CP06 — Desktop Client Tkinter / Local verification
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok)
+- Branch: `codex/cp06-tkinter-client` แยกจาก `main` ที่ Working tree สะอาด
+- เป้าหมาย: ต่อ Desktop Client กับ Server CP05 จริง เพื่อเตรียมตรวจ R1–R11
+- สถานะ: CP06 `TODO` → `IN_PROGRESS`; ยังไม่ DONE เพราะยังไม่มีคอมพิวเตอร์จริงสองเครื่อง
+- สิ่งที่ทำสำเร็จ:
+  - เพิ่ม `client.main`, Application และหน้าจอ Native Tkinter แบบ Focus สีม่วง
+    Register/Login/Server settings, Online users รวมตนเอง, Private conversations,
+    รายชื่อทุกกลุ่มและสมาชิก, สร้างกลุ่ม/Join เอง, Dialog สมาชิก และสถานะข้อผิดพลาด
+  - GUI รองรับภาษาไทย/Emoji, Enter ส่ง, Shift+Enter ขึ้นบรรทัดใหม่, Scroll,
+    หน้าต่าง 850×700 / 1120×800 และหน้าสมัครแบบเลื่อนเมื่อพื้นที่ไม่พอ
+  - เพิ่ม Single-owner NetworkWorker พร้อม Request/Event queues ที่จำกัดขนาด
+    Nonblocking TLS, Incremental framing ที่ใช้ Decoder ร่วม, Total frame deadline,
+    Request timeout, Response dispatch ด้วย Request ID และการปิดแบบไม่บล็อก Tk
+  - ตรวจพบและแก้ TLS 1.3 session tickets ทำให้ select อ่านได้แต่ไม่มี Application data
+    จึงใช้ Nonblocking TLS แทนการเข้า Blocking recv จนขวางคำขอขาออก
+  - รวม Sender response/Event echo ด้วย Message ID; Draft แยกห้อง ไม่ลบร่างใหม่เมื่อ
+    Ack ข้อความเก่ามาถึง; เก็บ Unread และค้น Private metadata เมื่อมีข้อความเข้าห้องใหม่
+  - ลด Page size เมื่อ Group listing เกิน Frame และโหลดทุกหน้าพร้อม Coalesce invalidations
+    ผลเปิดห้องเก่าไม่แย่งห้องที่ผู้ใช้เลือกภายหลัง ระหว่างรอ Response
+  - Disconnect เก็บร่างและแจ้งผลส่งที่ยังยืนยันไม่ได้ ไม่ Replay/Retry เอง
+    Login บัญชี/Server เดิมรักษา In-memory state; เปลี่ยนบัญชี/Server หรือ Logout ล้างข้อมูลเก่า
+    แก้ Callback cycle เพื่อไม่ให้ Tk Variables ถูก Finalize ใน Network thread หลังปิดแอป
+  - เพิ่มเอกสาร architecture.md และ demo-checklist.md พร้อมวิธีทดสอบ LAN
+    สคริปต์ generate-lan-cert.sh ใช้ CA เดิม สร้าง SAN ตาม IP/DNS จริงใน certs/lan
+    ไม่แทน Localhost certificate/keys เดิม และปฏิเสธการเขียนทับ
+- หลักฐานและผลจริง (คำสั่ง uv ใช้ `UV_CACHE_DIR=/private/tmp/studygroup-uv-cache`):
+  - `uv run --locked pytest -q --tb=short -W error` — **378 passed, 0 failed, 0 skipped**
+    ใช้เวลา 41.62 วินาที รวมชุดเดิม 352 + Client 21 + LAN certificate 5
+  - `uv run --locked pytest tests/gui_checks.py -q --tb=short -W error`
+    — **3 passed** ใน 4.00 วินาที ไม่มี Callback error หรือ Warning
+    เรียกแยกเพราะต้องมี Desktop/Display ไม่ถูก Collect ในชุด Headless ปกติ
+  - GUI checks ใช้ Widgets จริงและ TCP/TLS จริง ครอบคลุมสมัคร/Login, เลือก Private,
+    Thai/Emoji/Enter/Shift+Enter, Draft/สลับห้อง, สร้าง/Join กลุ่ม, รายชื่อสมาชิก,
+    Disconnect/Re-login/Logout และปุ่มสำคัญไม่หลุดขอบหน้าต่างเล็ก
+  - Client integration ใช้ A/B/C กับ TLS/SQLite ชั่วคราว ตรวจ Privacy, Sender echo,
+    Pagination, Commit แล้วตัดก่อน Ack, ไม่มี Retry, Session isolation, I/O owner thread,
+    Frame แตก/รวม/UTF-8, Partial-frame deadline และ UI queue เต็ม
+  - Certificate tests ตรวจ SAN IP/DNS ถูกต้อง, ชื่อผิดถูกปฏิเสธ, ไม่เขียนทับ Key
+    และ SAN ผิด/แทรก Config ไม่ Publish ใบรับรอง
+  - เปิดหน้าต่างจริงผ่าน Desktop automation ตรวจ Login/ออนไลน์/Private/กลุ่มและข้อความไทย
+    ภาพ Local อยู่ที่ docs/evidence/cp06/private-chat.png; Accounts/Database ใช้ Temporary data
+  - `uv lock --check`, `bash -n scripts/generate-lan-cert.sh` และ `git diff --check` — ผ่าน
+  - Network tests ต้องใช้สิทธิ์ Local TCP; Environment ปกติปฏิเสธ bind() เช่น checkpoint เดิม
+    การเปิด Tk ต้องใช้สิทธิ์ Desktop ตรวจซ้ำด้วยสิทธิ์ที่พร้อมแล้ว ไม่ใช้ Mock หรือ Skip แทน
+- Dependencies/ข้อมูลจริง: ไม่เพิ่ม Dependency ไม่เปลี่ยน Schema/uv.lock/.python-version
+  ไม่แก้ `.env`, certs เดิม หรือข้อมูลจริงใน data/ ไม่ติดตั้ง/เปลี่ยน System trust
+- ขอบเขต: ยังไม่มี Network history/search, Files, AI และ Cloud (CP07–CP10)
+  UI แสดงเฉพาะข้อความที่รับระหว่างเปิดแอป ไม่มีการโหลดประวัติหลังเปิดใหม่ใน CP06
+  ฟีเจอร์อนาคตใน Prototype ยังไม่เปิดเป็นปุ่มทำงานจำลองใน Desktop
+- งานที่ยังค้างก่อน DONE: R1–R11 บนคอมพิวเตอร์จริงสองเครื่อง, LAN/Firewall/TLS จริง,
+  Thai IME และ OS Copy/Paste บนเครื่องเดโม พร้อมรายละเอียดเครื่อง/เครือข่ายและภาพ A/B/C
+- งานแรก Session ถัดไป: เปิด docs/demo-checklist.md เตรียม LAN SAN ให้ตรง Server จริง
+  รัน Client A/B คนละเครื่องและ C เป็นคนนอกห้อง เติมหลักฐานแล้วจึงปิด CP06/เริ่ม CP07
 
 ### แบบบันทึกสำหรับ session ถัดไป
 
