@@ -5,7 +5,7 @@ export class ClientError extends Error {
 }
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: ClientError) => void; timer: ReturnType<typeof setTimeout> }
-const idKeys = new Set(['id', 'room_id', 'message_id', 'sender_id', 'created_by', 'next_after_id'])
+const idKeys = new Set(['id', 'room_id', 'message_id', 'sender_id', 'created_by', 'next_after_id', 'next_before_id', 'attachment_id'])
 function safeIds(value: unknown, depth = 0): void {
   if (depth > 64) throw new ClientError('PROTOCOL', true)
   if (!value || typeof value !== 'object') return
@@ -67,13 +67,13 @@ export class Transport {
     return this.opening
   }
 
-  request<T extends RequestType>(type: T, data: Record<string, unknown> = {}): Promise<Results[T]> {
+  request<T extends RequestType>(type: T, data: Record<string, unknown> = {}, timeout = 15000): Promise<Results[T]> {
     if (this.socket?.readyState !== WebSocket.OPEN) return Promise.reject(new ClientError('CONNECTION', true))
     if (this.pending.size >= 128) return Promise.reject(new ClientError('BUSY'))
     const bytes = crypto.getRandomValues(new Uint8Array(16))
     const id = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('')
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => this.fail(new ClientError('TIMEOUT', true)), 15000)
+      const timer = setTimeout(() => this.fail(new ClientError('TIMEOUT', true)), timeout)
       this.pending.set(id, { resolve: value => resolve(value as Results[T]), reject, timer })
       try { this.socket!.send(JSON.stringify({ v: 1, id, type, data })) }
       catch { this.fail(new ClientError('CONNECTION', true)) }

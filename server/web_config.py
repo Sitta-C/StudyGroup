@@ -22,6 +22,10 @@ class WebConfig:
     def database_path(self):
         return self.data_dir / "studygroup.db"
 
+    @property
+    def uploads_dir(self):
+        return self.data_dir / "uploads"
+
     @classmethod
     def from_env(cls, env=None, *, base_dir=PROJECT_ROOT):
         source = os.environ if env is None else env

@@ -6,7 +6,7 @@ Web App ปัจจุบันใช้ SQLite/schema/Argon2/permission logic 
 
 CP03 ใช้ `server/schema.sql`, `server/database.py` และ `server/permissions.py`
 เป็นส่วนจัดเก็บข้อมูลฝั่ง Server ปัจจุบัน Auth และ Chat handlers ใช้ API เหล่านี้แล้ว
-ยังไม่มีการรับส่งไฟล์หรือ AI ที่เรียกใช้งานจริง ผลตรวจล่าสุดอยู่ใน
+History/Search/Files (CP07–CP08) ใช้ `search_messages()`/`add_file_message()` ด้านล่าง AI ยังไม่เรียกใช้งาน ผลตรวจล่าสุดอยู่ใน
 [DEVELOPMENT.md](../DEVELOPMENT.md)
 
 ## Connection และ Transaction
@@ -89,14 +89,16 @@ Library นี้ไม่ใช่ Authentication; Handler ต้องไม�
   Private ต้องเป็นหนึ่งในคู่ และ `message_id > visible_after_message_id`
   ข้อมูลที่ไม่มีอยู่หรือไม่มีสิทธิ์ให้ `AccessDenied` (`FORBIDDEN`) เหมือนกัน
 - `get_messages()` คืนหน้าล่าสุดเรียงเก่าไปใหม่ ใช้ `before_id` สำหรับหน้าก่อนหน้า
-  จำกัด 1–100 รายการ; Search ใน CP07 ต้องใช้เงื่อนไขสิทธิ์เดียวกัน
+  จำกัด 1–100 รายการ; `search_messages()` (CP07) ใช้เงื่อนไขสิทธิ์เดียวกัน คืนใหม่→เก่า
+  กรองคำแบบ LIKE literal (`ESCAPE '\'`), ช่วง `created_at` UTC และชนิดข้อความได้
+  `list_private_rooms()` คืนเฉพาะ Private rooms ของผู้ขอ
   AI ใน CP09 ต้องเพิ่มเงื่อนไขเฉพาะกลุ่มและจำกัดไม่เกิน 50 ข้อความ
   รวมทั้งตรวจสิทธิ์ซ้ำก่อนคืนผล
 - File message และ Attachment ยังไม่เปิดให้อ่านจนสถานะเป็น `ready`
   การเปลี่ยนสถานะของ File message เก่าหลัง Join ไม่ทำให้สมาชิกใหม่อ่านไฟล์นั้นได้
-  Schema/Tests เก็บเพียง Metadata ไม่ตรวจ Bytes หรือ Hash ของไฟล์จริง;
-  CP08 ต้องตรวจขนาด/Hash, สร้างชื่อจัดเก็บเอง และ Publish แบบ Transaction
-  หลังรับครบเท่านั้น ห้ามคืน `stored_name` หรือใช้ `original_name` เป็น Path ของ Client
+  `add_file_message()` (CP08) ตรวจสมาชิกซ้ำแล้วสร้าง File message + Attachment `ready`
+  ใน Transaction เดียว หลัง Handler ตรวจขนาด/Hash และย้ายไฟล์ไปชื่อที่ Server สร้างแล้วเท่านั้น
+  ไม่คืน `stored_name` และไม่ใช้ `original_name` เป็น Path
 
 CP05 ใช้ `message_recipient_ids()` เลือกผู้รับ Live Events ด้วย Join/Predicate เดียวกับ
 `VISIBLE_MESSAGES_FROM` ใน Query เดียว แล้วเข้าคิว Event หลัง Commit

@@ -34,8 +34,8 @@ uv run --locked --env-file .env python -m server.web
 บัญชีและข้อความอยู่ที่ **`data/studygroup.db`** บนเครื่องที่รัน Python
 ใช้ `STUDYGROUP_DATA_DIR` เดิมได้ ไม่ย้าย Database หรือสร้างบัญชีใหม่เพียงเพราะเปลี่ยน UI
 รหัสผ่านเก็บเป็น Argon2id hash; Browser เก็บสถานะแชต/ร่างในหน่วยความจำเท่านั้น
-หลัง Refresh ต้อง Login ใหม่ และการโหลดประวัติจาก Server เป็นงาน CP07
-ข้อความถูกบันทึกใน SQLite แล้วแม้ CP06 ยังไม่โหลดประวัติขึ้น UI
+หลัง Refresh ต้อง Login ใหม่ แล้ว UI โหลดประวัติจาก Server (CP07)
+ไฟล์แนบเก็บที่ `data/uploads/` ข้าง Database; Backup ต้องเก็บทั้งสองอย่างพร้อมกัน
 
 ## ระหว่างพัฒนา React
 

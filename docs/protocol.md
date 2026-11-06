@@ -5,7 +5,7 @@
 ใช้กับ Blocking TCP Socket และ Socket ที่หุ้ม TLS แล้วใน CP04
 Server/Router และ Auth handlers ใช้สัญญารายฟีเจอร์ใน [authentication.md](authentication.md)
 Chat/Groups handlers ใช้สัญญาใน [chat.md](chat.md) ตาม CP05
-History/Files/AI handlers ยังเป็นงาน checkpoint ถัดไป
+History/Search และ Files handlers ใช้สัญญาใน [history-files.md](history-files.md) ตาม CP07–CP08; AI ยังเป็นงาน CP09
 
 ## WebSocket transport (ค่าเริ่มต้นปัจจุบัน)
 
@@ -60,7 +60,7 @@ ID ใช้จับคู่ผลเท่านั้น ไม่ใช่�
 | กลุ่ม | `RequestType` |
 | --- | --- |
 | Auth | `REGISTER`, `LOGIN`, `LOGOUT` |
-| Users/Rooms | `USERS_LIST`, `PRIVATE_ROOM_OPEN`, `GROUP_CREATE`, `GROUP_LIST`, `GROUP_JOIN` |
+| Users/Rooms | `USERS_LIST`, `PRIVATE_ROOM_OPEN`, `PRIVATE_ROOM_LIST`, `GROUP_CREATE`, `GROUP_LIST`, `GROUP_JOIN` |
 | Chat/History | `MESSAGE_SEND`, `HISTORY_GET`, `HISTORY_SEARCH` |
 | Files | `FILE_BEGIN`, `FILE_CHUNK`, `FILE_END`, `FILE_GET` |
 | AI | `AI_SUMMARIZE` |

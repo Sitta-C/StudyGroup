@@ -12,6 +12,8 @@ from server.connection import ClientConnection
 from server.database import Database
 from server.handlers.auth import AuthHandlers
 from server.handlers.chat import ChatHandlers
+from server.handlers.files import FileHandlers
+from server.handlers.history import HistoryHandlers
 from server.passwords import Passwords
 from server.rate_limit import AuthRateLimiter
 from server.router import Router
@@ -59,10 +61,13 @@ class TLSServer:
         self.context.minimum_version = ssl.TLSVersion.TLSv1_2
         self.context.load_cert_chain(self.config.tls_cert, self.config.tls_key)
         self.database.initialize()
+        chat = ChatHandlers(self.registry)
+        self.files = FileHandlers(self.registry, self.config.uploads_dir, chat)
+        self.files.prepare(self.database)
         self.router = Router(AuthHandlers(
             self.registry, Passwords(), self.limiter,
             threading.BoundedSemaphore(self.limits.hash_workers),
-        ), ChatHandlers(self.registry))
+        ), chat, HistoryHandlers(), self.files)
         family, socktype, proto, _, address = socket.getaddrinfo(
             self.config.host, self.config.port, type=socket.SOCK_STREAM,
         )[0]

@@ -205,25 +205,109 @@ def add_text_message(conn: sqlite3.Connection, user_id: int, room_id: int, text:
         return conn.execute("SELECT * FROM messages WHERE id = ?", (message_id,)).fetchone()
 
 
+def add_file_message(
+    conn: sqlite3.Connection, user_id: int, room_id: int, *,
+    stored_name: str, original_name: str, size_bytes: int, sha256: str,
+) -> sqlite3.Row:
+    """Publish a fully received, hash-verified file in one transaction (CP08).
+
+    The caller must have stored the bytes under stored_name first; membership
+    is checked again here so a transfer cannot outlive the sender's access.
+    """
+    with transaction(conn):
+        require_member(conn, user_id, room_id)
+        message_id = conn.execute(
+            "INSERT INTO messages (room_id, sender_id, kind, text) VALUES (?, ?, 'file', NULL)",
+            (room_id, user_id),
+        ).lastrowid
+        conn.execute(
+            """INSERT INTO attachments
+               (message_id, stored_name, original_name, size_bytes, sha256, status)
+               VALUES (?, ?, ?, ?, ?, 'ready')""",
+            (message_id, stored_name, original_name, size_bytes, sha256),
+        )
+        return conn.execute(
+            "SELECT " + MESSAGE_COLUMNS + " " + VISIBLE_MESSAGES_FROM + " AND m.id = ?",
+            (user_id, message_id),
+        ).fetchone()
+
+
+# Message rows for history, search and file publication. Attachment columns are
+# NULL for text messages; stored_name stays internal and is never selected here.
+MESSAGE_COLUMNS = """m.id, m.room_id, m.sender_id, m.kind, m.text, m.created_at,
+    a.id AS attachment_id, a.original_name AS attachment_name,
+    a.size_bytes AS attachment_size, a.sha256 AS attachment_sha256"""
+
+
+def like_pattern(text: str) -> str:
+    """Literal substring for LIKE ... ESCAPE '\\' (user % and _ are not wildcards)."""
+    escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
+
+
+def search_messages(
+    conn: sqlite3.Connection, user_id: int, room_id: int, *,
+    query: str | None = None, since: str | None = None, until: str | None = None,
+    kind: str | None = None, before_id: int | None = None, limit: int = 50,
+) -> list[sqlite3.Row]:
+    """Visible messages newest first, keyset-paginated by message ID.
+
+    since/until are UTC timestamps in the stored created_at format
+    (YYYY-MM-DDTHH:MM:SS.mmmZ): since is inclusive, until is exclusive.
+    query is a literal, ASCII case-insensitive substring of the text or file
+    name. The membership join and the join boundary are the same as history.
+    """
+    if type(limit) is not int or not 1 <= limit <= 101:
+        raise ValueError("Limit must be an integer between 1 and 101")
+    if before_id is not None and (type(before_id) is not int or before_id <= 0):
+        raise ValueError("before_id must be a positive integer")
+    if kind not in (None, "text", "file"):
+        raise ValueError("kind must be text or file")
+    require_member(conn, user_id, room_id)
+    sql = "SELECT " + MESSAGE_COLUMNS + " " + VISIBLE_MESSAGES_FROM + " AND m.room_id = ?"
+    params: list = [user_id, room_id]
+    if before_id is not None:
+        sql += " AND m.id < ?"
+        params.append(before_id)
+    if query is not None:
+        sql += r" AND (m.text LIKE ? ESCAPE '\' OR a.original_name LIKE ? ESCAPE '\')"
+        params += [like_pattern(query)] * 2
+    if since is not None:
+        sql += " AND m.created_at >= ?"
+        params.append(since)
+    if until is not None:
+        sql += " AND m.created_at < ?"
+        params.append(until)
+    if kind is not None:
+        sql += " AND m.kind = ?"
+        params.append(kind)
+    sql += " ORDER BY m.id DESC LIMIT ?"
+    params.append(limit)
+    return conn.execute(sql, params).fetchall()
+
+
 def get_messages(
     conn: sqlite3.Connection, user_id: int, room_id: int, *,
     before_id: int | None = None, limit: int = 50,
 ) -> list[sqlite3.Row]:
     """Latest visible page, returned oldest first. Shared basis for history/AI.
 
-    CP07 adds keyword/date search; CP09 must additionally restrict AI to groups
-    and cap inputs at 50. No transfer or AI provider is implemented here.
+    CP09 must additionally restrict AI to groups and cap inputs at 50.
     """
     if type(limit) is not int or not 1 <= limit <= 100:
         raise ValueError("Limit must be an integer between 1 and 100")
-    if before_id is not None and (type(before_id) is not int or before_id <= 0):
-        raise ValueError("before_id must be a positive integer")
-    require_member(conn, user_id, room_id)
-    query = "SELECT m.* " + VISIBLE_MESSAGES_FROM + " AND m.room_id = ?"
-    params = [user_id, room_id]
-    if before_id is not None:
-        query += " AND m.id < ?"
-        params.append(before_id)
-    query += " ORDER BY m.id DESC LIMIT ?"
-    params.append(limit)
-    return list(reversed(conn.execute(query, params).fetchall()))
+    return list(reversed(search_messages(conn, user_id, room_id, before_id=before_id, limit=limit)))
+
+
+def list_private_rooms(
+    conn: sqlite3.Connection, user_id: int, *, after_id: int = 0, limit: int = 50,
+) -> list[sqlite3.Row]:
+    """The caller's own private rooms by ID, so history survives a re-login."""
+    require_user(conn, user_id)
+    return conn.execute(
+        """SELECT r.id FROM rooms AS r JOIN room_members AS rm ON rm.room_id = r.id
+           WHERE r.kind = 'private' AND rm.user_id = ? AND r.id > ?
+             AND rm.user_id IN (r.private_user_low, r.private_user_high)
+           ORDER BY r.id LIMIT ?""",
+        (user_id, after_id, limit),
+    ).fetchall()

@@ -7,7 +7,8 @@ StudyGroup เป็น Web App สำหรับนักศึกษาคุ
 **สถานะการพัฒนา:** มี Config, Socket Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล,
 TLS Server, Authentication, รายชื่อออนไลน์ และ Chat/Group handlers พร้อม Tests แล้ว
 มี React Web App แบบ Focus และ WebSocket adapter แล้ว ผู้ใช้ตรวจรับ CP06 แล้ว
-งานถัดไป CP07 ประวัติ/ค้นหา; หลักฐานรายอุปกรณ์สองเครื่องเก็บต่อสำหรับ CP11 และ Cloud เป็น CP10
+CP07 ประวัติ/ค้นหา และ CP08 ส่ง-ดาวน์โหลดไฟล์พัฒนาและผ่านการทดสอบ Local แล้ว ดู [docs/history-files.md](docs/history-files.md)
+งานถัดไป CP09 AI; หลักฐานรายอุปกรณ์สองเครื่องเก็บต่อสำหรับ CP11 และ Cloud เป็น CP10
 ดูสถานะ checkpoint และผลทดสอบล่าสุดใน [DEVELOPMENT.md](DEVELOPMENT.md)
 สัญญา Chat/Group ที่ใช้จริงอยู่ใน [docs/chat.md](docs/chat.md)
 โค้ด HTML ใน Prototype เป็นแบบอ้างอิงหน้าจอ ไม่ใช่แอปที่พัฒนาเสร็จแล้ว

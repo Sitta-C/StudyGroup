@@ -75,7 +75,7 @@ Queue เต็มปิด Connection ที่ช้าโดยไม่ก�
 แต่ Events อื่นอาจแทรกระหว่าง Requests ได้ ต้องจับคู่ Response ด้วย Request ID
 Logout/EOF/Error ลบ Session ตาม Registry เดิม ไม่ส่ง Events แชตให้ Connection ที่ยังไม่ Login
 หรือ Logout แล้ว ไม่มีการ Push ข้อความที่ส่งตอน Offline ย้อนหลังเมื่อ Login ใหม่
-ข้อความยังเก็บใน SQLite และการโหลดประวัติผ่าน Network เป็นงาน CP07
+ข้อความยังเก็บใน SQLite และโหลดย้อนหลังด้วย `HISTORY_GET` ตาม [history-files.md](history-files.md)
 
 ## ขอบเขตและการตรวจรับ
 
@@ -85,7 +85,8 @@ Logout/EOF/Error ลบ Session ตาม Registry เดิม ไม่ส่�
   ถ้ารายชื่อกลุ่มเกินขนาดให้ `FRAME_TOO_LARGE` แล้วขอ `limit` เล็กลงได้
   ถ้ารายชื่อสมาชิกของกลุ่มเดียวเกิน 1 MiB ต้องเพิ่ม Member pagination ก่อนรองรับขนาดนั้น
   การ Join ที่ทำให้ Response เกินขนาดจะ Rollback และ Connection ยังใช้ต่อได้
-- `HISTORY_GET`, `HISTORY_SEARCH`, Files และ AI ยังให้ `UNKNOWN_TYPE` หลัง Login
+- History/Search/Files ใช้สัญญาใน [history-files.md](history-files.md) (CP07–CP08)
+  `AI_SUMMARIZE` ยังให้ `UNKNOWN_TYPE` หลัง Login จนถึง CP09
   CP05 ตรวจ Live chat กับข้อมูลถาวรฝั่ง Server; CP06 เพิ่ม Tkinter และ Network worker แล้ว
   การตรวจสองเครื่องจริงยังต้องทำ ดู [demo-checklist.md](demo-checklist.md)
 

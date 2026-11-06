@@ -41,7 +41,7 @@ uv run --locked --env-file .env python -m server.web
 - บัญชี Anan/Ploy/Mek และข้อความในภาพเป็นข้อมูลทดสอบแยกใน Temporary directory
   ไม่ seed ข้อมูลตัวอย่างเข้า runtime จริง วันเวลาเป็นเวลาที่ Server สร้าง
 - เทียบกับ Focus prototype โดยเอา title bar จำลองออก สี/spacing/typography ใช้ CSS ตามแบบ
-  ปุ่ม Files/Search/AI/Attachment ยัง disabled ตาม scope ไม่สร้างไฟล์/ผล AI ปลอม
+  ภาพนี้ถ่ายตอน CP06 ซึ่งปุ่ม Files/Search/AI/Attachment ยัง disabled; CP07–CP08 เปิด Search/Files/Attachment แล้ว AI ยังปิด
 - ภาพเดิมใน `evidence/cp06/` เป็นหลักฐาน Tkinter ก่อน migration ไม่ใช่เว็บปัจจุบัน
 
 ## Connection / UI checks
@@ -67,7 +67,7 @@ uv run --locked --env-file .env python -m server.web
 3. เปิดเฉพาะพอร์ต Web/HTTPS ที่ใช้ ไม่เปิด SQLite หรือส่ง keys/.env ให้ Client
 4. ให้ A/B เปิดคนละคอมพิวเตอร์ C เป็น Browser profile แยกสำหรับตรวจคนนอก
 5. ไล่ R1–R11 บันทึกผลและภาพจากทั้งสองเครื่อง ตรวจ `/ws` Upgrade/ข้อความใน Network
-6. ข้อมูล/บัญชียังอยู่หลัง restart; UI โหลดข้อความเก่าหลังเปิดใหม่ยังเป็น CP07
+6. ข้อมูล/บัญชียังอยู่หลัง restart และ UI โหลดข้อความเก่าหลังเปิดใหม่ (CP07)
 7. ลงวันที่/OS/Browser/เครื่อง/เครือข่าย/URL/ผล TLS และภาพไว้ใน DEVELOPMENT สำหรับ CP11
 
 | ข้อมูลตรวจจริง | ผล |
@@ -79,4 +79,13 @@ uv run --locked --env-file .env python -m server.web
 | Client C / บัญชีคนนอก | รอ |
 | R1–R11 / IME / disconnect / ภาพ | รอ |
 
-History/search (CP07), files (CP08), AI จริง (CP09), Cloud (CP10) ยังไม่ตรวจรับ
+### CP07–CP08 บนเครื่องจริง (เก็บผลสำหรับ CP11)
+
+1. A ส่งข้อความหลายข้อความ ปิด Browser และหยุด/เริ่ม Server ใหม่ แล้ว Login ใหม่ ข้อความเดิมยังอยู่
+2. กด “โหลดข้อความก่อนหน้า” ในห้องที่มีมากกว่า 50 ข้อความ ไม่มีข้อความซ้ำหรือหาย
+3. ค้นหาด้วยคำและช่วงวันที่ กดผลลัพธ์แล้วเลื่อนไปข้อความนั้น; C (คนนอก) ค้นห้อง A/B ไม่ได้
+4. B เข้ากลุ่มหลัง A ส่งข้อความ/ไฟล์ B ไม่เห็นของก่อน Join ทั้งแชต ค้นหา และแท็บไฟล์
+5. A ส่งไฟล์ ≤ 5 MB B ดาวน์โหลดจากอีกเครื่องแล้ว `shasum -a 256` ตรงกับต้นฉบับ
+6. ไฟล์เกิน 5 MB ถูกปฏิเสธ และตัดเน็ตระหว่างส่งไฟล์แล้วแชตยังใช้ได้หลัง Login ใหม่
+
+ผล CP07–CP08 ล่าสุดเป็นผล Local (Python + Browser E2E) ดู DEVELOPMENT; AI จริง (CP09), Cloud (CP10) ยังไม่ตรวจรับ
