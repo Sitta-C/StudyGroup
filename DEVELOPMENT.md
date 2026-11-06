@@ -8,17 +8,17 @@
 ## สถานะสำหรับเริ่ม session ถัดไป
 
 - อัปเดตล่าสุด: 6 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
-- ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config
-  และ CP02 Socket Protocol รวมถึง CP03 SQLite และสิทธิ์เข้าถึงข้อมูล
-- งานถัดไป: **CP04 TLS และ Authentication** แล้วต่อ CP05 Chat Server
-- สถานะโค้ด: มี `client/`, `server/`, `shared/`, Config, Socket Protocol,
-  SQLite Schema/Transaction และส่วนตรวจสิทธิ์ร่วม พร้อม Tests รวม 234 กรณีผ่าน
-  (Config 69 + Protocol 83 + Database 51 + Permissions 31)
-  ยังไม่มี Entry points, Authentication, Chat Server หรือหน้าจอแอป
+- ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
+  CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล และ CP04 TLS/Authentication
+- งานถัดไป: **CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม** แล้วต่อ CP06 Tkinter
+- สถานะโค้ด: มี Config, Socket Protocol, SQLite Schema/Transaction/สิทธิ์ร่วม,
+  TLS Server entry point, Client TLS transport, Router, Auth handlers และ Online registry
+  พร้อม Tests รวม 313 กรณีผ่าน (Config 69 + Protocol 83 + Database 51 + Permissions 31
+  + Auth 19 + TLS integration 60) ยังไม่มี Chat handlers หรือหน้าจอแอป
 - สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
 - สิ่งที่ยังต้องเตรียมภายหลัง: AI Key/งบใช้งาน, เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
   และคอมพิวเตอร์จริงอย่างน้อย 2 เครื่องสำหรับตรวจรับ
-- งาน Local ที่ทำต่อได้ตามลำดับ: CP04–CP06 ไม่ต้องรอบัญชี AI หรือ Cloud
+- งาน Local ที่ทำต่อได้ตามลำดับ: CP05–CP06 ไม่ต้องรอบัญชี AI หรือ Cloud
   ส่วนการตรวจรับ CP06 ให้ครบ R1 ต้องใช้คอมพิวเตอร์จริงสองเครื่อง
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
@@ -52,7 +52,7 @@
 | CP01 | Packages และ Config | CP00 | DONE | `tests/test_config.py`: 69 passed; import, defaults และ Config จาก Local `.env` ผ่าน ดูบันทึก CP01 |
 | CP02 | Socket Protocol | CP01 | DONE | `tests/test_protocol.py`: 83 passed ผ่าน TCP loopback จริง; ดูสัญญาใน docs/protocol.md และบันทึก CP02 |
 | CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | DONE | Database 51 + Permissions 31 passed ด้วย Temporary SQLite; Constraints/Reopen/Rollback/Join contention ผ่าน ดู docs/database.md และบันทึก CP03 |
-| CP04 | TLS และ Authentication | CP03 | TODO | มีเพียงใบรับรอง Local และผลตรวจ environment |
+| CP04 | TLS และ Authentication | CP03 | DONE | Auth 19 + TLS integration 60 passed ผ่าน TCP/TLS จริง รวม CA/Hostname/Expired cert, Login ซ้อน, Cleanup และ CLI; ดู docs/authentication.md และบันทึก CP04 |
 | CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | TODO | ยังไม่มี Handlers |
 | CP06 | Tkinter และตรวจรับ R1–R11 | CP05 | TODO | ต้องมี GUI จริงและทดสอบสองเครื่อง |
 | CP07 | ประวัติและการค้นหา | CP06 | TODO | ฟีเจอร์พิเศษข้อ 1 |
@@ -500,6 +500,91 @@ uv run --locked --env-file .env python -m client.main
   `server/passwords.py`, TLS listener/Connection lifecycle, Router, Auth handlers
   และ Session registry ที่ Login/Logout/Cleanup เป็นอะตอม พร้อม Tests ตามเกณฑ์ CP04
   โดยใช้ `Database` และ Permission API ใน `docs/database.md`
+
+### Session วันที่ 6 พฤศจิกายน 2026 — CP04 TLS และ Authentication
+
+- เป้าหมาย: ประกอบ TLS listener หลาย Clients, Auth handlers และ Session registry
+  บน Protocol/Database เดิม พร้อมตรวจรับผ่านเครือข่ายจริงและไม่แตะข้อมูล Local จริง
+- สถานะ: CP04 `TODO` → `IN_PROGRESS` → `DONE`; CP05–CP12 ยังเป็น `TODO`
+- สิ่งที่ทำสำเร็จ:
+  - เพิ่ม `server.main` สำหรับเปิด TLS listener ด้วย Config เดิม Initialize/Reopen SQLite
+    และหยุดด้วย Ctrl+C โดยปิด Listener และรอ Workers Cleanup ครบ
+  - แต่ละ Connection ใช้ Worker เจ้าของ TLS Handshake/Read/Write เพียงรายเดียว
+    พร้อม Outbound queue แบบจำกัดขนาดและ Socket pair สำหรับปลุก Worker;
+    Workers อื่นไม่เขียน TLS Socket ข้าม Thread และเปิด SQLite แยกตาม Worker
+  - เพิ่ม `client.network.connect()` ตรวจ Certificate chain และ Hostname ก่อนคืน Transport
+    ใช้ Local CA หรือ System trust store ตาม Config, TLS 1.2 ขึ้นไป ไม่มีโหมดปิด Verification
+  - เพิ่ม Register/Login/Logout/Users list, Argon2id พร้อม Random salt และ Upgrade hash
+    เมื่อ Parameters เก่า สมัครแล้วต้อง Login แยก ไม่คืน Hash/Exception/Secrets ให้ Client
+  - Username ใช้ Normalize เดียวกับ CP03 และ Database UNIQUE ป้องกันสมัครชื่อซ้ำพร้อมกัน
+    Password 8–128 Unicode characters, สูงสุด 512 UTF-8 bytes, ไม่มี NUL;
+    ไม่ Trim/Normalize และตรวจ Confirm Password ฝั่ง Server
+  - Router รับเฉพาะ Client requests; ก่อน Login ให้ผ่านเฉพาะ Register/Login
+    ทุกคำขออื่นให้ AUTH_REQUIRED; ปฏิเสธ Fields ปลอมตัวตนใน Auth/Users list
+    คำขอ CP05–CP09 หลัง Login ยังให้ UNKNOWN_TYPE จนกว่าจะมี Handler จริง
+  - Registry ล็อกการ Login/Logout/เรียง Snapshot และเข้าคิว Event แบบอะตอม
+    Login พร้อมกันได้เพียงผู้ชนะ ไม่ตัด Session เดิมหรือให้ Cleanup ผู้แพ้ล้างผู้ชนะ
+    ตรวจ Connection identity ก่อนลบเพื่อป้องกัน Cleanup เก่าล้าง Session ใหม่
+  - Online events มี User ID/ชื่อที่ Login รวมตัวเองและ Revision เพิ่มตาม Registry
+    Login response มาก่อน Event แรก; Logout response มาก่อน Snapshot สุดท้ายของตน
+    หลังจากนั้นไม่ Broadcast ให้ Connection ที่ Logout/ยังไม่ Login
+  - EOF, Invalid/truncated Frame, TLS/Socket error, Deadline, Idle timeout, Queue เต็ม
+    และ Server stop ผ่าน Cleanup เดียวกัน มี Total frame deadline กัน Byte drip
+  - จำกัด Auth ต่อ Source IP และชื่อ Normalize ร่วมทั้ง Server ข้าม Reconnect/Logout
+    ใช้ Monotonic window/Bounded buckets และจำกัดงาน Argon2 พร้อมกัน 2 งาน
+    Unknown account Verify ด้วย Dummy hash ที่ Cost เดียวกัน Login ผิดใช้ข้อความรวม
+    Log ใช้ข้อความคงที่ ไม่บันทึก Credentials/Keys หรือ Exception ที่อาจมี Secrets
+- ไฟล์สำคัญ: `server/main.py`, `server/connection.py`, `server/router.py`,
+  `server/handlers/auth.py`, `server/passwords.py`, `server/sessions.py`,
+  `server/rate_limit.py`, `client/network.py`, `tests/test_auth.py`,
+  `tests/test_tls_integration.py`, `docs/authentication.md`, docs/protocol/setup,
+  README, HANDOFF และ DEVELOPMENT
+- Dependencies: ไม่เพิ่ม Dependency และไม่เปลี่ยน `pyproject.toml`/`uv.lock`;
+  Tests ใช้ OpenSSL CLI ที่มีอยู่เพื่อสร้างใบรับรองชั่วคราว
+- คำสั่งตรวจและผลจริง (ใช้ `UV_CACHE_DIR=/private/tmp/studygroup-uv-cache`
+  นำหน้าคำสั่ง uv):
+  - ก่อนพัฒนา: `uv run --locked pytest -q` ภายใต้สิทธิ์ Local TCP — **234 passed**
+  - `uv sync --locked` — ผ่าน; Resolved 11 packages, Checked 9 packages
+  - `uv lock --check` — ผ่าน; Resolved 11 packages
+  - รอบสุดท้าย `uv run --locked pytest -q --tb=short` — **313 passed, 0 failed, 0 skipped**
+    ใช้เวลา 19.34 วินาที; Config 69, Protocol 83, Database 51, Permissions 31,
+    Auth 19 และ TLS integration 60
+  - TLS Tests ใช้ TCP จริงบน `127.0.0.1` และตรวจชื่อ DNS `localhost` ด้วย
+    พอร์ตชั่วคราว พร้อม CA/Certificate/Keys และ SQLite ที่สร้างใน Temporary directories
+    ครอบคลุมสมัคร/Login พร้อมกัน, Generic failures, Hash/Upgrade, Actor spoofing,
+    CA ผิด/Hostname ผิด/หมดอายุ, Plaintext ถูกปฏิเสธ, Online events รวมตัวเอง,
+    Logout/EOF/Frame error/Timeout, Stale cleanup, Reconnect limits, Capacity/Queue,
+    งาน Hash เต็มแล้วฟื้นตัว, Byte drip และ Shutdown ระหว่าง Handshake/Partial frame
+  - ตรวจ 3 TLS Clients ส่ง Requests รวม 60 ครั้งพร้อม Presence events และตรวจ Thread ID
+    ของ Handshake/recv/sendall ฝั่ง Server พบ I/O owner เพียง Thread เดียวต่อ Connection
+  - ทดสอบ Restart ใช้ Database เดิม บัญชียังอยู่แต่ต้อง Login ใหม่
+    และเปิด `python -m server.main` ใน Process จริง รับ Register/Login ผ่าน TLS
+    แล้วส่ง SIGINT แทน Ctrl+C ได้ Exit code 0
+  - `git diff --check` — ผ่าน
+- ข้อสังเกตระหว่างตรวจ:
+  - Sandbox ปกติยังไม่อนุญาต TCP bind ตาม CP02–CP03 จึงรันชุดเครือข่ายด้วยสิทธิ์
+    Local TCP ที่อนุมัติ ไม่ Skip หรือใช้ Mock แทน Integration tests
+  - รอบใหม่แรก Auth unit 18 passed แต่ TLS fixtures 50 errors เพราะ OpenSSL ของเครื่องนี้
+    ไม่รองรับ `x509 -days -1`; เปลี่ยน Fixture เป็น `openssl ca` กำหนดวันหมดอายุ
+    ในอดีตอย่างชัดเจน จากนั้นผ่านครบ และเพิ่มกรณีตรวจรับจนได้ผลรอบสุดท้ายข้างต้น
+- ขอบเขตและการตัดสินใจ:
+  - Limits และ Wire fields ที่ใช้จริงอยู่ใน docs/authentication.md; ยังไม่มี Environment
+    variables ใหม่ สามารถปรับ ServerLimits/AuthRateLimiter ผ่าน Constructor
+    Limiter อยู่ใน Memory และเริ่มใหม่เมื่อ Restart; ผู้ใช้หลัง NAT ใช้งบ Source IP ร่วมกัน
+  - Client transport ยังเป็น Blocking API ให้ผู้เรียกเดียวทำ I/O ไม่มี GUI worker,
+    Pending request registry, Remember password หรือ Auto retry; CP06 ต้องทำต่อ
+    โดยรักษา TLS I/O ownership และส่งผลไป Tkinter ผ่าน Queue/after()
+  - Tests เป็น Local เครื่องเดียว ยังไม่ตรวจ GUI, สองเครื่องจริง หรือ Cloud
+    CP04 จบตามเกณฑ์ Auth/TLS แต่ยังไม่ใช่การตรวจรับ R1–R11 ของ CP06
+  - CP05 ต้องใช้ `connection.user` เป็น Actor ตรวจสิทธิ์ร่วมจาก CP03
+    บันทึกข้อความก่อนตอบรับ และส่ง Live events เฉพาะสมาชิก/ผู้มีสิทธิ์หลัง Commit
+- สภาพ Workspace: เริ่มจาก Git working tree สะอาด; ไม่แก้ `.env`, ใบรับรอง/Keys
+  ใน `certs/` หรือข้อมูลจริงใน `data/`; ยังไม่ได้ Commit
+- งานที่ยังค้าง: CP05–CP12; AI Provider/Model/Key และ Cloud ยังไม่เลือก
+- งานแรกของ Session ถัดไป: เปลี่ยน CP05 เป็น `IN_PROGRESS` แล้วเพิ่ม Chat/Group handlers
+  และ Routing สำหรับ PRIVATE_ROOM_OPEN, GROUP_CREATE/LIST/JOIN, MESSAGE_SEND
+  ด้วย Database/Permissions เดิม พร้อม Registry API ส่ง Event ถึงผู้มีสิทธิ์เท่านั้น
+  ทดสอบ Clients A/B/C ผ่าน TLS จริงเพื่อยืนยันว่าคนนอกห้องไม่เห็นข้อมูลหรือ Events
 
 ### แบบบันทึกสำหรับ session ถัดไป
 

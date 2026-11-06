@@ -2,9 +2,9 @@
 
 โปรเจกต์ Desktop Chat สำหรับงานกลุ่มนักศึกษา ใช้ Python, Tkinter และ TCP Socket พร้อม AI สรุปบทสนทนา ส่งไฟล์ ค้นหาประวัติ และ Cloud Server
 
-**สถานะ:** มี Packages, Config แยก Client/Server, Socket Protocol,
-SQLite และส่วนตรวจสิทธิ์เข้าถึงข้อมูลพร้อม Tests แล้ว
-ยังไม่มีหน้าจอแอปหรือ Socket Server ที่เปิดใช้งานได้
+**สถานะ:** มี Config, Socket Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล,
+TLS Server และ Register/Login/Logout พร้อมรายชื่อออนไลน์และ Tests แล้ว
+งานถัดไปคือ Server แชตส่วนตัว/กลุ่ม ยังไม่มีหน้าจอแอป
 
 **Environment:** เตรียม Local environment ด้วย **uv** แล้ว ใช้ Python 3.14.10,
 Tkinter, `argon2-cffi` และ `pytest` พร้อม `uv.lock` ดู
@@ -13,6 +13,7 @@ Tkinter, `argon2-cffi` และ `pytest` พร้อม `uv.lock` ดู
 ```bash
 uv sync --locked
 uv run --locked python -m tkinter
+uv run --locked --env-file .env python -m server.main
 ```
 
 สำหรับเครื่องใหม่ให้เตรียม Python/Tkinter ตามคู่มือก่อน `uv sync`
@@ -21,6 +22,7 @@ uv run --locked python -m tkinter
 - [ข้อกำหนดใน HANDOFF.md](HANDOFF.md) — Project Structure สถาปัตยกรรม Auth/Database/Protocol และเกณฑ์ส่งงาน
 - [สัญญา Socket Protocol](docs/protocol.md) — Framing, Request/Response/Event, Validation และการใช้ API
 - [SQLite และสิทธิ์เข้าถึงข้อมูล](docs/database.md) — Schema, Connection/Transaction และขอบเขตประวัติของสมาชิก
+- [TLS และ Authentication](docs/authentication.md) — เปิด Server, Auth contract, Session lifecycle และ Limits
 - [เปิด Prototype GUI](docs/prototypes/studygroup-desktop.html) — เปิดไฟล์นี้ใน Browser เพื่อทดลองหน้าตา Desktop
 - [รายละเอียด Prototype](docs/prototypes/README.md) — วิธีใช้งานและส่วนที่ยังจำลองอยู่
 - [โจทย์ Term Project](docs/reference/socket-programming-assignment.pdf)

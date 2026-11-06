@@ -2,8 +2,9 @@
 
 สัญญาระดับ Frame และ Packet ที่ใช้จริงใน `shared/protocol.py`,
 `shared/message_types.py` และ `shared/validation.py` ตาม CP02
-ใช้กับ Blocking TCP Socket และภายหลังกับ Socket ที่หุ้ม TLS ใน CP04
-ขณะนี้ยังไม่มี Server, Router หรือ Handler ของฟีเจอร์จริง
+ใช้กับ Blocking TCP Socket และ Socket ที่หุ้ม TLS แล้วใน CP04
+Server/Router และ Auth handlers ใช้สัญญารายฟีเจอร์ใน [authentication.md](authentication.md)
+Chat/Groups/History/Files/AI handlers ยังเป็นงาน checkpoint ถัดไป
 
 ## Frame
 
@@ -109,7 +110,7 @@ Event ไม่ต้องรอ Request และไม่มี Request ID:
 Validator ตาม Python runtime ทั้งสองกรณีถูกปฏิเสธด้วย `ProtocolError`
 ข้อความ Exception ที่ Library สร้างไม่คัดลอก Payload ที่รับมา
 
-Error Codes ฝั่งฟีเจอร์ที่ประกาศไว้เพิ่มเติม (ยังไม่มี Handler):
+Error Codes ฝั่งฟีเจอร์ที่ประกาศไว้เพิ่มเติม (Auth เริ่มใช้แล้วใน CP04):
 `INVALID_INPUT`, `AUTH_REQUIRED`, `AUTH_FAILED`, `USERNAME_TAKEN`,
 `ALREADY_LOGGED_IN`, `FORBIDDEN`, `NOT_FOUND`, `RATE_LIMITED`,
 `AI_UNAVAILABLE`, `INTERNAL_ERROR`
@@ -151,7 +152,8 @@ packet = connection.recv_packet()  # dict หรือ None เมื่อ EOF 
 - อย่าแก้ไข Packet/`data` จากอีก Thread ระหว่าง Validate/Encode/Send
   Builders ไม่ Copy ข้อมูลภายใน
 - Caller เป็นเจ้าของ Socket, Timeout และการปิด/Cleanup; Lock การเขียน
-  ไม่ขวาง Reader การจัดการ TLS Socket ข้าม Thread และ Lifecycle ต้องตรวจต่อใน CP04
+  ไม่ขวาง Reader แต่ TLS Server ใน CP04 ใช้เจ้าของ I/O เพียง Worker เดียวต่อ Socket
+  และ Outbound queue สำหรับ Thread อื่น ตาม [authentication.md](authentication.md)
 - Module import ไม่เปิด Network ไม่อ่าน Config และไม่สร้าง Runtime data
 
 ## หลักฐานและคำสั่งทดสอบ

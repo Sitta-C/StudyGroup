@@ -96,14 +96,15 @@ Config อ่านจาก Environment ปัจจุบันเมื่อ
 Relative paths อ้างจาก Root โปรเจกต์เสมอ แม้เปลี่ยน Working directory
 รองรับ Absolute paths และ `~`; ผู้เรียกกำหนดฐานอื่นด้วย `base_dir=Path(...)` ได้
 Config จะคืน Path แบบ Absolute แต่ไม่สร้าง Directory, Database หรือไฟล์ใด ๆ
-Server จะใช้ `data_dir/studygroup.db` และ `data_dir/uploads` ในขั้นพัฒนาถัดไป
+Server สร้าง/เปิด `data_dir/studygroup.db` เมื่อเริ่มทำงาน;
+`data_dir/uploads` ยังรอขั้นส่งไฟล์
 Host/Port/Path ที่ผิดจะยก `shared.config.ConfigError` ซึ่งเป็น `ValueError`
 พร้อมชื่อตัวแปรและสาเหตุ โดยไม่แสดงค่า AI Key
 
 เมื่อไม่ตั้งตัวแปรใดเลย ค่าตั้งต้นยังต้องใช้ไฟล์ Local TLS ที่สร้างไว้ด้านบน
 ถ้าไม่มีไฟล์เหล่านี้ `from_env()` จะรายงานข้อผิดพลาดชัดเจน
 Path ของ Server ห้ามกำหนดค่าว่าง ส่วน CA ของ Client ที่กำหนดว่างอย่างชัดเจน
-จะใช้ System CA แทน Local CA โดยยังต้องตรวจ Certificate และ Hostname เมื่อทำ TLS ใน CP04
+จะใช้ System CA แทน Local CA โดยยังตรวจ Certificate และ Hostname ใน `client.network.connect()`
 การตรวจ Config ใน CP01 ตรวจ Path/สิทธิ์อ่านเท่านั้น ยังไม่ตรวจ PEM, คู่ Key/Certificate
 หรือ TLS handshake
 
@@ -140,7 +141,7 @@ openssl verify -CAfile certs/ca.crt -verify_hostname localhost certs/server.crt
 ```
 
 คำสั่ง Tkinter ต้องเปิดหน้าต่างทดสอบได้ แล้วปิดหน้าต่างเพื่อจบคำสั่ง
-SQLite ใช้ผ่าน Python ได้ทันที ยังไม่สร้าง `studygroup.db` จนกว่าจะมี Schema จริง
+SQLite ใช้ผ่าน Python ได้ทันที และจะสร้าง `studygroup.db` เมื่อเปิด Server
 
 ## ทำงานต่อ
 
@@ -150,17 +151,19 @@ uv add <runtime-package>
 uv add --dev <development-package>
 ```
 
-Tests ปัจจุบันรันได้ด้วย `uv run --locked pytest`
-เมื่อพัฒนา Entry points แล้วจึงใช้คำสั่งเปิดแอปต่อไปนี้:
+Tests ปัจจุบันรันได้ด้วย `uv run --locked pytest` และต้องใช้ OpenSSL CLI
+เพื่อสร้างใบรับรองทดสอบชั่วคราว รวมทั้งอนุญาตเปิด TCP Loopback บนเครื่อง
+เปิด TLS/Auth Server และหยุดด้วย Ctrl+C ได้แล้ว:
 
 ```bash
 uv run --locked --env-file .env python -m server.main
-uv run --locked --env-file .env python -m client.main
 uv run --locked pytest
 ```
 
 uv ไม่โหลด `.env` ให้อัตโนมัติ จึงระบุ `--env-file .env` เมื่อคำสั่งต้องใช้ Config
 อย่าส่ง AI Key หรือ Server private key ไปกับ Client
+สัญญา Register/Login/Logout, Client transport และ Limits อยู่ใน
+[authentication.md](authentication.md) ยังไม่มี `client.main`/GUI และ Chat handlers
 
 ให้นำ `pyproject.toml`, `uv.lock`, `.python-version`, `.env.example` และสคริปต์เข้า Git
 ส่วน `.venv/`, `.env`, `certs/`, `data/` ถูก exclude ใน `.gitignore` แล้ว

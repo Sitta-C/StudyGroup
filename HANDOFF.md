@@ -4,9 +4,9 @@
 
 StudyGroup เป็นโปรแกรม Desktop สำหรับนักศึกษาคุยงานกลุ่ม ใช้ Python, Tkinter และ TCP Socket โดยมี Server และ SQLite อยู่บน Cloud เครื่องเดียวกัน ฟีเจอร์พิเศษ 4 ข้อคือ AI สรุปบทสนทนา ส่งไฟล์ ประวัติแชตที่ค้นหาได้ และ Cloud deployment
 
-**สถานะการพัฒนา:** มี Packages, Config แยก Client/Server, Socket Protocol,
-SQLite และส่วนตรวจสิทธิ์เข้าถึงข้อมูลพร้อม Tests แล้ว
-ยังไม่มี Entry points, ระบบแชตผ่าน Network, Authentication หรือการ Deploy
+**สถานะการพัฒนา:** มี Config, Socket Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล,
+TLS Server และ Authentication พร้อมรายชื่อออนไลน์และ Tests แล้ว
+ยังไม่มี Chat handlers, Desktop entry point/GUI หรือการ Deploy
 ดูสถานะ checkpoint และผลทดสอบล่าสุดใน [DEVELOPMENT.md](DEVELOPMENT.md)
 โค้ด HTML ใน Prototype เป็นแบบอ้างอิงหน้าจอ ไม่ใช่แอปที่พัฒนาเสร็จแล้ว
 
@@ -18,10 +18,14 @@ SQLite และส่วนตรวจสิทธิ์เข้าถึง�
 และ `shared/config.py`
 
 สัญญา Protocol ที่พัฒนาแล้วและขอบเขต Validation อยู่ใน [docs/protocol.md](docs/protocol.md)
-ใช้ `PacketConnection` เดียวต่อ Socket เพื่อรวม Lock การเขียนของทุก Thread
+ใช้ `PacketConnection` เดียวต่อ Socket; TLS ฝั่ง Server ให้ Worker เจ้าของ Connection
+ทำ I/O เพียงรายเดียว ส่วน Thread อื่นส่งผ่าน Outbound queue
 
 Schema, Transaction และ Permission API ที่พัฒนาแล้วอยู่ใน
 [docs/database.md](docs/database.md) โดย Handler ต้องผูก Actor กับ Connection ที่ Login
+
+สัญญา Auth, TLS transport, Session registry และ Limits ที่ใช้แล้วอยู่ใน
+[docs/authentication.md](docs/authentication.md)
 
 ## 1. เริ่มอ่านและทำงานจากตรงนี้
 
@@ -211,6 +215,8 @@ StudyGroup/
 - สมัครด้วย Username, Password, Confirm Password ใช้ `user_id` ถาวรอ้างอิงข้อมูล ชื่อผู้ใช้มีค่า Normalize สำหรับตรวจซ้ำ และมี UNIQUE constraint ในฐานข้อมูล
 - เสนอ Username 3–24 ตัว ใช้อักษรอังกฤษ ตัวเลข และ `_` โดยไม่แยกตัวพิมพ์เล็ก/ใหญ่ แสดงชื่อเดิมได้ แต่ไม่สร้างสองบัญชีด้วยชื่อที่ต่างกันแค่ตัวพิมพ์
 - Hash Password ด้วย Argon2id ผ่าน `argon2-cffi` ให้ Library สร้าง Salt และตรวจ Hash ฝั่ง Server ห้ามเก็บ Password ตรง ๆ หรือใช้ SHA-256 อย่างเดียว
+- Password ยาว 8–128 Unicode characters ไม่เกิน 512 UTF-8 bytes และไม่มี NUL;
+  ไม่ Trim/Normalize และ Confirm ต้องตรงกัน สมัครแล้ว Login แยกตามสัญญา CP04
 - ส่ง Credentials หลัง TLS handshake และตรวจ Certificate chain/Hostname ของ Server แล้วเท่านั้น สำหรับ Local ให้เชื่อถือ CA ทดสอบอย่างชัดเจน ไม่ปิด Certificate verification
 - ก่อน Login อนุญาตเฉพาะคำขอที่จำเป็น เช่น REGISTER และ LOGIN หลัง Login ผูก `user_id` กับ Connection Object ไม่เชื่อ `sender_id` หรือ Username ที่ Client อ้างมาในคำขอแชต
 - ปฏิเสธการ Login ซ้อนของบัญชีเดียวกันโดยไม่ตัด Session เดิม การตรวจและลงทะเบียน Session ต้องทำอย่างเป็นอะตอม ภายใต้ Lock
@@ -327,8 +333,9 @@ uv run --locked --env-file .env python -m client.main
 uv run --locked pytest
 ```
 
-ยังใช้คำสั่งเปิดแอปไม่ได้เพราะยังไม่มี Entry points แต่รัน `uv run --locked pytest`
-เพื่อตรวจ Config, Socket Protocol, SQLite และสิทธิ์เข้าถึงข้อมูลได้แล้ว
+เปิด `server.main` สำหรับ TLS/Auth ได้แล้ว ส่วน `client.main` ยังรอ CP06
+รัน `uv run --locked pytest` เพื่อตรวจ Config, Protocol, SQLite, สิทธิ์เข้าถึงข้อมูล
+และ Authentication ผ่าน TCP/TLS จริงได้
 
 Environment ฝั่ง Server ที่ควรเตรียม: `STUDYGROUP_HOST`, `STUDYGROUP_PORT`, `STUDYGROUP_DATA_DIR`, `STUDYGROUP_TLS_CERT`, `STUDYGROUP_TLS_KEY`, `STUDYGROUP_AI_PROVIDER`, `STUDYGROUP_AI_MODEL`, `STUDYGROUP_AI_API_KEY` และ Timeout/Limit ตามจำเป็น ส่วน Client มีเพียง Host, Port และ Trust configuration ไม่มี AI Key หรือ Server private key
 
