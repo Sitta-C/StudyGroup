@@ -1,6 +1,16 @@
 # TLS และ Authentication (CP04)
 
-## เปิด Server
+## Web app ปัจจุบัน
+
+เปิดด้วย `uv run --locked --env-file .env python -m server.web` หลัง build React
+ตาม [setup.md](setup.md) Browser ต่อ `/ws` ที่ origin เดียวกัน ไม่มี Host/CA form
+สัญญา Auth/Argon2id/rate limits และ registry ด้านล่างใช้ handlers เดิมทั้งหมด
+Session ผูก WebSocket, ไม่ persist password/token/cookie ใน Browser storage
+Browser Logout ขอ `LOGOUT` แล้วปิด socket; ปิดแท็บ/หลุดให้ server cleanup เช่นเดิม
+HTTP/WS ใช้เฉพาะ loopback dev; LAN/production ใช้ HTTPS/WSS พร้อม certificate ที่เชื่อถือได้
+Web config แยก `STUDYGROUP_WEB_*` จาก TLS/TCP config เดิม
+
+## เปิด Legacy TCP Server
 
 เตรียม environment และ Local CA ตาม [setup.md](setup.md) แล้วรัน:
 

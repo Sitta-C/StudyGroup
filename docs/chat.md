@@ -1,6 +1,7 @@
 # Chat Server (CP05)
 
-เปิด Server ตาม [authentication.md](authentication.md) และใช้ TLS transport เดิม
+เปิด Web Server ตาม [setup.md](setup.md) และใช้ JSON WebSocket text ที่ `/ws`
+คำขอ/ผล/สิทธิ์ด้านล่างใช้ร่วมกับ legacy TCP/TLS ผ่าน handlers เดิม
 ทุกคำขอด้านล่างต้อง Login แล้ว ผู้ส่ง/ผู้เข้ากลุ่มมาจาก `connection.user`
 ห้ามส่ง `sender_id`, `user_id`, `username`, รายชื่อสมาชิก หรือ Fields เพิ่มเพื่ออ้างตัวตน
 

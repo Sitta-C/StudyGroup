@@ -11,19 +11,23 @@
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
   CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล, CP04 TLS/Authentication
   และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม
-- งานปัจจุบัน: **CP06 Tkinter และตรวจรับ R1–R11 — IN_PROGRESS**
-- สถานะโค้ด: มี Config, Socket Protocol, SQLite Schema/Transaction/สิทธิ์ร่วม,
-  TLS Server, Router, Auth/Chat handlers และ Online registry พร้อม Desktop Client Tkinter
-  แบบ Focus ที่ปรับสไตล์ตามภาพต้นแบบแล้ว, Register/Login/Server settings, Private/Group chat,
-  Draft และ Disconnect/Re-login
-  ชุดทดสอบหลัก 378 กรณีผ่าน (ชุดเดิม 352 + Client integration 21 + LAN certificate 5)
-  และตรวจ GUI จริงแยกอีก 3 กรณีผ่าน ดูบันทึก CP06 ด้านล่าง
+- งานปัจจุบัน: **CP06 React Web App / WebSocket และตรวจรับ R1–R11 — IN_PROGRESS**
+- คำสั่งผู้ใช้ 6 พ.ย. 2026 เปลี่ยนจาก Tkinter เป็น `React → WebSocket → Python → SQLite`
+  ใช้ branch `feat/react-websocket` ไม่มี prefix `codex/`
+- สถานะโค้ด: React/TypeScript/Vite แบบ Focus, WebSocket adapter, Python HTTP assets,
+  Login/Register, ออนไลน์, Private/Group chat, Join, Draft และ Disconnect/Re-login
+  ใช้ Auth/Chat/permissions และ Database เดิม ไม่มี schema migration
+- Python tests **400 passed** (เดิม 378 + Web transport/config 22) และ Browser E2E **6 passed**
+  ผ่าน production build จริง รวมมือถือ/IME/HTML escaping/ตัดหลัง Commit ก่อน Ack/ไม่ Replay
+  หลักฐานหน้าเว็บใน docs/evidence/cp06-web/; Tkinter tests/ภาพเดิมเป็นประวัติก่อนย้าย UI
+- วิธีเริ่ม: `npm --prefix web ci`, `npm --prefix web run build`,
+  `uv run --locked --env-file .env python -m server.web` แล้วเปิด http://127.0.0.1:8000
 - สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
 - สิ่งที่ยังต้องเตรียมภายหลัง: AI Key/งบใช้งาน, เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
   และคอมพิวเตอร์จริงอย่างน้อย 2 เครื่องสำหรับตรวจรับ
-- งานถัดไปเพื่อปิด CP06: ทำตาม docs/demo-checklist.md บนคอมพิวเตอร์จริงสองเครื่อง
-  เก็บหลักฐาน R1–R11 พร้อมตรวจ Thai IME/Copy-Paste และการหลุดบน LAN จริง
-  เตรียม LAN certificate ด้วย scripts/generate-lan-cert.sh ได้แล้ว ไม่ต้องรอบัญชี AI หรือ Cloud
+- งานถัดไปเพื่อปิด CP06: ทำ docs/demo-checklist.md บนคอมพิวเตอร์จริงสองเครื่อง
+  ตั้ง HTTPS/WSS และ Origin ให้ตรง URL เก็บหลักฐาน R1–R11, Thai IME/Copy-Paste,
+  mobile keyboard และการหลุดบนเครือข่ายจริง แล้วเริ่ม CP07 history/search
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
 พร้อมกัน ไม่คัดลอกสถานะไปดูแลหลายชุดใน README หรือ HANDOFF
@@ -58,7 +62,7 @@
 | CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | DONE | Database 51 + Permissions 31 passed ด้วย Temporary SQLite; Constraints/Reopen/Rollback/Join contention ผ่าน ดู docs/database.md และบันทึก CP03 |
 | CP04 | TLS และ Authentication | CP03 | DONE | Auth 19 + TLS integration 60 passed ผ่าน TCP/TLS จริง รวม CA/Hostname/Expired cert, Login ซ้อน, Cleanup และ CLI; ดู docs/authentication.md และบันทึก CP04 |
 | CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | DONE | Chat integration 39 passed ผ่าน TCP/TLS จริงด้วย Clients A/B/C; Private/Group/Join boundary/Actor spoofing/Event isolation/Restart ผ่าน ดู docs/chat.md และบันทึก CP05 |
-| CP06 | Tkinter และตรวจรับ R1–R11 | CP05 | IN_PROGRESS | Desktop Client/Worker/สไตล์ Focus และ GUI checks ผ่าน Local; มีภาพเทียบต้นแบบ; ยังรอ R1–R11 บนสองเครื่องจริง |
+| CP06 | React WebSocket และตรวจรับ R1–R11 | CP05 | IN_PROGRESS | React Focus + Python WebSocket; Python 400 และ Browser 6 passed; ภาพ Desktop/Mobile; ยังรอสองเครื่องจริง |
 | CP07 | ประวัติและการค้นหา | CP06 | TODO | ฟีเจอร์พิเศษข้อ 1 |
 | CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | TODO | ฟีเจอร์พิเศษข้อ 2 |
 | CP09 | AI สรุปบทสนทนา | CP08 | TODO | ทำ Adapter/Mock ก่อน แล้วตรวจ API จริง |
@@ -160,14 +164,14 @@ Client C ที่อยู่นอกห้องไม่ได้รับ E
 **หลักฐาน:** Integration Tests หลาย Connections จริง รวมคำขอที่เดา Room ID
 และปลอม Sender ID พร้อมตรวจว่าข้อมูลที่ตอบกลับและ Event ไม่รั่วไปยังคนนอก
 
-### CP06 Tkinter และตรวจรับ R1 ถึง R11
+### CP06 React WebSocket และตรวจรับ R1 ถึง R11
 
-**งาน:** ทำหน้า Login/Register, ตั้งค่า Server และหน้าหลักแบบ Focus
-เชื่อม Receive Worker กับ `queue.Queue` และ Tkinter `after()`
+**งาน:** ทำ React Login/Register และหน้าหลักแบบ Focus เชื่อม WebSocket ที่ origin เดียว
+Python เสิร์ฟ static build และ `/ws` ใช้ Auth/Chat/SQLite เดิม
 ทำ Sidebar, ห้องส่วนตัว/กลุ่ม, ช่องพิมพ์, รายชื่อสมาชิกและสถานะเชื่อมต่อ
 เริ่ม `docs/architecture.md` และ `docs/demo-checklist.md`
 
-**ผ่านเมื่อ:** ทุก Widget เปลี่ยนจาก Main Thread, Network ไม่ทำ GUI ค้าง,
+**ผ่านเมื่อ:** UI ตอบสนองระหว่างรอ Network, production build และ Browser tests ผ่าน,
 ข้อความไทยใช้ได้, Enter ส่งและ Shift+Enter ขึ้นบรรทัดใหม่
 Loading/Empty/Error/Disconnected แสดงตรงสถานะจริง
 เมื่อหลุดเก็บ Draft ไม่แสดงว่าส่งสำเร็จและไม่ส่งซ้ำเงียบ ๆ
@@ -224,11 +228,11 @@ Timeout/Rate limit พร้อมบันทึก Provider/Model และผ
 
 ### CP10 Cloud deployment
 
-**งาน:** เตรียม Dockerfile/Compose, Server Config, TCP Port/TLS,
+**งาน:** เตรียม Dockerfile/Compose, React build, Python Web Server, HTTPS/WSS proxy,
 Persistent volume สำหรับ SQLite และ uploads บน Cloud เครื่องเดียวกัน
 พร้อมขั้นตอน Backup/Restore ที่ครอบคลุมฐานข้อมูลและไฟล์แนบสอดคล้องกัน
 
-**ผ่านเมื่อ:** Deploy และเชื่อม Desktop Clients ไปยัง Cloud จริงได้ผ่าน TLS
+**ผ่านเมื่อ:** Deploy และเชื่อม Browser Clients ไปยัง Cloud จริงได้ผ่าน HTTPS/WSS
 ข้อมูลอยู่ครบหลัง Restart/Recreate Container
 กู้คืน Backup แล้วข้อความและไฟล์กลับมาใช้ได้
 ไม่เปิด Database Port ให้ Client และไม่มี Key จริงอยู่ใน Image/Source
@@ -283,12 +287,16 @@ uv run --locked pytest
 
 ใช้ชื่อไฟล์จริงที่มีใน session นั้น บันทึกจำนวนผ่าน/ไม่ผ่าน/ข้ามและสาเหตุ
 อย่ารายงานว่าชุดทดสอบผ่านเมื่อยังไม่มี Tests หรือมีแต่ผลข้าม
-เมื่อมี entry points แล้วจึงใช้คำสั่งเปิดแอป:
+เปิดแอปปัจจุบันด้วย:
 
 ```bash
-uv run --locked --env-file .env python -m server.main
-uv run --locked --env-file .env python -m client.main
+npm --prefix web ci
+npm --prefix web run build
+uv run --locked --env-file .env python -m server.web
+# เปิด http://127.0.0.1:8000
 ```
+
+Browser tests: `npm --prefix web run test:e2e` ใช้ Chrome และ SQLite ชั่วคราว
 
 อย่าส่ง `.env` ฝั่ง Server ที่มี AI Key/private key ให้ Client
 เมื่อ Deploy จริงให้แยก Config ของแต่ละฝั่งตาม HANDOFF
@@ -770,6 +778,52 @@ uv run --locked --env-file .env python -m client.main
   การตรวจภาพใช้ชื่อแอป Preview แยกและหยุด Temporary server เมื่อเก็บภาพเสร็จ
 - งานค้าง: ตรวจ Thai IME/OS Clipboard และการแสดงผลบนเครื่องเดโมจริงสองเครื่อง
   ตาม docs/demo-checklist.md ก่อนปิด CP06 แล้วเริ่ม CP07
+
+### Session CP06 — React → WebSocket → Python → SQLite
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok)
+- Branch: `feat/react-websocket` จาก `origin/main` ที่ merge PR #1 แล้ว (`75d2669`)
+  ผู้ใช้สั่งไม่ใช้ prefix `codex/` จึงใช้ชื่อ branch นี้
+- เหตุผล: ผู้ใช้เลือก Web App เพื่อทำ Focus UI ด้วย React โดยคง Python backend
+  อัปเดต HANDOFF ให้แทนข้อเลือก Tkinter เดิม ไม่เปลี่ยน R1–R11 หรือฟีเจอร์พิเศษ
+- เพิ่ม `server/web.py`, `server/web_config.py`, dependency `websockets` พร้อม uv.lock
+  เสิร์ฟ React build + `/health` + `/ws` บนพอร์ต 8000, exact Origin allowlist,
+  TLS ตรงแบบ optional, strict JSON 1 MiB, bounded queues และ registry cleanup
+  ใช้ Router/Auth/Chat/Argon2/permissions/SQLite เดิม ไม่แก้ schema หรือข้อมูลจริง
+- เพิ่ม `web/`: React/TypeScript/Vite, controller/transport, Focus CSS/Lucide/local fonts
+  Login ไม่ให้กรอก Host/Port/CA ใช้ URL เดียวกับ Browser ไม่มี credentials ใน storage
+  Private/Group/Join/online/drafts/unread, dedup echo, stale selection guard,
+  coalesced group paging, explicit re-login, ไม่ reconnect/replay เอง
+- ตรวจภาพเทียบ Focus: CSS/tokens/typography จากต้นแบบ ไม่มี title bar จำลอง
+  รองรับ drawer มือถือ, dialogs, Thai/Emoji/Enter/Shift+Enter และ IME composition
+  ภาพใหม่ `docs/evidence/cp06-web/focus-desktop.png` / `focus-mobile.png`
+  ใช้ Browser จริงกับ Python/SQLite ชั่วคราว ไม่ seed Anan/Ploy/Mek ลง runtime
+- หลักฐานตรวจ:
+  - `uv run --locked pytest -q --tb=short -W error` — **400 passed** ใน 39.43 วินาที
+    ไม่มี failure/skip/warning รวมเดิม 378 + Web 22; เปิด loopback จริง
+  - Web tests ตรวจ HTTP assets/CSP/traversal/symlink, Origin reject, malformed JSON/binary,
+    A/B/C privacy/actor spoofing/join boundaries/cleanup, WSS certificate และ restart persistence
+  - `npm --prefix web run build` — TypeScript + Vite production build ผ่าน
+  - `npm --prefix web run test:e2e` — **6 passed** บน Chrome จริง
+    ตรวจหลาย Browser contexts, ไทย/หลายบรรทัด/4,000 emoji, privacy/join,
+    sender echo, duplicate login, draft/disconnect/re-login/logout/account isolation,
+    HTML เป็น text, มือถือ390×844, ชื่อกลุ่ม100ตัว และ IME events
+  - `uv lock --check`, `uv sync --locked` และ `git diff --check` — ผ่าน
+  - Test-only fixture ตัด socket หลัง `MESSAGE_SEND` Commit แต่ก่อน flush Ack/echo
+    ตรวจ SQLite เพิ่มแถวเดียว UI เก็บร่าง/แจ้งยังยืนยันไม่ได้ และ Login ใหม่ไม่ replay
+    Test endpoints/token มีเฉพาะ `web/e2e/server.py` ไม่อยู่ใน production server
+  - `STUDYGROUP_CAPTURE_EVIDENCE=1 npm --prefix web run test:e2e -- --grep 'Focus reference'`
+    จับภาพข้อมูลตัวอย่างจริงใน isolated test fixture
+- `.env` เดิมยังใช้ได้ Web ใช้ config แยกจาก TCP 5000/5001; DB ยัง `data/studygroup.db`
+  ไม่เปลี่ยน `.env`, certs, ข้อมูลจริง, trust store หรือแอปเดิมที่เปิดอยู่
+- เก็บ Tkinter/TCP โค้ดและ tests เดิมเพื่อ compatibility แต่เปลี่ยน entry point หลักเป็น server.web
+  คำสั่งเก่าย้ายไป docs/legacy-desktop.md ห้ามรันสอง Server กับ DB เดียวพร้อมกัน
+- เอกสาร README/setup/architecture/protocol/auth/chat/demo/HANDOFF ตรงกับ Web แล้ว
+  LAN/production ต้อง HTTPS/WSS พร้อม certificate ที่เชื่อถือ และ Origin ตรง public URL
+- CP06 ยัง IN_PROGRESS: Local Browser tests ไม่แทนสองเครื่องจริง R1–R11, Thai IME จริง,
+  OS clipboard/mobile keyboard และ LAN/TLS; CP07–CP10 ยังไม่ทำ history/search/files/AI/Cloud
+- งานแรก session ถัดไป: ทำ docs/demo-checklist.md บนสองเครื่องจริงแล้วเก็บหลักฐาน
+  จากนั้นปิด CP06 และเริ่ม CP07; ยังไม่ Deploy Cloud หรือเปิด PR ใหม่ในรอบ migration นี้
 
 ### แบบบันทึกสำหรับ session ถัดไป
 

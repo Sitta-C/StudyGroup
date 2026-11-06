@@ -1,185 +1,135 @@
-# Development environment (uv)
+# รัน StudyGroup Web
 
-StudyGroup ใช้ **uv** จัดการ Python environment และ dependencies โดยมี
-`pyproject.toml` เป็นรายการ dependency และ `uv.lock` เป็นเวอร์ชันที่ล็อกไว้
-ไม่ต้องดูแล `requirements.txt` แยกอีกชุด
+สถาปัตยกรรมปัจจุบันคือ **React → WebSocket → Python → SQLite**
+Python เสิร์ฟทั้งหน้าเว็บที่ build แล้วและ `/ws` บนพอร์ตเดียว
+Browser ไม่ต้องติดตั้ง Python/Tkinter และไม่ต้องกรอก Host/Port/CA ในหน้า Login
 
-Environment รอบนี้ใช้ CPython **3.14.10** ตาม `.python-version` พร้อม Tcl/Tk
-มี `argon2-cffi` สำหรับ Argon2id และ `pytest` ในกลุ่ม `dev`
-มี Packages และ Config แยก Client/Server พร้อม Tests, TLS Chat Server
-และ Desktop Client Tkinter แล้ว ดูสถานะการตรวจรับใน DEVELOPMENT.md
+## เตรียมครั้งแรก
 
-ตรวจบนเครื่องพัฒนาแล้ว: สร้างหน้าต่าง Tkinter ได้, Hash/Verify ด้วย Argon2id ได้,
-SQLite ในหน่วยความจำทำงาน และ TLS handshake ผ่านเมื่อเชื่อถือ Local CA และใช้
-`localhost` โดยปฏิเสธชื่อ Host ที่ไม่ตรงกับใบรับรอง
-
-## เตรียมเครื่อง
-
-ติดตั้ง uv ตาม [เอกสาร Astral](https://docs.astral.sh/uv/getting-started/installation/)
-และ Python ที่ import `tkinter`, `ssl`, `sqlite3` ได้
-Tkinter เป็นส่วนของ Python/Tcl/Tk ไม่ใช่ dependency ที่ติดตั้งด้วย `uv add`
-
-บน macOS ที่ใช้ Homebrew:
-
-```bash
-brew install python@3.14 python-tk@3.14
-uv venv --python "$(brew --prefix python@3.14)/bin/python3.14"
-uv sync --locked
-```
-
-หาก Homebrew มี patch version ต่างจาก `.python-version` ให้ติดตั้ง Python
-เวอร์ชันที่ pin ไว้ หรืออัปเดต pin ด้วย `uv python pin <version>` หลังตรวจว่า
-Python ใหม่นั้นใช้ Tkinter และ dependencies ได้แล้ว
-
-บนระบบอื่น ใช้ Python ที่มี Tcl/Tk แล้วระบุ interpreter นั้นให้ `uv venv --python`:
-
-```bash
-uv venv --python /path/to/python3.14
-uv sync --locked
-```
-
-คำสั่งทั้งหมดรันจาก root ของโปรเจกต์ ไม่ต้อง activate `.venv` เมื่อใช้ `uv run`
-ในเครื่องที่เตรียมรอบนี้ Python จาก Homebrew อยู่ที่
-`/opt/homebrew/opt/python@3.14/bin/python3.14` ส่วนคำสั่ง `python3` ของระบบอาจชี้
-คนละเวอร์ชัน จึงควรเรียก Python ของโปรเจกต์ผ่าน uv
-
-## Local config และ TLS
-
-สำหรับ checkout ใหม่ที่ยังไม่มี `.env`:
-
-```bash
-cp .env.example .env
-chmod 600 .env
-mkdir -p data/uploads
-bash scripts/generate-dev-certs.sh
-```
-
-ถ้ามี `.env` หรือ certificates อยู่แล้ว ให้ใช้ไฟล์เดิม ไม่ต้องคัดลอกทับ
-สคริปต์ใบรับรองจะหยุดหากพบไฟล์เดิมเพื่อไม่เปลี่ยน trust โดยไม่ตั้งใจ
-
-สคริปต์ต้องมีคำสั่ง `openssl` และสร้าง:
-
-- `certs/ca.crt`: CA สำหรับให้ Client เชื่อถืออย่างชัดเจน
-- `certs/ca.key`: private key ของ CA ใช้เฉพาะการออกใบรับรอง Local
-- `certs/server.crt` และ `certs/server.key`: ใบรับรองและ private key ของ Server
-
-ใบรับรอง Server อายุ 365 วัน ใช้กับ `localhost`, `127.0.0.1`, `::1` เท่านั้น
-ไม่ได้ติดตั้ง CA ลง system trust store และ Client ต้องเปิด hostname verification
-เครื่องอื่นที่เข้าผ่าน IP ของ LAN หรือ Cloud ต้องใช้ใบรับรองที่มีชื่อ/IP ตรงกัน
-ห้ามแจก private keys ให้ Client หรือใช้ชุด Local นี้เป็นใบรับรอง Production
-
-`.env` ตั้ง Host เป็น `127.0.0.1`, Port `5000`, ที่เก็บข้อมูล `data/`
-และ `STUDYGROUP_TLS_CA=certs/ca.crt` สำหรับ Client
-ค่าของ AI ยังเว้นว่างจนกว่าจะเลือก Provider/Model และมี Key จริง
-ค่าเหล่านี้อ่านได้แล้วผ่าน `ClientConfig.from_env()` และ `ServerConfig.from_env()`
-ใน `client/config.py` และ `server/config.py` ตามลำดับ
-
-### การอ่านและตรวจ Config
-
-Config อ่านจาก Environment ปัจจุบันเมื่อเรียก `from_env()` ไม่โหลด `.env` เอง
-และไม่อ่านค่าตอน import จึง import Packages ได้ก่อนมี Certificates
-ส่ง Mapping ให้ `from_env({...})` ได้สำหรับการทดสอบ; `{}` หมายถึงใช้ค่าเริ่มต้นทั้งหมด
-โดยไม่ดึงค่าจาก Environment จริงมาเติม
-
-| ตัวแปร | ฝั่ง | ค่าเริ่มต้น/เงื่อนไข |
-| --- | --- | --- |
-| `STUDYGROUP_HOST` | ทั้งสอง | `127.0.0.1`; Hostname หรือ IP ไม่มี URL/Port |
-| `STUDYGROUP_PORT` | ทั้งสอง | `5000`; เลขฐานสิบ 1–65535 |
-| `STUDYGROUP_TLS_CA` | Client | `certs/ca.crt`; ต้องเป็นไฟล์ที่อ่านได้ หรือกำหนดค่าว่างเพื่อใช้ System trust store |
-| `STUDYGROUP_DATA_DIR` | Server | `data`; Directory เดิมหรือ Path ใหม่ที่มี Parent เขียนและเข้าถึงได้ |
-| `STUDYGROUP_TLS_CERT` | Server | `certs/server.crt`; ต้องเป็นไฟล์ที่มีอยู่และอ่านได้ |
-| `STUDYGROUP_TLS_KEY` | Server | `certs/server.key`; ต้องเป็นไฟล์ที่มีอยู่และอ่านได้ |
-| `STUDYGROUP_AI_PROVIDER` | Server | ไม่ตั้งค่าหรือว่างได้; ยังไม่เลือก Provider |
-| `STUDYGROUP_AI_MODEL` | Server | ไม่ตั้งค่าหรือว่างได้; ยังไม่เลือก Model |
-| `STUDYGROUP_AI_API_KEY` | Server | ไม่ตั้งค่าหรือว่างได้; ซ่อนจาก `repr(ServerConfig)` |
-
-Relative paths อ้างจาก Root โปรเจกต์เสมอ แม้เปลี่ยน Working directory
-รองรับ Absolute paths และ `~`; ผู้เรียกกำหนดฐานอื่นด้วย `base_dir=Path(...)` ได้
-Config จะคืน Path แบบ Absolute แต่ไม่สร้าง Directory, Database หรือไฟล์ใด ๆ
-Server สร้าง/เปิด `data_dir/studygroup.db` เมื่อเริ่มทำงาน;
-`data_dir/uploads` ยังรอขั้นส่งไฟล์
-Host/Port/Path ที่ผิดจะยก `shared.config.ConfigError` ซึ่งเป็น `ValueError`
-พร้อมชื่อตัวแปรและสาเหตุ โดยไม่แสดงค่า AI Key
-
-เมื่อไม่ตั้งตัวแปรใดเลย ค่าตั้งต้นยังต้องใช้ไฟล์ Local TLS ที่สร้างไว้ด้านบน
-ถ้าไม่มีไฟล์เหล่านี้ `from_env()` จะรายงานข้อผิดพลาดชัดเจน
-Path ของ Server ห้ามกำหนดค่าว่าง ส่วน CA ของ Client ที่กำหนดว่างอย่างชัดเจน
-จะใช้ System CA แทน Local CA โดยยังตรวจ Certificate และ Hostname ใน `client.network.connect()`
-การตรวจ Config ใน CP01 ตรวจ Path/สิทธิ์อ่านเท่านั้น ยังไม่ตรวจ PEM, คู่ Key/Certificate
-หรือ TLS handshake
-
-ทดสอบอ่าน Config Local โดยไม่เปิด Network หรือแสดง Secrets:
-
-```bash
-uv run --locked python -c "import client, server, shared; print('Packages OK')"
-uv run --locked --env-file .env python -c "from client.config import ClientConfig; from server.config import ServerConfig; ClientConfig.from_env(); ServerConfig.from_env(); print('Config OK')"
-uv run --locked pytest
-```
-
-สำหรับ Client บนเครื่องอื่น ให้ตั้ง Environment เพียง Host, Port และ Trust เช่น:
-
-```dotenv
-STUDYGROUP_HOST=chat.example.com
-STUDYGROUP_PORT=5000
-# ใช้ System CA เมื่อ Server มีใบรับรองจาก CA ที่ระบบเชื่อถือ
-STUDYGROUP_TLS_CA=
-```
-
-ถ้าใช้ Local CA ให้คัดลอกเฉพาะ `ca.crt` ไป Client แล้วระบุ Path ของเครื่องนั้น
-ห้ามคัดลอก `.env` ฝั่ง Server ที่มี Secrets หรือ private keys ไป Client
-Host ฝั่ง Server คือที่อยู่ Bind เช่น `0.0.0.0` หรือ `::` ส่วน Host ฝั่ง Client
-ต้องเป็นชื่อ/IP ของ Server ที่เข้าถึงได้และตรงกับใบรับรอง
-
-## ตรวจ environment
-
-```bash
-uv run --locked python --version
-uv run --locked python -c "import tkinter, ssl, sqlite3, argon2, pytest; print('Imports OK')"
-uv run --locked python -m tkinter
-uv run --locked pytest --version
-openssl verify -CAfile certs/ca.crt -verify_hostname localhost certs/server.crt
-```
-
-คำสั่ง Tkinter ต้องเปิดหน้าต่างทดสอบได้ แล้วปิดหน้าต่างเพื่อจบคำสั่ง
-SQLite ใช้ผ่าน Python ได้ทันที และจะสร้าง `studygroup.db` เมื่อเปิด Server
-
-## ทำงานต่อ
+ติดตั้ง [uv](https://docs.astral.sh/uv/getting-started/installation/),
+Python 3.14 ตาม `.python-version` และ [Node.js](https://nodejs.org/en/download)
+รุ่น 22.12+ หรือ 24 LTS พร้อม npm ใช้ Chrome สำหรับ Browser tests
+จาก root โปรเจกต์:
 
 ```bash
 uv sync --locked
-uv add <runtime-package>
-uv add --dev <development-package>
+npm --prefix web ci
+npm --prefix web run build
 ```
 
-Tests ปัจจุบันรันได้ด้วย `uv run --locked pytest` และต้องใช้ OpenSSL CLI
-เพื่อสร้างใบรับรองทดสอบชั่วคราว รวมทั้งอนุญาตเปิด TCP Loopback บนเครื่อง
-เปิด TLS Chat Server และหยุดด้วย Ctrl+C ได้แล้ว:
+เครื่องที่มี `.env` อยู่แล้วใช้ไฟล์เดิมได้เลย ไม่ต้องสร้าง certificates สำหรับ localhost HTTP
+เครื่องใหม่คัดลอก `.env.example` เป็น `.env` และอย่านำไฟล์ที่มี secrets เข้า Git
+`uv run` อ่านไฟล์นี้เฉพาะเมื่อระบุ `--env-file .env`
+
+## เปิดใช้งาน
 
 ```bash
-uv run --locked --env-file .env python -m server.main
-# เปิด Terminal อีกหน้าสำหรับ Client แต่ละบัญชี
-uv run --locked --env-file .env python -m client.main
-uv run --locked pytest
+uv run --locked --env-file .env python -m server.web
 ```
 
-uv ไม่โหลด `.env` ให้อัตโนมัติ จึงระบุ `--env-file .env` เมื่อคำสั่งต้องใช้ Config
-อย่าส่ง AI Key หรือ Server private key ไปกับ Client
-สัญญา Register/Login/Logout, Client transport และ Limits อยู่ใน
-[authentication.md](authentication.md) และ Chat contract ใน [chat.md](chat.md)
-Desktop Client มีหน้า Register/Login/Server settings และ Focus chat แล้ว
-ตั้งค่า Host/Port/CA ใน UI ได้โดยไม่เขียนทับ `.env` ไม่เก็บ Password หรือ Retry ข้อความเอง
-ดู [architecture.md](architecture.md) และ [demo-checklist.md](demo-checklist.md)
-สำหรับการตรวจ GUI และตั้งค่า LAN บนสองเครื่องจริง
+เปิด **http://127.0.0.1:8000** สมัครแล้วเข้าสู่ระบบ กด Ctrl+C ที่ Terminal เพื่อหยุด
+เปิด Browser profile / Incognito แยกสำหรับ A/B/C คนละบัญชี
+หนึ่งบัญชีออนไลน์ได้ครั้งละหนึ่ง Connection รวมทุกแท็บ
 
-ตรวจหน้าต่างจริงเพิ่มเติม (ต้องมี Desktop/Display):
+บัญชีและข้อความอยู่ที่ **`data/studygroup.db`** บนเครื่องที่รัน Python
+ใช้ `STUDYGROUP_DATA_DIR` เดิมได้ ไม่ย้าย Database หรือสร้างบัญชีใหม่เพียงเพราะเปลี่ยน UI
+รหัสผ่านเก็บเป็น Argon2id hash; Browser เก็บสถานะแชต/ร่างในหน่วยความจำเท่านั้น
+หลัง Refresh ต้อง Login ใหม่ และการโหลดประวัติจาก Server เป็นงาน CP07
+ข้อความถูกบันทึกใน SQLite แล้วแม้ CP06 ยังไม่โหลดประวัติขึ้น UI
+
+## ระหว่างพัฒนา React
+
+เปิด Python Server ตามด้านบน แล้วเปิด Terminal อีกอัน:
 
 ```bash
-uv run --locked pytest tests/gui_checks.py -q --tb=short -W error
+npm --prefix web run dev
 ```
 
-ให้นำ `pyproject.toml`, `uv.lock`, `.python-version`, `.env.example` และสคริปต์เข้า Git
-ส่วน `.venv/`, `.env`, `certs/`, `data/` ถูก exclude ใน `.gitignore` แล้ว
-Cloud, Docker deployment และ AI API จริงยังไม่ได้ตั้งค่าในรอบเตรียม Local นี้
+เปิด http://127.0.0.1:5173; Vite ส่ง `/ws` ไป Python พอร์ต 8000
+แก้ CSS/React แล้วดูผลได้ทันที ไม่ต้อง build ทุกครั้ง
+ถ้า Python ใช้พอร์ตอื่น ตั้ง `STUDYGROUP_WEB_PROXY=ws://127.0.0.1:8001`
+ตอนรัน npm ด้วย หน้าเว็บ production ให้เปิดจาก Python พอร์ต 8000
+`npm run preview` เป็นเครื่องมือ preview ของ Vite และไม่ได้ตั้ง WebSocket proxy
 
-แนวทาง uv อ้างอิง [Working on projects](https://docs.astral.sh/uv/guides/projects/)
-และ [Locking and syncing](https://docs.astral.sh/uv/concepts/projects/sync/)
+## Config สำหรับ Web
+
+| ตัวแปร | ค่าเริ่มต้น / หน้าที่ |
+| --- | --- |
+| `STUDYGROUP_WEB_HOST` | `127.0.0.1`; ที่อยู่ที่ Python รับการเชื่อมต่อ |
+| `STUDYGROUP_WEB_PORT` | `8000`; แยกจากพอร์ต TCP เดิม |
+| `STUDYGROUP_WEB_ORIGINS` | ถ้าไม่กำหนด รับ `http://localhost:<port>`, `http://127.0.0.1:<port>` (https หากตั้ง Web TLS) และ http localhost/127.0.0.1:5173; ถ้ากำหนดจะใช้รายการนั้นแทนทั้งหมด |
+| `STUDYGROUP_WEB_STATIC_DIR` | `web/dist`; เสิร์ฟเฉพาะไฟล์ใน directory นี้ |
+| `STUDYGROUP_WEB_TLS_CERT` | ไม่กำหนด = HTTP สำหรับ loopback / หลัง reverse proxy; ต้องตั้งคู่กับ KEY |
+| `STUDYGROUP_WEB_TLS_KEY` | private key ฝั่ง Server เท่านั้น |
+| `STUDYGROUP_DATA_DIR` | `data`; SQLite ที่ `<directory>/studygroup.db` |
+| `STUDYGROUP_WEB_PROXY` | Vite development เท่านั้น; เปลี่ยนปลายทาง `/ws` |
+
+Origins เป็นรายการ URL คั่นด้วย comma เช่น `https://chat.example.com` ไม่มี path
+ไม่รับ `*`, `null` หรือ URL ที่มี username/password และต้องตรง scheme/host/port ที่ Browser เปิดจริง
+Relative paths อ้างจาก root โปรเจกต์ ค่าที่ผิดรายงานชื่อตัวแปรแล้วหยุดเริ่ม Server
+`STUDYGROUP_HOST/PORT/TLS_CERT/TLS_KEY/TLS_CA` เป็นของ TCP/Tkinter เดิม
+จึงไม่ส่งผลต่อ Web Server; `STUDYGROUP_PORT=5001` เดิมไม่ต้องเปลี่ยนกลับ
+
+## ใช้สองเครื่อง / เตรียม Deploy
+
+ใช้ **HTTPS + WSS** เมื่อส่งรหัสผ่านผ่าน LAN หรืออินเทอร์เน็ต:
+
+1. ตั้ง `STUDYGROUP_WEB_HOST=0.0.0.0` และเปิดพอร์ตที่ใช้เฉพาะเครือข่ายที่ตั้งใจ
+2. ใช้ HTTPS reverse proxy ที่รองรับ WebSocket Upgrade ชี้ไป `127.0.0.1:8000`
+   หรือกำหนด `STUDYGROUP_WEB_TLS_CERT/KEY` ให้ Python รับ HTTPS/WSS โดยตรง
+3. Certificate ต้องมี DNS/IP ของ URL จริงและได้รับความเชื่อถือจาก Browser
+   สำหรับ LAN ใช้ `scripts/generate-lan-cert.sh` ตามส่วนถัดไป
+4. ตั้ง `STUDYGROUP_WEB_ORIGINS=https://<ชื่อหรือ-IP-จริง>:8000` หากใช้ TLS ตรงพอร์ต 8000
+   ถ้า HTTPS proxy เปิดพอร์ต 443 ใช้ `https://<domain>` ไม่ใส่ `:8000`
+5. เครื่อง Client เปิด URL เดียวกัน Browser เลือก `wss://.../ws` อัตโนมัติ
+   ไม่ส่ง `.env`, Database, private keys หรือ AI key ไป Client
+
+ตัวอย่าง TLS ตรงบน LAN (แทน IP ให้ตรงเครื่อง Server):
+
+```bash
+bash scripts/generate-lan-cert.sh IP:192.168.1.25 DNS:studygroup.local
+STUDYGROUP_WEB_HOST=0.0.0.0 \
+STUDYGROUP_WEB_ORIGINS=https://192.168.1.25:8000 \
+STUDYGROUP_WEB_TLS_CERT=certs/lan/server.crt \
+STUDYGROUP_WEB_TLS_KEY=certs/lan/server.key \
+uv run --locked --env-file .env python -m server.web
+```
+
+สคริปต์ต้องมี CA เดิมจาก `bash scripts/generate-dev-certs.sh` และไม่เขียนทับใบรับรองเก่า
+Client ต้องเชื่อถือ CA สำหรับ LAN ตามวิธีของ OS/Browser ก่อนใช้ ไม่กดข้าม certificate error
+ส่งเฉพาะ `certs/ca.crt` ไปเครื่องที่ตั้งใจเชื่อถือ CA นี้ เก็บ `ca.key/server.key` ไว้ที่ Server
+ถ้าใช้ public domain ให้ใช้ certificate ที่ Browser เชื่อถืออยู่แล้ว
+
+Production ใช้ Python process เดียวกับ SQLite บน persistent disk, สำรอง `data/`
+และเสิร์ฟ build เดียวกับรุ่น backend ตั้ง reverse proxy ให้ส่ง Upgrade/Origin และมี idle timeout
+ยาวกว่า WebSocket ping 20 วินาที ยังไม่มีการ Deploy Cloud จริงและยังไม่เลือก Provider (CP10)
+
+## ตรวจเมื่อเปิดไม่ได้
+
+- หน้า `/` แจ้ง 503 “Build the frontend first”: รัน `npm --prefix web ci` และ `npm --prefix web run build`
+- เปิด URL ไม่ได้: ดู Terminal ว่า Python ยังรันอยู่และพอร์ตตรงกัน ตรวจ `http://127.0.0.1:8000/health`
+  ควรได้ `{"status":"ok"}` ไม่ใช้พอร์ต 5000 ของแอปเดิม
+- หน้าเว็บขึ้นแต่ Login เชื่อมต่อไม่ได้: ตรวจ Browser Network `/ws` ต้อง Upgrade 101
+  ถ้า 403 ให้ตั้ง Origin ตรง URL; ถ้า TLS error ให้แก้ certificate/trust
+  ถ้าผ่าน proxy ให้เปิด WebSocket Upgrade และอย่าเขียน Origin ทับ
+- Server ไม่ตอบทันเวลา: ปุ่มแจ้งข้อผิดพลาดและไม่ส่งซ้ำเอง ตรวจ Server/URL/พอร์ต/proxy
+  แล้ว Login ใหม่ ร่างยังอยู่ในแท็บเดิม; Refresh จะล้างร่าง
+- บัญชีออนไลน์อยู่แล้ว: Logout/ปิดแท็บเก่าก่อน ใช้คนละบัญชีสำหรับแต่ละ Client
+
+## ตรวจโค้ด
+
+```bash
+uv run --locked pytest -q --tb=short -W error
+npm --prefix web run build
+npm --prefix web run test:e2e
+```
+
+Python tests ต้องเปิด loopback และมี OpenSSL; Playwright ใช้ Chrome ที่ติดตั้งไว้
+หรือ `PLAYWRIGHT_CHANNEL=chromium` หลังติดตั้งด้วย `cd web && npx playwright install chromium`
+Browser tests เปิด server พอร์ต 8765 และใช้ SQLite ชั่วคราว ไม่แตะ `data/` จริง
+ทดสอบแชตหลาย Browser contexts, privacy, disconnect, draft, IME และมือถือ
+ไม่แทนการตรวจสองเครื่องจริงตาม [demo-checklist.md](demo-checklist.md)
+
+โค้ดเดิม `client/` และ `server.main` เก็บไว้สำหรับ compatibility และการทดสอบเดิม
+วิธีรันอยู่ใน [legacy-desktop.md](legacy-desktop.md) อย่ารัน Server เดิมและ Web Server
+กับ Database เดียวพร้อมกัน เพราะ registry ของแต่ละ process แยกกัน

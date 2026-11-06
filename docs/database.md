@@ -1,5 +1,9 @@
 # SQLite และสิทธิ์เข้าถึงข้อมูล
 
+Web App ปัจจุบันใช้ SQLite/schema/Argon2/permission logic เดิม ไม่ย้ายฐานข้อมูลไป Browser
+`server.web` เปิด `<STUDYGROUP_DATA_DIR>/studygroup.db` เช่นเดียวกับ Server เดิม
+โค้ด initialize ใช้ schema เดิม ไม่มีการล้าง/seed ข้อมูลเมื่อย้าย UI เป็น React
+
 CP03 ใช้ `server/schema.sql`, `server/database.py` และ `server/permissions.py`
 เป็นส่วนจัดเก็บข้อมูลฝั่ง Server ปัจจุบัน Auth และ Chat handlers ใช้ API เหล่านี้แล้ว
 ยังไม่มีการรับส่งไฟล์หรือ AI ที่เรียกใช้งานจริง ผลตรวจล่าสุดอยู่ใน
