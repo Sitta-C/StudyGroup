@@ -4,8 +4,9 @@
 
 StudyGroup เป็นโปรแกรม Desktop สำหรับนักศึกษาคุยงานกลุ่ม ใช้ Python, Tkinter และ TCP Socket โดยมี Server และ SQLite อยู่บน Cloud เครื่องเดียวกัน ฟีเจอร์พิเศษ 4 ข้อคือ AI สรุปบทสนทนา ส่งไฟล์ ประวัติแชตที่ค้นหาได้ และ Cloud deployment
 
-**สถานะการพัฒนา:** มี Packages, Config แยก Client/Server และ Socket Protocol พร้อม Tests แล้ว
-ยังไม่มี Entry points, ระบบแชต, Authentication, Database จริง หรือการ Deploy
+**สถานะการพัฒนา:** มี Packages, Config แยก Client/Server, Socket Protocol,
+SQLite และส่วนตรวจสิทธิ์เข้าถึงข้อมูลพร้อม Tests แล้ว
+ยังไม่มี Entry points, ระบบแชตผ่าน Network, Authentication หรือการ Deploy
 ดูสถานะ checkpoint และผลทดสอบล่าสุดใน [DEVELOPMENT.md](DEVELOPMENT.md)
 โค้ด HTML ใน Prototype เป็นแบบอ้างอิงหน้าจอ ไม่ใช่แอปที่พัฒนาเสร็จแล้ว
 
@@ -18,6 +19,9 @@ StudyGroup เป็นโปรแกรม Desktop สำหรับนัก
 
 สัญญา Protocol ที่พัฒนาแล้วและขอบเขต Validation อยู่ใน [docs/protocol.md](docs/protocol.md)
 ใช้ `PacketConnection` เดียวต่อ Socket เพื่อรวม Lock การเขียนของทุก Thread
+
+Schema, Transaction และ Permission API ที่พัฒนาแล้วอยู่ใน
+[docs/database.md](docs/database.md) โดย Handler ต้องผูก Actor กับ Connection ที่ Login
 
 ## 1. เริ่มอ่านและทำงานจากตรงนี้
 
@@ -324,7 +328,7 @@ uv run --locked pytest
 ```
 
 ยังใช้คำสั่งเปิดแอปไม่ได้เพราะยังไม่มี Entry points แต่รัน `uv run --locked pytest`
-เพื่อตรวจ Config และ Socket Protocol ได้แล้ว
+เพื่อตรวจ Config, Socket Protocol, SQLite และสิทธิ์เข้าถึงข้อมูลได้แล้ว
 
 Environment ฝั่ง Server ที่ควรเตรียม: `STUDYGROUP_HOST`, `STUDYGROUP_PORT`, `STUDYGROUP_DATA_DIR`, `STUDYGROUP_TLS_CERT`, `STUDYGROUP_TLS_KEY`, `STUDYGROUP_AI_PROVIDER`, `STUDYGROUP_AI_MODEL`, `STUDYGROUP_AI_API_KEY` และ Timeout/Limit ตามจำเป็น ส่วน Client มีเพียง Host, Port และ Trust configuration ไม่มี AI Key หรือ Server private key
 

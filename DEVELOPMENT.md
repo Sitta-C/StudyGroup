@@ -9,15 +9,16 @@
 
 - อัปเดตล่าสุด: 6 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config
-  และ CP02 Socket Protocol
-- งานถัดไป: **CP03 SQLite และสิทธิ์เข้าถึงข้อมูล** แล้วต่อ CP04 TLS และ Authentication
-- สถานะโค้ด: มี `client/`, `server/`, `shared/`, Config และ Socket Protocol
-  พร้อม Tests รวม 152 กรณีผ่าน (Config 69 + Protocol 83)
-  ยังไม่มี Entry points, Database หรือหน้าจอแอป
+  และ CP02 Socket Protocol รวมถึง CP03 SQLite และสิทธิ์เข้าถึงข้อมูล
+- งานถัดไป: **CP04 TLS และ Authentication** แล้วต่อ CP05 Chat Server
+- สถานะโค้ด: มี `client/`, `server/`, `shared/`, Config, Socket Protocol,
+  SQLite Schema/Transaction และส่วนตรวจสิทธิ์ร่วม พร้อม Tests รวม 234 กรณีผ่าน
+  (Config 69 + Protocol 83 + Database 51 + Permissions 31)
+  ยังไม่มี Entry points, Authentication, Chat Server หรือหน้าจอแอป
 - สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
 - สิ่งที่ยังต้องเตรียมภายหลัง: AI Key/งบใช้งาน, เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
   และคอมพิวเตอร์จริงอย่างน้อย 2 เครื่องสำหรับตรวจรับ
-- งาน Local ที่ทำต่อได้ตามลำดับ: CP03–CP06 ไม่ต้องรอบัญชี AI หรือ Cloud
+- งาน Local ที่ทำต่อได้ตามลำดับ: CP04–CP06 ไม่ต้องรอบัญชี AI หรือ Cloud
   ส่วนการตรวจรับ CP06 ให้ครบ R1 ต้องใช้คอมพิวเตอร์จริงสองเครื่อง
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
@@ -50,7 +51,7 @@
 | CP00 | Environment ด้วย uv | ไม่มี | DONE | ผลตรวจรอบ setup อยู่ในบันทึกเริ่มต้นและ docs/setup.md |
 | CP01 | Packages และ Config | CP00 | DONE | `tests/test_config.py`: 69 passed; import, defaults และ Config จาก Local `.env` ผ่าน ดูบันทึก CP01 |
 | CP02 | Socket Protocol | CP01 | DONE | `tests/test_protocol.py`: 83 passed ผ่าน TCP loopback จริง; ดูสัญญาใน docs/protocol.md และบันทึก CP02 |
-| CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | TODO | ยังไม่มี Schema |
+| CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | DONE | Database 51 + Permissions 31 passed ด้วย Temporary SQLite; Constraints/Reopen/Rollback/Join contention ผ่าน ดู docs/database.md และบันทึก CP03 |
 | CP04 | TLS และ Authentication | CP03 | TODO | มีเพียงใบรับรอง Local และผลตรวจ environment |
 | CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | TODO | ยังไม่มี Handlers |
 | CP06 | Tkinter และตรวจรับ R1–R11 | CP05 | TODO | ต้องมี GUI จริงและทดสอบสองเครื่อง |
@@ -427,6 +428,78 @@ uv run --locked --env-file .env python -m client.main
   `server/schema.sql`, `server/database.py`, `server/permissions.py` และ Tests
   ด้วย Temporary database ตรวจ Constraints, Normalize username, คู่ห้องส่วนตัว,
   Join boundary ใน Transaction, สิทธิ์คนนอก/สมาชิกใหม่, Rollback และ Reopen
+
+### Session วันที่ 6 พฤศจิกายน 2026 — CP03 SQLite และสิทธิ์เข้าถึงข้อมูล
+
+- เป้าหมาย: สร้างฐานข้อมูลและสิทธิ์ร่วมสำหรับต่อ Authentication/Handlers
+  โดยตรวจสมาชิกใหม่กับข้อความและ Metadata ไฟล์ด้วยเงื่อนไขเดียวกัน
+- สถานะ: CP03 `TODO` → `IN_PROGRESS` → `DONE`; CP04–CP12 ยังเป็น `TODO`
+- สิ่งที่ทำสำเร็จ:
+  - เพิ่ม Schema v1 แบบ STRICT สำหรับ `users`, `rooms`, `room_members`,
+    `messages`, `attachments` พร้อม Foreign keys, Composite membership foreign key,
+    Check/Unique constraints, Triggers จำกัดสมาชิก Private/Attachment kind และ Index
+    ตามผู้ใช้ ห้อง Message ID และเวลา
+  - Username ใช้ ASCII อังกฤษ/ตัวเลข/`_` ยาว 3–24 ตัว เก็บ Display case เดิม
+    และค่า Lowercase ที่ UNIQUE; บังคับทั้ง API และ Schema รวมกรณี NUL
+    และทดสอบสมัครชื่อซ้ำต่างตัวพิมพ์พร้อมกันด้วย Connection จริง
+  - `Database.initialize()` เรียกซ้ำ/เปิดไฟล์เดิมใหม่ได้โดยข้อมูลทั้ง 5 ตารางไม่หาย
+    ใช้ `user_version = 1` และปฏิเสธ Version ที่ไม่รองรับ; Schema error Rollback
+    ทั้งการ Initialize โดยไม่เหลือตารางที่สร้างค้างไว้
+  - Connection แยกตาม Worker/Thread เปิด Foreign keys, Busy timeout 5 วินาที
+    และ WAL; Context manager ปิด Connection และ Rollback งานที่ยังไม่ Commit
+    ไม่มี Filesystem/Config/Connection side effect ระหว่าง import หรือ Constructor
+  - เพิ่ม Transaction helper แบบ `BEGIN IMMEDIATE` รองรับ Nested savepoints;
+    สร้างห้อง/Join/ส่งข้อความแบบอะตอมและใช้ Parameterized queries
+    เวลา Create/Join มาจาก SQLite เป็น UTC ลงท้าย `Z`
+  - ห้อง Private ใช้คู่ ID เรียงลำดับที่ UNIQUE พร้อมสมาชิกสองคนขอบเขต 0;
+    เปิดพร้อมกันจาก 6 Workers หรือสลับผู้เรียก/คู่สนทนาก็ได้ห้องเดิม
+    กลุ่มใหม่มีเพียงผู้สร้างและ Join ซ้ำไม่เปลี่ยนขอบเขตประวัติ
+  - Join อ่าน Message ID ล่าสุดเฉพาะห้องแล้วเพิ่มสมาชิกใน Write transaction
+    ทดสอบ Send ก่อน Join และ Join ก่อน Send โดยถือ Write lock แล้วให้ Connection
+    อีกตัวรอจริง ยืนยันว่าข้อความก่อน Join ถูกซ่อนและข้อความหลัง Join อ่านได้
+  - เพิ่ม Permission helpers สำหรับสมาชิก ข้อความ และไฟล์ พร้อม SQL เงื่อนไขร่วม
+    `message_id > visible_after_message_id`; คนนอก/ID ที่ไม่มีอยู่ให้ `FORBIDDEN`
+    รายชื่อกลุ่ม/สมาชิกกลุ่มเปิดให้บัญชีที่มีอยู่ตาม R9 โดยไม่คืนเนื้อหาหรือ Hash
+  - เพิ่ม Query ข้อความที่เห็นแบบ Pagination เรียงเก่าไปใหม่เพื่อให้ Handler ใช้ต่อ;
+    File message/Attachment ที่ยังไม่ `ready` ถูกซ่อน และ Publish ไฟล์เก่า
+    หลัง Join ไม่ทำให้สมาชิกใหม่ข้ามขอบเขตได้
+- ไฟล์สำคัญ: `server/schema.sql`, `server/database.py`, `server/permissions.py`,
+  `tests/conftest.py`, `tests/test_database.py`, `tests/test_permissions.py`,
+  `docs/database.md`, README, HANDOFF และ DEVELOPMENT
+- Dependencies: ไม่เพิ่ม Dependency และไม่เปลี่ยน `pyproject.toml`/`uv.lock`
+- คำสั่งตรวจและผลจริง (ใช้ `UV_CACHE_DIR=/private/tmp/studygroup-uv-cache`
+  นำหน้าคำสั่ง uv):
+  - `uv sync --locked`: ผ่าน; Resolved 11 packages, Checked 9 packages
+  - `uv lock --check`: ผ่าน; Resolved 11 packages
+  - รอบสุดท้าย `uv run --locked pytest`: **234 passed, 0 failed, 0 skipped**
+    แยกเป็น Config 69, Protocol 83, Database 51 และ Permissions 31
+  - Database/Permissions ใช้ฐานข้อมูลบน Disk ใน Temporary directory เท่านั้น
+    ครอบคลุม Persistence/Reopen/Integrity, UTC, Constraints, SQL ที่เป็นข้อมูล,
+    Atomic rollback, Nested savepoints, Thread ownership, Concurrent uniqueness,
+    Join/Send contention และสิทธิ์ Private/Group/สมาชิกใหม่/ไฟล์ก่อน Join
+  - Protocol ใช้ TCP Loopback จริง; รันภายใต้สิทธิ์ที่อนุญาต Local TCP แล้วผ่านครบ
+    รอบเริ่มต้นภายใต้ Sandbox ปกติได้ 75 passed/77 setup errors จาก `bind()`
+    ถูกปฏิเสธตามข้อจำกัดเดิมของ CP02 ไม่ได้ Skip หรือแทนด้วย Mock
+- ขอบเขตและการตัดสินใจ:
+  - `user_id` ของ API ต้องมาจาก Connection ที่ยืนยันตัวตนแล้ว; CP04 ต้องใช้
+    Argon2id ก่อนเรียก `create_user()` และไม่ส่ง Hash จาก Internal login lookup
+    กลับ Client; Session นี้ยังไม่ใช่ผลตรวจ Authentication/TLS
+  - CP07 ต้องเพิ่ม Search โดยคงเงื่อนไขสิทธิ์ร่วม; CP09 ต้องจำกัด AI เฉพาะกลุ่ม
+    และไม่เกิน 50 ข้อความ รวมทั้งตรวจสิทธิ์ซ้ำก่อนคืนผล
+  - Attachment Tests ตรวจ Metadata/สถานะ/สิทธิ์เท่านั้น ไม่ได้ส่งไฟล์จริง
+    CP08 ต้องรับ Chunk ตรวจ Bytes/Hash สร้างชื่อจัดเก็บเอง และ Publish หลังรับครบ
+  - ยังไม่มี Handlers, Live Events, GUI หรือการทดสอบสองเครื่อง;
+    CP05 ต้องส่ง Event เฉพาะผู้มีสิทธิ์และหลัง Transaction Commit
+  - Migration หลัง Schema v1 และการลบสมาชิก/ห้อง/บัญชียังไม่ได้ออกแบบเป็นฟีเจอร์
+    เมื่อประกอบหลาย Write operations ให้ใช้ `transaction()` เป็นชั้นนอกด้วย
+    เพื่อไม่เริ่มอ่านภายใต้ Deferred transaction
+- สภาพ Workspace: มี Git repository และเริ่มจาก Working tree สะอาด;
+  ไม่แก้ `.env`, Certificates/private keys หรือข้อมูลจริงใน `data/`
+- งานที่ยังค้าง: CP04–CP12; Provider/Model/Key ของ AI และ Cloud ยังไม่เลือก
+- งานแรกของ Session ถัดไป: เปลี่ยน CP04 เป็น `IN_PROGRESS` แล้วทำ
+  `server/passwords.py`, TLS listener/Connection lifecycle, Router, Auth handlers
+  และ Session registry ที่ Login/Logout/Cleanup เป็นอะตอม พร้อม Tests ตามเกณฑ์ CP04
+  โดยใช้ `Database` และ Permission API ใน `docs/database.md`
 
 ### แบบบันทึกสำหรับ session ถัดไป
 

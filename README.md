@@ -2,7 +2,8 @@
 
 โปรเจกต์ Desktop Chat สำหรับงานกลุ่มนักศึกษา ใช้ Python, Tkinter และ TCP Socket พร้อม AI สรุปบทสนทนา ส่งไฟล์ ค้นหาประวัติ และ Cloud Server
 
-**สถานะ:** มี Packages, Config แยก Client/Server และ Socket Protocol พร้อม Tests แล้ว
+**สถานะ:** มี Packages, Config แยก Client/Server, Socket Protocol,
+SQLite และส่วนตรวจสิทธิ์เข้าถึงข้อมูลพร้อม Tests แล้ว
 ยังไม่มีหน้าจอแอปหรือ Socket Server ที่เปิดใช้งานได้
 
 **Environment:** เตรียม Local environment ด้วย **uv** แล้ว ใช้ Python 3.14.10,
@@ -19,6 +20,7 @@ uv run --locked python -m tkinter
 - [แผนพัฒนาและ checkpoint กลาง](DEVELOPMENT.md) — อ่านก่อนเริ่มแต่ละ session และอัปเดตความคืบหน้าเมื่อจบ
 - [ข้อกำหนดใน HANDOFF.md](HANDOFF.md) — Project Structure สถาปัตยกรรม Auth/Database/Protocol และเกณฑ์ส่งงาน
 - [สัญญา Socket Protocol](docs/protocol.md) — Framing, Request/Response/Event, Validation และการใช้ API
+- [SQLite และสิทธิ์เข้าถึงข้อมูล](docs/database.md) — Schema, Connection/Transaction และขอบเขตประวัติของสมาชิก
 - [เปิด Prototype GUI](docs/prototypes/studygroup-desktop.html) — เปิดไฟล์นี้ใน Browser เพื่อทดลองหน้าตา Desktop
 - [รายละเอียด Prototype](docs/prototypes/README.md) — วิธีใช้งานและส่วนที่ยังจำลองอยู่
 - [โจทย์ Term Project](docs/reference/socket-programming-assignment.pdf)
