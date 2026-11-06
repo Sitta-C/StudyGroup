@@ -1,0 +1,446 @@
+# แผนพัฒนาและจุดตรวจรับ StudyGroup
+
+ใช้ไฟล์นี้เป็นจุดเริ่มต้นและบันทึกความคืบหน้าของทุก session ตั้งแต่ Local development
+จนถึงเดโมและส่งงาน อัปเดตสถานะตามผลที่ทำและทดสอบจริง เพื่อให้ session ถัดไปทำต่อได้ทันที
+ข้อกำหนดและรายละเอียดสถาปัตยกรรมอยู่ใน [HANDOFF.md](HANDOFF.md)
+ส่วนการเตรียมเครื่องและคำสั่ง uv อยู่ใน [docs/setup.md](docs/setup.md)
+
+## สถานะสำหรับเริ่ม session ถัดไป
+
+- อัปเดตล่าสุด: 6 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
+- ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config
+  และ CP02 Socket Protocol
+- งานถัดไป: **CP03 SQLite และสิทธิ์เข้าถึงข้อมูล** แล้วต่อ CP04 TLS และ Authentication
+- สถานะโค้ด: มี `client/`, `server/`, `shared/`, Config และ Socket Protocol
+  พร้อม Tests รวม 152 กรณีผ่าน (Config 69 + Protocol 83)
+  ยังไม่มี Entry points, Database หรือหน้าจอแอป
+- สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
+- สิ่งที่ยังต้องเตรียมภายหลัง: AI Key/งบใช้งาน, เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
+  และคอมพิวเตอร์จริงอย่างน้อย 2 เครื่องสำหรับตรวจรับ
+- งาน Local ที่ทำต่อได้ตามลำดับ: CP03–CP06 ไม่ต้องรอบัญชี AI หรือ Cloud
+  ส่วนการตรวจรับ CP06 ให้ครบ R1 ต้องใช้คอมพิวเตอร์จริงสองเครื่อง
+
+เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
+พร้อมกัน ไม่คัดลอกสถานะไปดูแลหลายชุดใน README หรือ HANDOFF
+
+## วิธีทำงานในแต่ละ session
+
+1. อ่านส่วนสถานะล่าสุด ตาราง checkpoint และบันทึก session ล่าสุดในไฟล์นี้
+   ตรวจ `AGENTS.md` หากมี แล้วอ่านหัวข้อใน HANDOFF และ Prototype ที่เกี่ยวข้องกับงาน
+2. ตรวจไฟล์จริงและการแก้ไขที่ค้างอยู่ หากมี Git ให้ตรวจ `git status` และ diff
+   รักษางานเดิมของผู้ใช้ และเทียบสภาพจริงกับสถานะในเอกสารก่อนเริ่ม
+3. เลือก checkpoint แรกที่ยังไม่ผ่านและมี dependency พร้อม เปลี่ยนเป็น `IN_PROGRESS`
+   ระบุเป้าหมายย่อยของ session นี้ โดยหนึ่ง checkpoint อาจใช้หลาย session
+4. พัฒนาและทดสอบเฉพาะขอบเขตที่เลือก ใช้ `uv add` และ `uv add --dev` เมื่อเพิ่ม dependency
+   พร้อมเก็บ `pyproject.toml` และ `uv.lock` ให้ตรงกัน
+5. บันทึกคำสั่ง ผลตรวจ และข้อจำกัดจริง ไม่ถือว่ามีไฟล์หรือมี Mock แล้วเท่ากับฟีเจอร์ผ่าน
+   รันชุดทดสอบที่มีอยู่และเกี่ยวข้อง รวมการทดสอบส่วนเดิมที่การแก้ไขอาจกระทบ
+6. จบ session ด้วยการอัปเดตไฟล์นี้ ระบุไฟล์สำคัญที่เปลี่ยน งานค้าง และก้าวแรกที่ชัดเจน
+   สำหรับ session ถัดไป หากตัดสินใจเปลี่ยนข้อกำหนดให้บันทึกเหตุผลและแก้ HANDOFF ให้ตรงกัน
+
+ใช้สถานะ `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE` เท่านั้น
+`DONE` หมายถึงเกณฑ์ผ่านครบและมีหลักฐานในบันทึก session
+หากมีปัญหาที่ต้องรอข้อมูลหรือบริการภายนอก ให้ใช้ `BLOCKED` พร้อมระบุสิ่งที่ต้องการ
+และทำงานส่วนอื่นที่ไม่ขึ้นต่อปัญหานั้นได้ต่อ โดยยังไม่ประกาศว่าขั้นที่ติดขัดผ่านแล้ว
+
+## ตาราง checkpoint
+
+| จุดตรวจรับ | งาน | เริ่มหลัง | สถานะ | หลักฐานหรือสิ่งที่ค้าง |
+| --- | --- | --- | --- | --- |
+| CP00 | Environment ด้วย uv | ไม่มี | DONE | ผลตรวจรอบ setup อยู่ในบันทึกเริ่มต้นและ docs/setup.md |
+| CP01 | Packages และ Config | CP00 | DONE | `tests/test_config.py`: 69 passed; import, defaults และ Config จาก Local `.env` ผ่าน ดูบันทึก CP01 |
+| CP02 | Socket Protocol | CP01 | DONE | `tests/test_protocol.py`: 83 passed ผ่าน TCP loopback จริง; ดูสัญญาใน docs/protocol.md และบันทึก CP02 |
+| CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | TODO | ยังไม่มี Schema |
+| CP04 | TLS และ Authentication | CP03 | TODO | มีเพียงใบรับรอง Local และผลตรวจ environment |
+| CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | TODO | ยังไม่มี Handlers |
+| CP06 | Tkinter และตรวจรับ R1–R11 | CP05 | TODO | ต้องมี GUI จริงและทดสอบสองเครื่อง |
+| CP07 | ประวัติและการค้นหา | CP06 | TODO | ฟีเจอร์พิเศษข้อ 1 |
+| CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | TODO | ฟีเจอร์พิเศษข้อ 2 |
+| CP09 | AI สรุปบทสนทนา | CP08 | TODO | ทำ Adapter/Mock ก่อน แล้วตรวจ API จริง |
+| CP10 | Cloud deployment | CP09 | TODO | เตรียมไฟล์ Deploy ได้ก่อนเมื่อส่วน Server พร้อม |
+| CP11 | เดโมครบระบบ | CP10 | TODO | ต้องมี 3 Clients บนอย่างน้อย 2 เครื่องจริง |
+| CP12 | เอกสารและชุดส่งงาน | CP11 | TODO | ต้องอ้างผลตรวจจริง |
+
+คอลัมน์เริ่มหลังคือลำดับหลักสำหรับตรวจรับ พัฒนาเอกสาร ทดสอบ และเตรียม Adapter/Deploy
+ควบคู่กับงานที่พร้อมแล้วได้ หาก AI API ยังไม่พร้อม สามารถทำ Cloud ต่อเมื่อ CP08 ผ่าน
+และ Server พร้อม โดยคง CP09 ไว้ตามสถานะจริง
+การตรวจคะแนนต้องผ่าน Part 1 ก่อน Part 2 และ Part 2 ก่อน Part 3 ตาม HANDOFF
+
+## ขอบเขตและเกณฑ์ผ่านแต่ละ checkpoint
+
+### CP00 Environment ด้วย uv
+
+**งาน:** เตรียม Python/Tkinter, dependencies, Local config, ที่เก็บข้อมูล และ Local TLS
+
+**ผ่านเมื่อ:** uv สร้างและ sync `.venv` ตาม lock ได้, Tkinter สร้างหน้าต่างได้,
+Argon2id Hash/Verify และ SQLite ทำงาน, TLS ตรวจ CA/Hostname ได้
+พร้อมแยก `.env`, private keys และ runtime data ออกจากไฟล์ที่นำเข้า Git
+
+**หลักฐานที่มีแล้ว:** Python 3.14.10, Tcl/Tk 9.1.0, `argon2-cffi` 25.1.0,
+`pytest` 9.2.0, `uv.lock`, `.env.example`, สคริปต์ Local TLS และผลตรวจใน
+[คู่มือ setup](docs/setup.md) เป็นผลของ environment ไม่ใช่การตรวจรับแอป
+
+### CP01 Packages และ Config
+
+**งาน:** สร้าง `client/`, `server/`, `shared/` และโครงสร้างทดสอบตามความจำเป็น
+เริ่ม `client/config.py` และ `server/config.py` ให้มีค่าเริ่มต้นและตรวจ Config
+ใช้ Host/Port/Paths จาก Environment ตาม `.env.example`
+
+**ผ่านเมื่อ:** import Packages ได้, อ่าน Config ได้ทั้งค่าปกติและกรณีข้อมูลไม่ถูกต้อง,
+Port/Path ที่ผิดให้ข้อผิดพลาดชัดเจน และ Client ใช้เพียง Host/Port/Trust configuration
+โดยไม่ต้องมี AI Key หรือ Server private key
+อัปเดตตัวแปร Config ใหม่ใน `.env.example` และคู่มือ setup
+
+**หลักฐาน:** คำสั่งตรวจ import และผลทดสอบ Config รวมกรณีไม่มีตัวแปร/ค่าไม่ถูกต้อง
+ยังไม่ต้องสร้างฟีเจอร์แชตหรือเปิด Server เปล่าเพื่อประกาศว่าแอปพร้อมใช้
+
+### CP02 Socket Protocol
+
+**งาน:** ทำ `shared/protocol.py`, ประเภทคำขอ/Event และ Validation
+ใช้ Header unsigned big-endian 4 bytes ตามด้วย JSON UTF-8,
+`recv_exact`, `sendall`, Request ID และ Error Code
+กำหนดขนาด Frame สูงสุด เช่น 1 MiB และ Lock หรือ Writer Queue ต่อ Connection
+บันทึกสัญญาการสื่อสารใน `docs/protocol.md`
+
+**ผ่านเมื่อ:** ส่งข้อความไทย/Unicode ได้ รับ Frame ที่แตกหลายส่วนหรือหลาย Frame
+ที่มาติดกันได้ แยก EOF ปกติกับ EOF กลาง Frame และปฏิเสธ Frame ใหญ่เกิน/JSON ผิดรูป
+โดยไม่ Allocate ตามค่าที่เกิน Limit การเขียนพร้อมกันไม่ทำให้ Packet แทรกกัน
+
+**หลักฐาน:** `tests/test_protocol.py` ทดสอบผ่านด้วยข้อมูลรับส่งจริงผ่าน Socket
+พร้อมตัวอย่าง Request/Response/Event ในเอกสาร
+
+### CP03 SQLite และสิทธิ์เข้าถึงข้อมูล
+
+**งาน:** ทำ `server/schema.sql`, `database.py` และส่วนตรวจสิทธิ์ร่วม
+ตาราง `users`, `rooms`, `room_members`, `messages`, `attachments`
+พร้อม Foreign keys, Index, Parameterized queries และ Transaction
+เก็บเวลาตาม UTC และใช้ Connection แยกตาม Worker/Thread
+
+**ผ่านเมื่อ:** Initialize ฐานข้อมูลซ้ำโดยไม่ทำข้อมูลเดิมหาย,
+ชื่อผู้ใช้แบบ Normalize ไม่ซ้ำ และคู่สนทนาส่วนตัวมีห้องเดียว
+การ Join บันทึก `visible_after_message_id` ใน Transaction
+Query สิทธิ์แยกสมาชิก คนนอก และสมาชิกใหม่ได้ตามขอบเขตใน HANDOFF
+
+**หลักฐาน:** ทดสอบ Constraints, Rollback และการเปิด Database เดิมใหม่ด้วยฐานข้อมูล
+ชั่วคราวสำหรับทดสอบ ไม่ใช้ข้อมูลจริงใน `data/` เป็น Fixture
+
+### CP04 TLS และ Authentication
+
+**งาน:** ทำ Server รับหลาย Clients ผ่าน TCP/TLS, Router และ Connection lifecycle
+รองรับ Register/Login/Logout, Argon2id, Registry ของผู้ที่ Login แล้ว
+และ Events รายชื่อออนไลน์
+
+**ผ่านเมื่อ:** Client ตรวจ CA/Hostname ก่อนส่ง Credentials,
+คำขอที่ต้องล็อกอินถูกปฏิเสธเมื่อยังไม่ยืนยันตัวตน,
+ชื่อซ้ำต่างตัวพิมพ์ถูกปฏิเสธ และรหัสผ่านเก็บเป็น Argon2id Hash
+ปฏิเสธ Login ซ้อนอย่างเป็นอะตอมโดยไม่ตัด Session เดิม
+Logout/EOF/Error ล้าง Session ถูกตัวและแจ้งออนไลน์ใหม่รวมตัวผู้ใช้เอง
+มีข้อจำกัดการลอง Login และไม่บันทึกรหัสผ่านหรือ Key ลง Log
+
+**หลักฐาน:** Unit/Integration Tests ครอบคลุมรหัสผ่านผิด, Login ซ้อนพร้อมกัน,
+Certificate ไม่ถูกต้อง, การปลอมตัวตนใน Packet และ Cleanup เก่าไม่ล้าง Session ใหม่
+ผลทดสอบ TLS ของ CP00 อย่างเดียวไม่ถือว่าผ่านขั้นนี้
+
+### CP05 Server สำหรับแชตส่วนตัวและกลุ่ม
+
+**งาน:** ทำรายชื่อออนไลน์ เปิดห้องส่วนตัว สร้าง/แสดง/เข้าร่วมกลุ่ม
+ส่งข้อความและ Live Events โดยผูกผู้ส่งกับ Connection ที่ Login
+บันทึกข้อความก่อนตอบรับสำเร็จและตรวจสิทธิ์ทุกคำขอ
+
+**ผ่านเมื่อ:** ห้องส่วนตัวใช้ห้องเดิมและมีเฉพาะคู่สนทนาเห็นข้อความ
+ทุกคนเห็นรายชื่อกลุ่มและสมาชิกได้ ผู้สร้างเป็นสมาชิกคนแรกเพียงคนเดียว
+คนอื่นเข้าร่วมด้วยตนเองและเฉพาะสมาชิกเท่านั้นที่ส่ง/อ่านข้อความกลุ่มได้
+Client C ที่อยู่นอกห้องไม่ได้รับ Event หรือข้อมูลของห้อง A/B
+
+**หลักฐาน:** Integration Tests หลาย Connections จริง รวมคำขอที่เดา Room ID
+และปลอม Sender ID พร้อมตรวจว่าข้อมูลที่ตอบกลับและ Event ไม่รั่วไปยังคนนอก
+
+### CP06 Tkinter และตรวจรับ R1 ถึง R11
+
+**งาน:** ทำหน้า Login/Register, ตั้งค่า Server และหน้าหลักแบบ Focus
+เชื่อม Receive Worker กับ `queue.Queue` และ Tkinter `after()`
+ทำ Sidebar, ห้องส่วนตัว/กลุ่ม, ช่องพิมพ์, รายชื่อสมาชิกและสถานะเชื่อมต่อ
+เริ่ม `docs/architecture.md` และ `docs/demo-checklist.md`
+
+**ผ่านเมื่อ:** ทุก Widget เปลี่ยนจาก Main Thread, Network ไม่ทำ GUI ค้าง,
+ข้อความไทยใช้ได้, Enter ส่งและ Shift+Enter ขึ้นบรรทัดใหม่
+Loading/Empty/Error/Disconnected แสดงตรงสถานะจริง
+เมื่อหลุดเก็บ Draft ไม่แสดงว่าส่งสำเร็จและไม่ส่งซ้ำเงียบ ๆ
+ทดสอบ R1–R11 ทีละข้อ โดยมีอย่างน้อย 2 Clients บนคอมพิวเตอร์จริงคนละเครื่อง
+และอธิบายสถาปัตยกรรมกับการใช้ Socket ได้
+
+**หลักฐาน:** Checklist R1–R11 พร้อมผลและภาพหน้าจอจริง รายละเอียดเครื่อง/เครือข่าย
+และผลทดสอบ Client A/B/C เพื่อตรวจสิทธิ์ หากทดลองได้เพียงหลาย Process บนเครื่องเดียว
+ให้บันทึกเป็นผล Local และยังไม่เปลี่ยน CP06 เป็น `DONE`
+สำหรับ LAN ให้เตรียม Server certificate ที่ตรงกับชื่อ/IP จริง ไม่ปิดการตรวจ TLS
+
+### CP07 ประวัติและการค้นหา
+
+**งาน:** โหลดประวัติหลัง Login ใหม่ ค้นด้วยคำ/ช่วงวันที่ในห้องปัจจุบัน
+รองรับ Pagination และแปลงช่วงวันที่ผู้ใช้เป็น UTC ก่อน Query
+
+**ผ่านเมื่อ:** ปิดและเปิด Client/Server ใหม่แล้วข้อความยังอยู่
+Pagination ไม่ข้ามหรือซ้ำข้อความในกรณีทดสอบที่มีข้อความใหม่ระหว่างโหลด
+คนนอกห้องและสมาชิกใหม่อ่าน/ค้นข้อความก่อนขอบเขตที่ตนมีสิทธิ์ไม่ได้
+GUI ยังคงตอบสนองระหว่างค้นหา
+
+**หลักฐาน:** Tests การเก็บถาวร/ช่วงวันที่/สิทธิ์/ขอบเขตการ Join และผลสาธิต Restart จริง
+
+### CP08 ส่งและดาวน์โหลดไฟล์
+
+**งาน:** ทำ `FILE_BEGIN`, `FILE_CHUNK`, `FILE_END`, `FILE_GET`
+ส่งผ่าน Socket เดียวกับแชต แบ่ง Chunk เช่น Binary 32 KiB เข้ารหัส Base64 ใน JSON
+แยก Transfer ID, ตรวจลำดับ/ยอดรวม/SHA-256 และแสดง Progress ใน GUI
+
+**ผ่านเมื่อ:** รับส่งไฟล์ไม่เกิน 5 MiB โดยนับขนาดจริงหลัง Decode
+ชื่อจัดเก็บสร้างโดย Server ไม่ใช้ Path จาก Client
+Publish Attachment หลังรับครบและ Hash ถูกต้องเท่านั้น
+การหลุด/ไฟล์ไม่ครบมี Cleanup และไม่ทำให้แชตเสีย
+ดาวน์โหลดตรวจสิทธิ์ห้องและขอบเขตข้อความของไฟล์เสมอ
+
+**หลักฐาน:** ส่งและดาวน์โหลดจริงแล้ว Hash ตรงกัน พร้อม Tests ไฟล์เกินขนาด,
+Chunk ผิดลำดับ, Hash ผิด, Path traversal, โอนขาดกลางทาง และเดา Attachment ID ของห้องอื่น
+
+### CP09 AI สรุปบทสนทนา
+
+**งาน:** ทำ Provider Adapter และ Worker ที่จำกัดจำนวน พร้อมปุ่ม/แผง AI ในห้องกลุ่ม
+แยก Mock สำหรับ Test/Demo ให้เห็นชัด แล้วเชื่อม API จริงเมื่อมี Provider/Model/Key
+
+**ผ่านเมื่อ:** ส่งเฉพาะข้อความที่ผู้ขอมีสิทธิ์ไม่เกิน 50 ข้อความล่าสุด เรียงเก่าไปใหม่
+ผลสรุปครอบคลุมประเด็น ข้อตกลง งาน/ผู้รับผิดชอบและกำหนดส่ง
+ช่องที่ไม่มีข้อมูลระบุว่าไม่ระบุ และไม่ทำตามคำสั่งที่แทรกในข้อความแชต
+ติดป้าย AI ตรวจสิทธิ์อีกครั้งก่อนส่งผลกลับ และไม่ส่งไปห้องอื่น
+เมื่อ Key ไม่พร้อม/Timeout/เรียกถี่ แสดง Error ที่เหมาะสมโดยแชตทำงานต่อได้
+ต้องเรียกโมเดลจริงได้จึงถือว่าฟีเจอร์ผ่าน
+
+**หลักฐาน:** Tests Adapter ด้วย Mock, ขอบเขตสิทธิ์และข้อความ,
+Timeout/Rate limit พร้อมบันทึก Provider/Model และผลเดโม API จริงที่ไม่มีข้อมูลลับ
+หากผ่านเฉพาะ Mock ให้บันทึกงานที่เสร็จและคงสถานะที่ยังไม่ `DONE`
+
+### CP10 Cloud deployment
+
+**งาน:** เตรียม Dockerfile/Compose, Server Config, TCP Port/TLS,
+Persistent volume สำหรับ SQLite และ uploads บน Cloud เครื่องเดียวกัน
+พร้อมขั้นตอน Backup/Restore ที่ครอบคลุมฐานข้อมูลและไฟล์แนบสอดคล้องกัน
+
+**ผ่านเมื่อ:** Deploy และเชื่อม Desktop Clients ไปยัง Cloud จริงได้ผ่าน TLS
+ข้อมูลอยู่ครบหลัง Restart/Recreate Container
+กู้คืน Backup แล้วข้อความและไฟล์กลับมาใช้ได้
+ไม่เปิด Database Port ให้ Client และไม่มี Key จริงอยู่ใน Image/Source
+
+**หลักฐาน:** คำสั่ง Deploy, Host/Port ที่ใช้ทดสอบ, ผล Restart/Restore
+และผลเชื่อมต่อจาก Clients คนละเครือข่าย
+ไฟล์ Deploy หรือ Container ที่รันได้เฉพาะ Local ยังไม่ถือว่าผ่าน Cloud
+
+### CP11 เดโมครบระบบ
+
+**งาน:** ทำ Scenario ใช้ 3 Clients บนคอมพิวเตอร์จริงอย่างน้อย 2 เครื่อง
+A/B สนทนาและ C เป็นคนนอกห้อง จากนั้นทดสอบผ่าน Cloud คนละเครือข่าย
+
+**ผ่านเมื่อ:** R1–R11 และฟีเจอร์พิเศษทั้ง 4 มีผลสาธิตจริง
+ครอบคลุม Private/Group, Online updates, Restart, Search, File Hash,
+AI API จริง, Cloud persistence และการปฏิเสธสิทธิ์คนนอก/ประวัติก่อน Join
+ตรวจกรณี Disconnect และ AI ไม่พร้อมโดยแชตส่วนอื่นยังใช้ได้
+
+**หลักฐาน:** `docs/demo-checklist.md` ระบุขั้นตอน ผลจริง เครื่อง/เครือข่าย
+และภาพหรือวิดีโอที่อ้างอิงได้ หากมีข้อไม่ผ่านให้แก้และทดสอบส่วนนั้นก่อนปิด checkpoint
+
+### CP12 เอกสารและชุดส่งงาน
+
+**งาน:** ปรับ README, Setup, Architecture, Protocol และ Demo checklist ให้ตรงโค้ดจริง
+จัดทำสไลด์ Implementation Explanation และคำสั่งติดตั้ง/รันสำหรับผู้ตรวจ
+
+**ผ่านเมื่อ:** ผู้ทดสอบทำตามคู่มือจาก Environment ใหม่แล้วเปิด Client/Server ได้
+มีคำอธิบาย Protocol, Threading, Authentication, Authorization และข้อมูลถาวร
+แยก Prototype/Mock กับผลที่ทำงานจริง และบอกข้อจำกัดที่ยังมี
+ชุดส่งงานไม่รวม Password/API Key/private keys หรือข้อมูลผู้ใช้จริง
+
+**หลักฐาน:** ผลทดลองตามคู่มือ, ผลชุดทดสอบที่มีทั้งหมด และตำแหน่งไฟล์ส่งงานจริง
+อัปเดตสถานะใน DEVELOPMENT และข้อความสถานะใน README/HANDOFF ให้สอดคล้องกัน
+
+## คำสั่งสำหรับแต่ละ session
+
+เริ่มจาก root ของโปรเจกต์ ใช้ environment ตาม [คู่มือ setup](docs/setup.md):
+
+```bash
+uv sync --locked
+uv run --locked python --version
+```
+
+เมื่อสร้าง Tests แล้ว ตัวอย่างคำสั่งตรวจแต่ละส่วนคือ:
+
+```bash
+uv run --locked pytest tests/test_protocol.py
+uv run --locked pytest tests/test_auth.py tests/test_permissions.py
+uv run --locked pytest tests/test_chat_integration.py
+uv run --locked pytest
+```
+
+ใช้ชื่อไฟล์จริงที่มีใน session นั้น บันทึกจำนวนผ่าน/ไม่ผ่าน/ข้ามและสาเหตุ
+อย่ารายงานว่าชุดทดสอบผ่านเมื่อยังไม่มี Tests หรือมีแต่ผลข้าม
+เมื่อมี entry points แล้วจึงใช้คำสั่งเปิดแอป:
+
+```bash
+uv run --locked --env-file .env python -m server.main
+uv run --locked --env-file .env python -m client.main
+```
+
+อย่าส่ง `.env` ฝั่ง Server ที่มี AI Key/private key ให้ Client
+เมื่อ Deploy จริงให้แยก Config ของแต่ละฝั่งตาม HANDOFF
+
+## บันทึก session
+
+เพิ่มบันทึกใหม่ต่อท้ายโดยคงประวัติก่อนหน้าไว้ ผลที่บันทึกเป็นผลของวันและสภาพแวดล้อมนั้น
+หากโค้ดหรือ Dependency เปลี่ยนจนกระทบ checkpoint เดิม ให้บันทึกผลตรวจใหม่
+และปรับสถานะ checkpoint ที่ได้รับผลกระทบ
+
+### บันทึกเริ่มต้นจากการเตรียม Environment
+
+- วันที่ทำ setup: 2 พฤศจิกายน 2026; นำสถานะมาเริ่มแผนนี้วันที่ 4 พฤศจิกายน 2026
+- Checkpoint: CP00 ผ่าน
+- สิ่งที่ทำ: uv project, `.venv`, Python pin, dependencies/lock,
+  `.env.example`/Local `.env`, โฟลเดอร์ข้อมูล, Local CA/Server certificate และคู่มือ setup
+- ไฟล์สำคัญ: `pyproject.toml`, `uv.lock`, `.python-version`, `.env.example`,
+  `scripts/generate-dev-certs.sh`, `docs/setup.md`, README และ HANDOFF
+- ผลตรวจรอบ setup: `uv sync --locked`, lock check และ dependency compatibility ผ่าน;
+  สร้างหน้าต่าง Tkinter ได้, Argon2id Hash/Verify และ SQLite ทำงาน;
+  TLS ยอมรับ `localhost` ที่เชื่อถือ CA และปฏิเสธ Hostname ผิด;
+  `.env` และ private keys มีสิทธิ์ไฟล์ 0600
+- Application Tests: ยังไม่มี จึงยังไม่มีผล `pytest` สำหรับแอป
+- งานค้าง: CP01–CP12; ยังไม่มี Client/Server/Database จริง
+- งานแรกของ session ถัดไป: สร้าง Packages และ Config พร้อมตรวจค่าตั้งต้น/ค่าผิดตาม CP01
+
+### Session วันที่ 4 พฤศจิกายน 2026
+
+- เป้าหมาย: สร้างแผนพัฒนาและ checkpoint กลางสำหรับใช้ต่อข้าม session
+- สิ่งที่ทำ: เพิ่ม DEVELOPMENT พร้อมลำดับงาน เกณฑ์ผ่าน dependency และแบบบันทึก;
+  เชื่อมจาก README/HANDOFF
+- การตรวจ: เทียบแผนกับ HANDOFF และตรวจลิงก์ไฟล์ในเอกสาร
+- สถานะ checkpoint: ไม่เปลี่ยนจากผล setup; CP01 ยังเป็น `TODO`
+- งานถัดไป: เริ่ม CP01 ตามส่วนสถานะสำหรับเริ่ม session ถัดไป
+
+### Session วันที่ 4 พฤศจิกายน 2026 — CP01 Packages และ Config
+
+- เป้าหมาย: สร้าง Packages และ Config ที่ตรวจค่าได้ตามเกณฑ์ CP01
+- สถานะ: CP01 `TODO` → `IN_PROGRESS` → `DONE`; CP02–CP12 ยังเป็น `TODO`
+- สิ่งที่ทำสำเร็จ:
+  - เพิ่ม Packages `client/`, `server/`, `shared/` โดย import ไม่อ่าน Config
+    ไม่เปิด Network และไม่สร้าง Runtime data
+  - เพิ่ม `ClientConfig.from_env()` และ `ServerConfig.from_env()` พร้อมค่าเริ่มต้น
+    รองรับ Environment ปัจจุบันหรือ Mapping ที่ระบุเอง และรายงาน `ConfigError`
+    พร้อมชื่อตัวแปรเมื่อ Host/Port/Path ไม่ถูกต้อง
+  - Resolve Relative paths จาก Root โปรเจกต์ รองรับ Absolute paths/`~`
+    ตรวจ TLS paths ว่าเป็นไฟล์ที่อ่านได้ และ Data directory/Parent ต้องเขียนและเข้าถึงได้
+    โดยไม่สร้าง Directory หรือ Database ระหว่างอ่าน Config
+  - Client อ่านเฉพาะ Host/Port/CA; ไม่ต้องใช้ AI Key, Server certificate,
+    Server private key หรือ Data directory; ค่า AI ฝั่ง Server เว้นว่างได้
+    และไม่แสดง AI Key ใน `repr(ServerConfig)`
+  - กำหนด CA ว่างอย่างชัดเจนได้เพื่อเลือก System trust store;
+    ถ้าไม่ตั้งตัวแปรจะใช้ `certs/ca.crt` ตามเดิม การตรวจ Certificate/Hostname
+    เมื่อเชื่อมต่อจริงยังเป็นงาน CP04 และต้องเปิดไว้
+- ไฟล์สำคัญ: `client/__init__.py`, `client/config.py`, `server/__init__.py`,
+  `server/config.py`, `shared/__init__.py`, `shared/config.py`, `tests/test_config.py`,
+  `pyproject.toml`, `.env.example`, `docs/setup.md`, README, HANDOFF และ DEVELOPMENT
+- Dependencies: ไม่เพิ่ม Dependency; `uv.lock` ไม่ต้องเปลี่ยน เพิ่มเฉพาะ pytest
+  configuration เพื่อให้ค้น Tests และ import Packages จาก Root ได้
+- คำสั่งตรวจและผลจริง (ใช้ `UV_CACHE_DIR=/private/tmp/studygroup-uv-cache`
+  นำหน้าคำสั่ง uv เพื่อใช้ Cache ในพื้นที่เขียนได้ของ Session):
+  - `uv sync --locked`: ผ่าน; Checked 9 packages
+  - `uv lock --check`: ผ่าน; Resolved 11 packages
+  - `uv run --locked pytest`: **69 passed, 0 failed, 0 skipped**
+    ครอบคลุม Defaults, Overrides, Environment ที่เปลี่ยนภายหลัง import,
+    Mapping ว่าง, Port ขอบเขต/ค่าผิด, Host, TLS paths, Permissions,
+    Data path ที่เป็นไฟล์/Parent เป็นไฟล์, Unicode paths, Path resolution,
+    Client ที่ไม่มี Server secrets และ Import ที่ไม่มีผลข้างเคียง
+  - ตรวจ import `client`, `server`, `shared` และอ่าน `from_env({})` ของทั้งสองฝั่ง:
+    ผ่านด้วย Local TLS ที่มีอยู่ โดยไม่ใช้ Environment variables
+  - `uv run --locked --env-file .env python -c "..."` เพื่อ import และเรียก
+    `ClientConfig.from_env()`/`ServerConfig.from_env()`: ผ่าน; Port ทั้งสองฝั่งเป็น
+    `5000`, TLS paths อ่านได้ และ Data directory ถูกต้อง โดยไม่แสดง Secrets
+- ข้อจำกัดของผลตรวจ: TLS fixtures ใน Unit Tests เป็นไฟล์ Placeholder สำหรับตรวจ Path;
+  Session นี้ไม่ได้ทดสอบ PEM/คู่ Key/Certificate, TLS handshake, GUI หรือหลายเครื่อง
+  และไม่ได้สร้าง Entry points/Chat Server เพื่อแทนการตรวจฟีเจอร์จริง
+- สภาพ Workspace: ไม่มี Git repository จึงตรวจ `git status`/diff ไม่ได้;
+  ไม่แก้ Local `.env`, Certificates/private keys หรือข้อมูลใน `data/`
+- งานที่ยังค้าง: CP02–CP12; Provider/Model/Key ของ AI และ Cloud ยังไม่เลือก
+- งานแรกของ Session ถัดไป: เปลี่ยน CP02 เป็น `IN_PROGRESS` แล้วทำ
+  `shared/protocol.py`, `shared/message_types.py`, Validation,
+  `tests/test_protocol.py` และ `docs/protocol.md` ตาม Framing/EOF/Limit/Concurrency
+  ที่ระบุในเกณฑ์ CP02
+
+### Session วันที่ 6 พฤศจิกายน 2026 — CP02 Socket Protocol
+
+- เป้าหมาย: สร้าง Protocol ที่ส่งต่อให้ Client/Server ใช้ร่วมกันและตรวจรับด้วย Socket จริง
+- สถานะ: CP02 `TODO` → `IN_PROGRESS` → `DONE`; CP03–CP12 ยังเป็น `TODO`
+- สิ่งที่ทำสำเร็จ:
+  - เพิ่ม Header unsigned big-endian 4 bytes ตามด้วย JSON UTF-8 จำกัด Body
+    1 MiB; ปฏิเสธ Header ขนาด 0/เกิน Limit ก่อนอ่านหรือ Allocate Body ตามค่านั้น
+  - เพิ่ม `recv_exact()`, `recv_packet()`, `encode_packet()` และ
+    `PacketConnection.send_packet()` ที่ใช้ `sendall()` ภายใต้ Lock ต่อ Connection
+    เมื่อ Send ล้มเหลวป้องกันการเขียนซ้ำบน Stream เดิม
+  - แยก EOF ปกติด้วย `None` เมื่อยังไม่ได้รับ Header กับ `IncompleteFrameError`
+    เมื่อ EOF กลาง Header/Body; ส่งต่อ Timeout/OSError ตามจริง
+  - เพิ่ม Request/Event/Error enums และ Builders สำหรับ Request/Response/Error/Event
+    สร้าง Request ID ด้วย UUID4 เมื่อไม่ระบุเอง และตรวจรูปแบบ ID/Version/Type
+  - ตรวจ Envelope และ Response/Error shape อย่างเคร่งครัด พร้อมปฏิเสธ Duplicate keys,
+    UTF-8/JSON ผิดรูป, ค่าตัวเลขไม่สิ้นสุด, Unicode surrogate ผิดรูป,
+    ความลึกเกิน 64, Python-only values และ Circular reference ฝั่งส่ง
+  - บันทึก Wire contract, ตัวอย่าง, Error/EOF policy, API และขอบเขต Validation
+    ใน `docs/protocol.md`; เชื่อมเอกสารจาก README/HANDOFF
+- ไฟล์สำคัญ: `shared/protocol.py`, `shared/message_types.py`,
+  `shared/validation.py`, `tests/test_protocol.py`, `docs/protocol.md`,
+  README, HANDOFF และ DEVELOPMENT
+- Dependencies: ไม่เพิ่ม Dependency และไม่เปลี่ยน `pyproject.toml`/`uv.lock`
+- คำสั่งตรวจและผลจริง (ใช้ `UV_CACHE_DIR=/private/tmp/studygroup-uv-cache`
+  นำหน้าคำสั่ง uv):
+  - ก่อนแก้โค้ด: `uv run --locked pytest` — **69 passed**
+  - `uv sync --locked` — ผ่าน; Resolved 11 packages, Checked 9 packages
+  - `uv lock --check` — ผ่าน; Resolved 11 packages
+  - `uv run --locked pytest tests/test_protocol.py` — **83 passed, 0 failed, 0 skipped**
+  - `uv run --locked pytest` — **152 passed, 0 failed, 0 skipped**
+  - Protocol Tests เปิด TCP `127.0.0.1` บนพอร์ตชั่วคราวจริง รับส่งไทย/Unicode
+    ทั้งสองทิศทาง, อ่านทีละ 1–7 Bytes, แยก Writes, รวมหลาย Frame,
+    EOF ทุกส่วน, Frame ขนาดพอดี 1 MiB/เกิน Limit และ JSON/Envelope ผิดรูป
+  - ทดสอบ Writer 6 Threads รวม 120 Frames โดยบังคับแยกแต่ละ `sendall()`
+    เป็นหลาย TCP writes และ Yield ให้ Threads อื่นทำงาน; Payload/ID ครบไม่แทรกกัน
+    และมี `sendall()` ทำงานพร้อมกันสูงสุด 1 ครั้ง
+- ข้อสังเกตระหว่างตรวจ:
+  - Sandbox ปกติไม่อนุญาต `bind()` แม้เป็น Loopback; รอบแรกจึงได้
+    6 passed/77 setup errors แล้วรันด้วยสิทธิ์ที่อนุญาต Local TCP จนผ่านครบ
+    ไม่มีการ Skip หรือเปลี่ยนเป็น Mock เพื่อหลบข้อจำกัด
+  - รอบ TCP แรกพบ Test expectations 2 จุดไม่ตรง Python 3.14 JSON decoder
+    (JSON ลึกอาจ Decode ได้ก่อนถูก Validator ปฏิเสธ และ `Infinity` เป็น JSON
+    ผิดรูป) แก้ Fixtures/Assertions และเพิ่มกรณี Number overflow `1e999`
+    แล้วตรวจซ้ำผ่านตามผลข้างต้น
+- ขอบเขตและการตัดสินใจ:
+  - CP02 ตรวจ Envelope/JSON และ Response/Error; Schema ภายใน Request/Event
+    `data` และผลสำเร็จ `result` เป็นงาน Handler รายฟีเจอร์ใน CP04–CP09
+    ยังไม่มี Authentication, Authorization, Pending request registry หรือ Retry
+  - Caller ต้องใช้ `PacketConnection` เดียวต่อ Socket และ Reader เดียว;
+    ตั้ง Timeout และปิด/ทิ้ง Connection เมื่อรับ Error หรือ `sendall()` ล้มเหลว
+    Lifecycle/การใช้งาน TLS หลาย Thread ต้องตรวจต่อใน CP04
+  - Tests เป็น TCP Local บนเครื่องเดียว ไม่ใช่ผลตรวจ TLS, GUI หรือหลายเครื่อง
+- สภาพ Workspace: ไม่มี Git repository จึงตรวจ `git status`/diff ไม่ได้;
+  ไม่แก้ `.env`, Certificates/private keys หรือข้อมูลใน `data/`
+- งานที่ยังค้าง: CP03–CP12; Provider/Model/Key ของ AI และ Cloud ยังไม่เลือก
+- งานแรกของ Session ถัดไป: เปลี่ยน CP03 เป็น `IN_PROGRESS` แล้วทำ
+  `server/schema.sql`, `server/database.py`, `server/permissions.py` และ Tests
+  ด้วย Temporary database ตรวจ Constraints, Normalize username, คู่ห้องส่วนตัว,
+  Join boundary ใน Transaction, สิทธิ์คนนอก/สมาชิกใหม่, Rollback และ Reopen
+
+### แบบบันทึกสำหรับ session ถัดไป
+
+คัดลอกแบบนี้เป็นหัวข้อใหม่ แล้วกรอกข้อมูลจริง:
+
+```text
+Session วันที่และเวลา Asia/Bangkok:
+Checkpoint และเป้าหมายของ session:
+สถานะเริ่มต้นและสถานะเมื่อจบ:
+สิ่งที่ทำสำเร็จ:
+ไฟล์สำคัญที่เปลี่ยน:
+คำสั่งตรวจและผลจริง รวมจำนวนผ่าน ไม่ผ่าน ข้าม:
+ผลตรวจด้วย GUI หรือหลายเครื่อง พร้อมสภาพแวดล้อม:
+การตัดสินใจและเหตุผล หากมี:
+ปัญหาที่ยังค้างหรือข้อมูลภายนอกที่ต้องการ:
+งานแรกของ session ถัดไป พร้อมไฟล์หรือคำสั่งที่จะเริ่ม:
+```

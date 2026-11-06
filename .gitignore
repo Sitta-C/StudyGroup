@@ -1,0 +1,26 @@
+# Python and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.uv-cache/
+
+# Secrets and server runtime data
+.env
+.env.*
+!.env.example
+/data/
+/certs/
+*.db-wal
+*.db-shm
+*.log
+
+# Design scratch files and generated build outputs
+/work/
+/build/
+/dist/
+*.egg-info/
+.DS_Store

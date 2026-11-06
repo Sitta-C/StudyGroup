@@ -1,0 +1,21 @@
+[project]
+name = "studygroup"
+version = "0.1.0"
+description = "Desktop group chat using Tkinter and TCP sockets with TLS"
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "argon2-cffi>=25.1.0",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

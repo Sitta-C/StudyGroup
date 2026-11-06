@@ -1,0 +1,405 @@
+<div id="studygroup-prototype">
+  <div class="viz-carousel" aria-label="รูปแบบหน้าต่าง StudyGroup" data-previous-label="แบบก่อนหน้า" data-next-label="แบบถัดไป">
+    <section data-variant="Focus" aria-label="Focus — แชตเต็มพื้นที่ สรุปเมื่อจำเป็น"><div class="ss-app ss-focus" data-design="focus"></div></section>
+    <section data-variant="Workspace" aria-label="Workspace — แชตและสรุปงานเคียงข้างกัน" hidden><div class="ss-app ss-workspace" data-design="workspace"></div></section>
+  </div>
+</div>
+<style>
+  #studygroup-prototype{font-family:"Noto Sans Thai","Thonburi",system-ui,sans-serif;color-scheme:light dark}
+  #studygroup-prototype *{box-sizing:border-box}
+  #studygroup-prototype [hidden]{display:none!important}
+  #studygroup-prototype .ss-app{--ss-bg:light-dark(#fff,#191b24);--ss-side:light-dark(#f6f7fb,#14161e);--ss-chat:light-dark(#fcfcfe,#191b24);--ss-text:light-dark(#272b3b,#e9eaf1);--ss-sub:light-dark(#74798b,#a4a9bc);--ss-line:light-dark(#e8eaf1,#303340);--ss-accent:light-dark(#6056d7,#b0a9ff);--ss-ink:light-dark(#fff,#201c44);--ss-soft:light-dark(#eeecff,#302c4b);--ss-green:light-dark(#34765e,#87c9ac);--ss-avatar:light-dark(#e4e6f3,#34384c);--ss-out:light-dark(#6258cf,#afa8f6);--ss-shadow:light-dark(#25294224,#00000050);background:var(--ss-bg);color:var(--ss-text);font-size:13px;line-height:1.65;border:1px solid var(--ss-line);border-radius:14px;overflow:clip;position:relative;min-height:810px;isolation:isolate}
+  #studygroup-prototype button,#studygroup-prototype input,#studygroup-prototype textarea{font:inherit}
+  #studygroup-prototype button{color:inherit}
+  #studygroup-prototype button:disabled{cursor:default;opacity:.5}
+  #studygroup-prototype button:focus-visible,#studygroup-prototype input:focus-visible,#studygroup-prototype textarea:focus-visible{outline:2px solid var(--ss-accent);outline-offset:3px}
+  #studygroup-prototype button{border:0;background:none}
+  #studygroup-prototype svg{width:17px;height:17px;flex-shrink:0;stroke-width:1.7}
+  #studygroup-prototype p,#studygroup-prototype h2,#studygroup-prototype h3{margin:0}
+  #studygroup-prototype .ss-windowbar{height:39px;border-bottom:1px solid var(--ss-line);background:var(--ss-side);display:flex;align-items:center;justify-content:center;position:relative;gap:10px;padding:0 98px;font-size:11px;color:var(--ss-sub);letter-spacing:.2px}
+  #studygroup-prototype .ss-lights{position:absolute;left:15px;display:flex;gap:7px}
+  #studygroup-prototype .ss-lights span{height:10px;width:10px;border-radius:50%;background:var(--ss-line)}
+  #studygroup-prototype .ss-lights span:first-child{background:light-dark(#ec9d98,#a76360)}
+  #studygroup-prototype .ss-lights span:nth-child(2){background:light-dark(#e7c37c,#a28b54)}
+  #studygroup-prototype .ss-lights span:last-child{background:light-dark(#99c7aa,#63846e)}
+  #studygroup-prototype .ss-demo{padding:1px 7px;border-radius:4px;background:var(--ss-line);font-size:10px;white-space:nowrap}
+  #studygroup-prototype .ss-desk{display:grid;grid-template-columns:218px minmax(0,1fr);min-height:770px}
+  #studygroup-prototype .ss-sidebar{background:var(--ss-side);border-right:1px solid var(--ss-line);padding:23px 14px 14px;display:flex;flex-direction:column;gap:23px;min-width:0}
+  #studygroup-prototype .ss-brand{display:flex;align-items:center;gap:10px;padding:0 5px;font-weight:600;font-size:19px;letter-spacing:-.6px}
+  #studygroup-prototype .ss-logo{height:33px;width:33px;border-radius:10px;background:var(--ss-accent);color:var(--ss-ink);display:grid;place-items:center}
+  #studygroup-prototype .ss-logo svg{width:20px;height:20px}
+  #studygroup-prototype .ss-brand-sub{font-size:11px;letter-spacing:0;font-weight:400;color:var(--ss-sub);margin-top:-4px}
+  #studygroup-prototype .ss-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--ss-line);background:var(--ss-bg);padding:8px 11px;border-radius:8px;white-space:nowrap;font-size:12px;font-weight:500;min-height:35px}
+  #studygroup-prototype .ss-btn:hover{background:var(--ss-side)}
+  #studygroup-prototype .ss-btn.ss-primary{background:var(--ss-accent);color:var(--ss-ink);border-color:transparent}
+  #studygroup-prototype .ss-btn.ss-ai{background:var(--ss-soft);color:var(--ss-accent);border-color:transparent}
+  #studygroup-prototype .ss-icon{height:32px;width:32px;display:inline-grid;place-items:center;border-radius:7px;flex-shrink:0}
+  #studygroup-prototype .ss-icon:hover{background:var(--ss-soft)}
+  #studygroup-prototype .ss-section-title{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--ss-sub);padding:0 7px 7px;gap:8px}
+  #studygroup-prototype .ss-section-title strong{font-weight:500;letter-spacing:.2px}
+  #studygroup-prototype .ss-person,#studygroup-prototype .ss-room{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px;border-radius:8px;text-align:left;min-width:0}
+  #studygroup-prototype .ss-person:hover,#studygroup-prototype .ss-room:hover{background:var(--ss-line)}
+  #studygroup-prototype .ss-room.is-active,#studygroup-prototype .ss-person.is-active{background:var(--ss-soft);color:var(--ss-accent)}
+  #studygroup-prototype .ss-avatar{height:31px;width:31px;border-radius:10px;background:var(--ss-avatar);display:inline-grid;place-items:center;font-size:11px;font-weight:600;flex-shrink:0;position:relative;color:var(--ss-text)}
+  #studygroup-prototype .ss-avatar.ss-self{background:var(--ss-soft);color:var(--ss-accent)}
+  #studygroup-prototype .ss-online-dot{position:absolute;width:8px;height:8px;background:var(--ss-green);border:2px solid var(--ss-side);bottom:-1px;right:-1px;border-radius:50%}
+  #studygroup-prototype .ss-label{min-width:0;flex:1}
+  #studygroup-prototype .ss-name{font-weight:500;font-size:12px;overflow-wrap:anywhere}
+  #studygroup-prototype .ss-small{font-size:11px;color:var(--ss-sub)}
+  #studygroup-prototype .ss-roomicon{height:29px;width:29px;display:grid;place-items:center;background:var(--ss-bg);border:1px solid var(--ss-line);border-radius:8px;flex-shrink:0;color:var(--ss-sub)}
+  #studygroup-prototype .ss-room.is-active .ss-roomicon{color:var(--ss-accent);border-color:transparent}
+  #studygroup-prototype .ss-badge{font-size:10px;border-radius:4px;background:var(--ss-line);color:var(--ss-sub);padding:1px 5px;white-space:nowrap}
+  #studygroup-prototype .ss-link{font-size:11px;color:var(--ss-accent);display:inline-flex;align-items:center;gap:4px;padding:7px}
+  #studygroup-prototype .ss-sidebar-bottom{margin-top:auto;border-top:1px solid var(--ss-line);padding-top:14px;display:grid;gap:12px}
+  #studygroup-prototype .ss-connection{display:flex;align-items:center;gap:6px;font-size:11px;padding:0 6px;color:var(--ss-green);text-align:left}
+  #studygroup-prototype .ss-connection span{height:6px;width:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+  #studygroup-prototype .ss-account{display:flex;align-items:center;gap:9px;padding:0 5px;text-align:left}
+  #studygroup-prototype .ss-main{display:flex;flex-direction:column;min-width:0;background:var(--ss-chat)}
+  #studygroup-prototype .ss-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:22px 25px 16px;background:var(--ss-bg);min-height:83px}
+  #studygroup-prototype .ss-heading{display:flex;align-items:center;gap:11px;min-width:0}
+  #studygroup-prototype .ss-heading .ss-roomicon{height:39px;width:39px;background:var(--ss-soft);color:var(--ss-accent);border:0;border-radius:11px}
+  #studygroup-prototype .ss-heading h2{font-size:17px;line-height:1.35;font-weight:600;letter-spacing:-.3px;overflow-wrap:anywhere}
+  #studygroup-prototype .ss-actions{display:flex;gap:7px;align-items:center;flex-shrink:0}
+  #studygroup-prototype .ss-tabs{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 25px;background:var(--ss-bg);border-bottom:1px solid var(--ss-line);min-height:40px}
+  #studygroup-prototype .ss-tabset{display:flex;gap:22px}
+  #studygroup-prototype .ss-tab{padding:9px 0;font-size:12px;color:var(--ss-sub);border-bottom:2px solid transparent;border-radius:0}
+  #studygroup-prototype .ss-tab[aria-selected=true]{color:var(--ss-accent);border-bottom-color:var(--ss-accent);font-weight:500}
+  #studygroup-prototype .ss-search-trigger{display:flex;align-items:center;gap:6px;color:var(--ss-sub);font-size:11px;padding:6px 0}
+  #studygroup-prototype .ss-search-trigger svg{width:14px;height:14px}
+  #studygroup-prototype .ss-chat-body{padding:20px 25px 18px;display:grid;gap:20px;align-content:start;flex:1;min-height:455px}
+  #studygroup-prototype .ss-day{display:flex;align-items:center;gap:14px;color:var(--ss-sub);font-size:10px;justify-content:center}
+  #studygroup-prototype .ss-day:before,#studygroup-prototype .ss-day:after{content:"";height:1px;background:var(--ss-line);flex:1}
+  #studygroup-prototype .ss-message{display:flex;align-items:flex-start;gap:9px;max-width:92%}
+  #studygroup-prototype .ss-message .ss-avatar{width:28px;height:28px;border-radius:9px;font-size:10px;margin-top:2px}
+  #studygroup-prototype .ss-message-body{min-width:0}
+  #studygroup-prototype .ss-message-meta{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px;font-weight:500}
+  #studygroup-prototype .ss-message-meta time{font-size:10px;color:var(--ss-sub);font-weight:400}
+  #studygroup-prototype .ss-bubble{padding:10px 13px;border-radius:0 12px 12px 12px;background:var(--ss-bg);border:1px solid var(--ss-line);overflow-wrap:anywhere;font-size:12px}
+  #studygroup-prototype .ss-message.ss-mine{margin-left:auto;justify-content:flex-end}
+  #studygroup-prototype .ss-mine .ss-message-meta{justify-content:flex-end}
+  #studygroup-prototype .ss-mine .ss-bubble{background:var(--ss-out);border-color:transparent;color:var(--ss-ink);border-radius:12px 0 12px 12px}
+  #studygroup-prototype .ss-file-bubble{display:flex;align-items:center;gap:11px;max-width:100%;text-align:left}
+  #studygroup-prototype .ss-file-glyph{width:34px;height:39px;background:var(--ss-soft);color:var(--ss-accent);border-radius:7px;display:grid;place-items:center;flex-shrink:0}
+  #studygroup-prototype .ss-file-bubble .ss-small{color:inherit;opacity:.75}
+  #studygroup-prototype .ss-compose-wrap{padding:0 25px 19px;background:var(--ss-chat)}
+  #studygroup-prototype .ss-compose{border:1px solid var(--ss-line);background:var(--ss-bg);border-radius:11px;padding:11px 12px 8px}
+  #studygroup-prototype .ss-compose textarea{background:transparent;color:var(--ss-text);border:0;resize:vertical;width:100%;min-height:37px;max-height:160px;font-size:12px;outline-offset:0}
+  #studygroup-prototype textarea::placeholder,#studygroup-prototype input::placeholder{color:var(--ss-sub)}
+  #studygroup-prototype .ss-compose-toolbar{display:flex;align-items:center;justify-content:space-between;gap:7px}
+  #studygroup-prototype .ss-compose-hint{font-size:10px;color:var(--ss-sub)}
+  #studygroup-prototype .ss-send{background:var(--ss-accent);color:var(--ss-ink);height:31px;padding:0 11px;border-radius:7px;display:flex;align-items:center;gap:6px;font-size:11px}
+  #studygroup-prototype .ss-send svg{width:14px;height:14px}
+  #studygroup-prototype .ss-composer-foot{padding-top:7px;color:var(--ss-sub);font-size:10px;display:flex;align-items:center;justify-content:space-between;gap:7px}
+  #studygroup-prototype .ss-insight{padding:20px;background:var(--ss-bg);min-width:0;border-left:1px solid var(--ss-line)}
+  #studygroup-prototype .ss-insight-head{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:17px}
+  #studygroup-prototype .ss-ai-title{font-size:13px;display:flex;align-items:center;gap:7px;font-weight:500;color:var(--ss-accent)}
+  #studygroup-prototype .ss-ai-title svg{width:16px;height:16px}
+  #studygroup-prototype .ss-ai-note{font-size:11px;color:var(--ss-sub);margin-bottom:17px}
+  #studygroup-prototype .ss-summary-section{margin-top:19px}
+  #studygroup-prototype .ss-summary-section h3{font-size:11px;color:var(--ss-sub);font-weight:500;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+  #studygroup-prototype .ss-summary-section p{font-size:12px}
+  #studygroup-prototype .ss-task{display:flex;align-items:flex-start;gap:8px;margin-top:8px;font-size:12px}
+  #studygroup-prototype .ss-task-check{width:13px;height:13px;border:1px solid var(--ss-line);border-radius:4px;flex-shrink:0;margin-top:4px}
+  #studygroup-prototype .ss-owner{font-size:10px;color:var(--ss-accent)}
+  #studygroup-prototype .ss-summary-foot{margin-top:25px;border-top:1px solid var(--ss-line);padding-top:15px;display:grid;gap:12px}
+  #studygroup-prototype .ss-summary-foot .ss-btn{width:100%}
+  #studygroup-prototype .ss-ai-disclaimer{font-size:10px;color:var(--ss-sub)}
+  #studygroup-prototype .ss-workspace .ss-desk{grid-template-columns:196px minmax(0,1fr) 224px}
+  #studygroup-prototype .ss-workspace .ss-header{padding-left:20px;padding-right:20px}
+  #studygroup-prototype .ss-workspace .ss-heading h2{font-size:15px}
+  #studygroup-prototype .ss-workspace .ss-chat-body{padding-left:20px;padding-right:20px}
+  #studygroup-prototype .ss-workspace .ss-compose-wrap{padding-left:20px;padding-right:20px}
+  #studygroup-prototype .ss-workspace .ss-heading .ss-roomicon{display:none}
+  #studygroup-prototype .ss-workspace .ss-header .ss-ai-label{display:none}
+  #studygroup-prototype .ss-workspace:not(.ss-has-ai) .ss-desk{grid-template-columns:196px minmax(0,1fr)}
+  #studygroup-prototype .ss-focus .ss-insight{border-left:0;border-bottom:1px solid var(--ss-line);padding:16px 25px;background:var(--ss-soft)}
+  #studygroup-prototype .ss-focus .ss-insight-head{margin-bottom:2px}
+  #studygroup-prototype .ss-focus .ss-ai-note{margin-bottom:8px}
+  #studygroup-prototype .ss-focus .ss-summary-grid{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:20px}
+  #studygroup-prototype .ss-focus .ss-summary-section{margin-top:0}
+  #studygroup-prototype .ss-focus .ss-summary-foot{margin-top:12px;padding-top:10px;display:flex;align-items:center;justify-content:space-between}
+  #studygroup-prototype .ss-focus .ss-summary-foot .ss-btn{width:auto}
+  #studygroup-prototype .ss-focus .ss-ai-disclaimer{max-width:60%}
+  #studygroup-prototype .ss-directory,#studygroup-prototype .ss-files{padding:24px;display:grid;gap:13px;align-content:start;flex:1;min-height:540px}
+  #studygroup-prototype .ss-directory h3,#studygroup-prototype .ss-files h3{font-size:14px;font-weight:500}
+  #studygroup-prototype .ss-dir-card{display:flex;align-items:center;gap:13px;padding:16px;border:1px solid var(--ss-line);border-radius:10px;background:var(--ss-bg);min-width:0;flex-wrap:wrap}
+  #studygroup-prototype .ss-dir-card .ss-label{flex:1;min-width:120px}
+  #studygroup-prototype .ss-join-panel{margin:18px 25px 24px;padding:22px;border:1px solid var(--ss-line);border-radius:12px;background:var(--ss-bg);text-align:center;display:grid;justify-items:center;gap:12px}
+  #studygroup-prototype .ss-empty{padding:40px 15px;text-align:center;color:var(--ss-sub);display:grid;justify-items:center;gap:9px}
+  #studygroup-prototype .ss-empty svg{width:27px;height:27px;opacity:.65}
+  #studygroup-prototype .ss-overlay{position:absolute;inset:39px 0 0;background:light-dark(#25294260,#00000088);z-index:20;padding:55px 24px 24px;display:flex;align-items:flex-start;justify-content:center}
+  #studygroup-prototype .ss-modal{width:100%;max-width:440px;background:var(--ss-bg);border:1px solid var(--ss-line);border-radius:14px;padding:24px;box-shadow:0 18px 60px var(--ss-shadow);color:var(--ss-text)}
+  #studygroup-prototype .ss-modal.ss-search-modal{max-width:560px}
+  #studygroup-prototype .ss-modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+  #studygroup-prototype .ss-modal-head h3{font-size:17px;font-weight:500}
+  #studygroup-prototype .ss-field{display:grid;gap:7px;margin-top:16px;font-size:12px}
+  #studygroup-prototype .ss-input{background:var(--ss-bg);color:var(--ss-text);border:1px solid var(--ss-line);border-radius:8px;padding:10px 12px;min-width:0;width:100%}
+  #studygroup-prototype .ss-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
+  #studygroup-prototype .ss-error{color:light-dark(#b5404c,#f9a8b0);font-size:11px;margin-top:8px}
+  #studygroup-prototype .ss-result{display:block;text-align:left;width:100%;padding:12px 0;border-bottom:1px solid var(--ss-line)}
+  #studygroup-prototype .ss-result p{font-size:12px;margin-top:4px;overflow-wrap:anywhere}
+  #studygroup-prototype mark{background:var(--ss-soft);color:var(--ss-accent);padding:1px 2px;border-radius:3px}
+  #studygroup-prototype .ss-search-fields{display:grid;grid-template-columns:1fr 140px;gap:10px}
+  #studygroup-prototype .ss-search-fields .ss-field{margin-top:0}
+  #studygroup-prototype .ss-modal .ss-member{display:flex;gap:10px;align-items:center;padding:10px 0}
+  #studygroup-prototype .ss-toast{position:absolute;bottom:25px;left:50%;transform:translateX(-50%);z-index:30;background:var(--ss-text);color:var(--ss-bg);padding:10px 16px;border-radius:9px;box-shadow:0 4px 20px var(--ss-shadow);font-size:12px;width:max-content;max-width:88%;text-align:center}
+  #studygroup-prototype .ss-mobile-menu{display:none}
+  #studygroup-prototype .ss-highlight .ss-bubble{outline:2px solid var(--ss-accent);outline-offset:3px}
+  #studygroup-prototype .ss-flush-status{color:var(--ss-green)}
+  @media(max-width:900px){
+    #studygroup-prototype .ss-workspace .ss-desk{grid-template-columns:196px minmax(0,1fr)}
+    #studygroup-prototype .ss-workspace .ss-insight{grid-column:2;border-left:0;border-top:1px solid var(--ss-line)}
+    #studygroup-prototype .ss-workspace .ss-sidebar{grid-row:1/3}
+    #studygroup-prototype .ss-workspace .ss-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    #studygroup-prototype .ss-workspace .ss-summary-section{margin-top:0}
+    #studygroup-prototype .ss-workspace .ss-summary-foot{display:flex;align-items:center;gap:12px}
+    #studygroup-prototype .ss-workspace .ss-summary-foot .ss-btn{width:auto}
+    #studygroup-prototype .ss-workspace .ss-header .ss-ai-label{display:inline}
+  }
+  @media(max-width:650px){
+    #studygroup-prototype .ss-app{min-height:900px;border-radius:10px}
+    #studygroup-prototype .ss-desk,#studygroup-prototype .ss-workspace .ss-desk,#studygroup-prototype .ss-workspace:not(.ss-has-ai) .ss-desk{display:flex;flex-direction:column;min-height:860px}
+    #studygroup-prototype .ss-sidebar{display:none;border-right:0;border-bottom:1px solid var(--ss-line);padding:18px;gap:15px}
+    #studygroup-prototype .ss-mobile-nav .ss-sidebar{display:flex}
+    #studygroup-prototype .ss-main{flex:1}
+    #studygroup-prototype .ss-mobile-menu{display:inline-grid}
+    #studygroup-prototype .ss-header,#studygroup-prototype .ss-workspace .ss-header{padding:18px 15px 13px;gap:10px;flex-wrap:wrap}
+    #studygroup-prototype .ss-heading{flex:1}
+    #studygroup-prototype .ss-heading .ss-roomicon{display:none}
+    #studygroup-prototype .ss-heading h2{font-size:15px}
+    #studygroup-prototype .ss-tabs{padding:0 15px}
+    #studygroup-prototype .ss-tabset{gap:16px}
+    #studygroup-prototype .ss-search-trigger span{display:none}
+    #studygroup-prototype .ss-chat-body,#studygroup-prototype .ss-workspace .ss-chat-body{padding:20px 15px;min-height:500px}
+    #studygroup-prototype .ss-compose-wrap,#studygroup-prototype .ss-workspace .ss-compose-wrap{padding:0 15px 18px}
+    #studygroup-prototype .ss-compose textarea,#studygroup-prototype .ss-input{font-size:16px}
+    #studygroup-prototype .ss-compose-hint{display:none}
+    #studygroup-prototype .ss-windowbar{padding:0 12px 0 65px;justify-content:flex-start;font-size:10px;gap:7px}
+    #studygroup-prototype .ss-windowbar .ss-demo{font-size:9px}
+    #studygroup-prototype .ss-lights{left:12px;gap:4px}
+    #studygroup-prototype .ss-lights span{height:8px;width:8px}
+    #studygroup-prototype .ss-focus .ss-insight{padding:18px 15px}
+    #studygroup-prototype .ss-focus .ss-summary-grid,#studygroup-prototype .ss-workspace .ss-summary-grid{grid-template-columns:1fr}
+    #studygroup-prototype .ss-focus .ss-summary-foot,#studygroup-prototype .ss-workspace .ss-summary-foot{flex-wrap:wrap}
+    #studygroup-prototype .ss-focus .ss-ai-disclaimer{max-width:100%}
+    #studygroup-prototype .ss-message{max-width:100%}
+    #studygroup-prototype .ss-overlay{padding:24px 12px}
+    #studygroup-prototype .ss-modal{padding:18px}
+    #studygroup-prototype .ss-search-fields{grid-template-columns:1fr}
+    #studygroup-prototype .ss-actions{margin-left:auto}
+    #studygroup-prototype .ss-composer-foot{flex-wrap:wrap}
+    #studygroup-prototype .ss-directory,#studygroup-prototype .ss-files{padding:18px 15px}
+    #studygroup-prototype .ss-insight{border-left:0}
+  }
+  @media(pointer:coarse){#studygroup-prototype .ss-icon,#studygroup-prototype .ss-btn,#studygroup-prototype .ss-tab,#studygroup-prototype .ss-send{min-height:44px;min-width:44px}}
+</style>
+<script>
+(() => {
+  const root = document.getElementById('studygroup-prototype');
+  const esc = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const icon = name => `<i data-lucide="${name}" aria-hidden="true"></i>`;
+  const avatar = (name, online=false) => `<span class="ss-avatar ${name==='Anan'?'ss-self':''}">${esc(name.slice(0,2).toUpperCase())}${online?'<span class="ss-online-dot"></span>':''}</span>`;
+  const badge = text => `<span class="ss-badge">${esc(text)}</span>`;
+  const initialRooms = () => [
+    {id:'network', name:'Network Project', members:['Anan','Ploy'], group:true},
+    {id:'cafe', name:'Study Café', members:['Mek'], group:true},
+    {id:'ploy', name:'Ploy', members:['Anan','Ploy'], group:false},
+    {id:'mek', name:'Mek', members:['Anan','Mek'], group:false}
+  ];
+  const initialMessages = () => ({
+    network:[
+      {id:'n1',from:'Ploy',time:'14:02',date:'2026-11-02',text:'มาแบ่งงาน Network Project กันนะ เราต้องมีแชตส่วนตัวกับห้องกลุ่มให้ครบก่อน'},
+      {id:'n2',from:'Anan',time:'14:03',date:'2026-11-02',text:'ได้เลย เราดูส่วน Server กับ Cloud ให้ แล้วเพิ่ม AI สรุปบทสนทนาด้วย'},
+      {id:'n3',from:'Ploy',time:'14:04',date:'2026-11-02',text:'งั้นเราทำ GUI กับส่งไฟล์นะ แนบโครงร่างโปรเจกต์ไว้ให้แล้ว'},
+      {id:'n4',from:'Ploy',time:'14:04',date:'2026-11-02',file:{name:'project-outline.pdf',size:'248 KB',example:true}},
+      {id:'n5',from:'Anan',time:'14:05',date:'2026-11-02',text:'โอเค กำหนดส่งงานส่วนแรกวันศุกร์ 6 พ.ย. แล้วมาทดสอบ Socket บนคอมคนละเครื่องกัน 👍'}
+    ],
+    cafe:[],
+    ploy:[
+      {id:'p1',from:'Ploy',time:'13:42',date:'2026-11-02',text:'วันนี้สะดวกคุยงานตอนบ่ายสองไหม?'},
+      {id:'p2',from:'Anan',time:'13:43',date:'2026-11-02',text:'ได้เลย เดี๋ยวไปคุยกันในกลุ่ม Network Project นะ'}
+    ],
+    mek:[{id:'m1',from:'Mek',time:'12:15',date:'2026-11-02',text:'เราเปิดห้อง Study Café ไว้ ถ้าอยากอ่านหนังสือด้วยกัน กดเข้าร่วมได้เลยนะ'}]
+  });
+  const controllers = [];
+  const bind = (app, design) => {
+    const state = {room:'network',tab:'chat',directory:false,ai:design==='workspace',mobile:false,rooms:initialRooms(),messages:initialMessages(),drafts:{},density:13,radius:12};
+    let toastTimer, modalInvoker;
+    const q = selector => app.querySelector(selector);
+    const current = () => state.rooms.find(room => room.id===state.room) || state.rooms[0];
+    const joined = () => current().members.includes('Anan');
+    const updateIcons = () => { app.querySelectorAll('button').forEach(button=>button.classList.add('cursor-interaction')); if(globalThis.lucide) globalThis.lucide.createIcons({attrs:{width:16,height:16}}); };
+    const safeSave = () => {
+      if(!window.openai?.setWidgetState) return;
+      const snapshots = controllers.map(controller => controller.snapshot());
+      while(new TextEncoder().encode(JSON.stringify(snapshots)).length>13000){
+        const largest=snapshots.flatMap(snapshot=>Object.values(snapshot.messages)).filter(list=>list.length).sort((a,b)=>JSON.stringify(b).length-JSON.stringify(a).length)[0];
+        if(!largest)break;largest.shift();
+      }
+      window.openai.setWidgetState({modelContent:{prototype:'StudyGroup Desktop',designs:snapshots.map(s=>({design:s.design,room:s.room,view:s.directory?'all-groups':s.tab,aiVisible:s.ai}))},privateContent:{studygroup:snapshots}}).catch(()=>{});
+    };
+    const insight = () => `<aside class="ss-insight" aria-label="ผู้ช่วยสรุปบทสนทนา" ${state.ai?'':'hidden'}>
+      <div class="ss-insight-head"><span class="ss-ai-title">${icon('sparkles')} สรุปด้วย AI</span><button type="button" class="ss-icon" data-action="close-ai" aria-label="ปิดสรุป AI">${icon('x')}</button></div>
+      <p class="ss-ai-note">เฉพาะบทสนทนาในห้องนี้</p>
+      <div class="ss-summary-content" aria-live="polite"></div>
+      <div class="ss-summary-foot"><button type="button" class="ss-btn ss-ai" data-action="summarize">${icon('refresh-cw')} สรุปอีกครั้ง</button><span class="ss-ai-disclaimer">ผลสรุปตัวอย่าง · ยังไม่ได้เชื่อมต่อ AI</span></div>
+    </aside>`;
+    app.innerHTML = `
+      <div class="ss-windowbar"><div class="ss-lights" aria-hidden="true"><span></span><span></span><span></span></div><span>StudyGroup — Desktop</span><span class="ss-demo">ต้นแบบ · ข้อมูลจำลอง</span></div>
+      <div class="ss-desk">
+        <nav class="ss-sidebar" aria-label="ผู้ใช้และห้องแชต">
+          <div class="ss-brand"><span class="ss-logo">${icon('layers')}</span><div>StudyGroup<div class="ss-brand-sub">พื้นที่คุยงานของทีมคุณ</div></div></div>
+          <button type="button" class="ss-btn ss-primary" data-action="create">${icon('plus')} สร้างกลุ่มใหม่</button>
+          <div><div class="ss-section-title"><strong>ออนไลน์</strong><span>3 คน</span></div><div class="ss-people"></div></div>
+          <div><div class="ss-section-title"><strong>ห้องกลุ่ม</strong><button type="button" class="ss-icon" data-action="create" aria-label="สร้างกลุ่ม">${icon('plus')}</button></div><div class="ss-rooms"></div><button type="button" class="ss-link" data-action="directory">${icon('compass')} สำรวจกลุ่มทั้งหมด</button></div>
+          <div class="ss-sidebar-bottom"><button type="button" class="ss-connection" data-action="connection"><span></span> เชื่อมต่อ Cloud Server ${icon('chevron-right')}</button><button type="button" class="ss-account" data-action="account">${avatar('Anan')}<span class="ss-label"><span class="ss-name">Anan</span><br><span class="ss-small">บัญชีของคุณ</span></span>${icon('settings-2')}</button></div>
+        </nav>
+        <main class="ss-main">
+          <header class="ss-header"><button type="button" class="ss-icon ss-mobile-menu" data-action="menu" aria-label="เปิดรายชื่อห้องแชต">${icon('panel-left')}</button><div class="ss-heading"></div><div class="ss-actions"><button type="button" class="ss-icon ss-member-button" data-action="members" aria-label="ดูสมาชิก">${icon('users')}</button><button type="button" class="ss-btn ss-ai ss-ai-trigger" data-action="ai">${icon('sparkles')}<span class="ss-ai-label">สรุปด้วย AI</span></button></div></header>
+          <div class="ss-tabs"><div class="ss-tabset" role="tablist" aria-label="เนื้อหาห้อง"><button type="button" class="ss-tab" role="tab" id="ss-chat-${design}" aria-controls="ss-panel-${design}" data-tab="chat" aria-selected="true">แชต</button><button type="button" class="ss-tab" role="tab" id="ss-files-${design}" aria-controls="ss-panel-${design}" data-tab="files" aria-selected="false">ไฟล์ <span class="ss-file-count"></span></button></div><button type="button" class="ss-search-trigger" data-action="search" aria-label="ค้นหาประวัติแชต">${icon('search')}<span>ค้นหาข้อความ</span></button></div>
+          ${design==='focus'?insight():''}
+          <div class="ss-content" id="ss-panel-${design}" role="tabpanel" aria-labelledby="ss-chat-${design}" style="display:flex;flex-direction:column;flex:1;min-width:0"></div>
+          <div class="ss-compose-wrap"><div class="ss-compose" role="group" aria-label="เขียนข้อความ"><textarea rows="1" aria-label="ข้อความแชต" placeholder="พิมพ์ข้อความถึงทีม…"></textarea><div class="ss-compose-toolbar"><div style="display:flex;align-items:center;gap:5px"><button type="button" class="ss-icon" data-action="attach" aria-label="แนบไฟล์">${icon('paperclip')}</button><span class="ss-compose-hint">Enter เพื่อส่ง · Shift + Enter ขึ้นบรรทัดใหม่</span></div><button type="button" class="ss-send" data-action="send">ส่ง ${icon('arrow-up')}</button></div></div><div class="ss-composer-foot"><span>ข้อความบันทึกในประวัติของห้อง</span><span class="ss-flush-status">บันทึกแล้ว</span></div></div>
+        </main>
+        ${design==='workspace'?insight():''}
+      </div>
+      <input type="file" class="ss-file-input" aria-label="เลือกไฟล์แนบ" hidden>
+      <div class="ss-modal-host"></div><div class="ss-toast" role="status" aria-live="polite" hidden></div>`;
+    const tell = message => {clearTimeout(toastTimer);q('.ss-toast').textContent=message;q('.ss-toast').hidden=false;toastTimer=setTimeout(()=>{q('.ss-toast').hidden=true},3300);};
+    const closeModal = () => {q('.ss-modal-host').innerHTML='';q('.ss-desk').inert=false;modalInvoker?.focus();};
+    const modal = (title, body, cls='') => {
+      modalInvoker=document.activeElement;
+      q('.ss-modal-host').innerHTML=`<div class="ss-overlay"><section class="ss-modal ${cls}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="ss-modal-head"><h3>${esc(title)}</h3><button type="button" class="ss-icon" data-action="close-modal" aria-label="ปิดหน้าต่าง">${icon('x')}</button></div>${body}</section></div>`;
+      q('.ss-desk').inert=true;updateIcons();q('.ss-modal input')?.focus();
+    };
+    const showSummary = () => {
+      const messages=state.messages[state.room]||[];
+      const output=q('.ss-summary-content');
+      if(!joined() || !current().group){output.innerHTML='<p class="ss-small">เลือกห้องกลุ่มที่คุณเป็นสมาชิกเพื่อสรุปบทสนทนา</p>';return;}
+      if(state.room==='network'){
+        output.innerHTML=`<div class="ss-summary-grid"><section class="ss-summary-section"><h3>${icon('message-square')} ประเด็นสำคัญ</h3><p>แบ่งงานทำแอปแชต และเตรียมทดสอบก่อนนำเสนอ</p></section><section class="ss-summary-section"><h3>${icon('list-checks')} งานที่ตกลงกัน</h3><div class="ss-task"><span class="ss-task-check"></span><div>Server, Cloud และ AI<div class="ss-owner">Anan</div></div></div><div class="ss-task"><span class="ss-task-check"></span><div>GUI และการส่งไฟล์<div class="ss-owner">Ploy</div></div></div></section><section class="ss-summary-section"><h3>${icon('calendar-days')} กำหนดส่ง</h3><p>ศุกร์ 6 พ.ย. 2569</p><p class="ss-small" style="margin-top:5px">ทดสอบบนคอมพิวเตอร์คนละเครื่อง</p></section></div>`;
+      }else{
+        output.innerHTML=`<div class="ss-empty">${icon('sparkles')}<p>${messages.length?'ตัวอย่างนี้ยังไม่มีผลสรุปสำหรับห้องนี้':'ยังไม่มีข้อความให้สรุป'}</p></div>`;
+      }
+      q('.ss-ai-note').textContent=`ห้อง ${current().name} · ${Math.min(messages.length,50)} ข้อความล่าสุด`;
+    };
+    const messageHTML = message => `<article class="ss-message ${message.from==='Anan'?'ss-mine':''}" data-message-id="${esc(message.id)}">${message.from==='Anan'?'':avatar(message.from)}<div class="ss-message-body"><div class="ss-message-meta"><span>${message.from==='Anan'?'คุณ':esc(message.from)}</span><time>${esc(message.time)}</time></div><div class="ss-bubble">${message.file?`<button type="button" class="ss-file-bubble" data-file-id="${esc(message.id)}"><span class="ss-file-glyph">${icon('file-text')}</span><span class="ss-label"><span class="ss-name">${esc(message.file.name)}</span><br><span class="ss-small">${esc(message.file.size)} · ${message.file.example?'ไฟล์ตัวอย่าง':'ไฟล์แนบ'}</span></span>${icon('arrow-down-to-line')}</button>`:esc(message.text).replace(/\n/g,'<br>')}</div></div></article>`;
+    const render = () => {
+      const room=current(), list=state.messages[state.room]||[], member=joined();
+      app.classList.toggle('ss-has-ai',state.ai&&!state.directory&&room.group&&member);
+      app.classList.toggle('ss-mobile-nav',state.mobile);
+      q('.ss-people').innerHTML=['Anan','Ploy','Mek'].map(name=>`<button type="button" class="ss-person ${!state.directory&&!room.group&&room.name===name?'is-active':''}" ${name==='Anan'?'data-action="account"':`data-room="${name.toLowerCase()}"`}>${avatar(name,true)}<span class="ss-label"><span class="ss-name">${name}${name==='Anan'?' <span class="ss-small">(คุณ)</span>':''}</span><br><span class="ss-small">${name==='Anan'?'พร้อมคุยงาน':'ส่งข้อความส่วนตัว'}</span></span></button>`).join('');
+      q('.ss-rooms').innerHTML=state.rooms.filter(r=>r.group).map(r=>`<button type="button" class="ss-room ${!state.directory&&room.id===r.id?'is-active':''}" data-room="${esc(r.id)}"><span class="ss-roomicon">${icon('hash')}</span><span class="ss-label"><span class="ss-name">${esc(r.name)}</span><br><span class="ss-small">${esc(r.members.join(', '))}</span></span>${r.members.includes('Anan')?'':badge('เข้าร่วม')}</button>`).join('');
+      q('.ss-heading').innerHTML=state.directory?`<span class="ss-roomicon">${icon('compass')}</span><div><h2>สำรวจกลุ่ม</h2><p class="ss-small">เลือกเข้าร่วมกลุ่มได้ด้วยตัวเอง</p></div>`:`<span class="ss-roomicon">${icon(room.group?'hash':'lock-keyhole')}</span><div><h2>${esc(room.name)}</h2><p class="ss-small">${room.group?`${room.members.length} สมาชิก · ${esc(room.members.join(', '))}`:'แชตส่วนตัว · เฉพาะคุณและ '+esc(room.name)}</p></div>`;
+      q('.ss-tabs').hidden=state.directory||!member;
+      q('.ss-member-button').hidden=state.directory;
+      q('.ss-ai-trigger').hidden=state.directory||!room.group||!member;
+      q('.ss-insight').hidden=!state.ai||state.directory||!room.group||!member;
+      q('.ss-compose-wrap').hidden=state.directory||!member||state.tab==='files';
+      q('.ss-file-count').textContent=list.filter(m=>m.file).length;
+      app.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.tab===state.tab)));
+      const content=q('.ss-content');
+      content.setAttribute('aria-labelledby',`ss-${state.tab}-${design}`);
+      if(state.directory){
+        content.innerHTML=`<div class="ss-directory"><div><h3>ทุกกลุ่มใน StudyGroup</h3><p class="ss-small">${state.rooms.filter(r=>r.group).length} กลุ่ม · เห็นรายชื่อสมาชิกก่อนเข้าร่วม</p></div>${state.rooms.filter(r=>r.group).map(r=>`<article class="ss-dir-card"><span class="ss-roomicon">${icon('hash')}</span><div class="ss-label"><div class="ss-name">${esc(r.name)}</div><p class="ss-small">สมาชิก: ${esc(r.members.join(', '))}</p></div><button type="button" class="ss-btn ${r.members.includes('Anan')?'':'ss-primary'}" ${r.members.includes('Anan')?`data-room="${esc(r.id)}"`:`data-join="${esc(r.id)}"`}>${r.members.includes('Anan')?'เปิดห้อง':'เข้าร่วม'}</button></article>`).join('')}</div>`;
+      }else if(!member){
+        content.innerHTML=`<div class="ss-empty">${icon('door-open')}<p>พื้นที่คุยงานของ ${esc(room.members.join(', '))}</p></div><section class="ss-join-panel"><h3 style="font-size:15px;font-weight:500">เข้าร่วม ${esc(room.name)}</h3><p class="ss-small">เข้าร่วมก่อนจึงจะอ่านและส่งข้อความในห้องนี้ได้</p><button type="button" class="ss-btn ss-primary" data-join="${esc(room.id)}">${icon('plus')} เข้าร่วมด้วยตัวเอง</button></section>`;
+      }else if(state.tab==='files'){
+        const files=list.filter(m=>m.file);
+        content.innerHTML=`<div class="ss-files"><div><h3>ไฟล์ในห้อง</h3><p class="ss-small">${files.length} ไฟล์ · เฉพาะสมาชิกห้องนี้</p></div>${files.length?files.map(m=>`<button type="button" class="ss-dir-card ss-file-bubble" data-file-id="${esc(m.id)}"><span class="ss-file-glyph">${icon('file-text')}</span><span class="ss-label"><span class="ss-name">${esc(m.file.name)}</span><br><span class="ss-small">${esc(m.file.size)} · ${esc(m.from)} · ${esc(m.time)}</span></span>${icon('arrow-down-to-line')}</button>`).join(''):`<div class="ss-empty">${icon('folder-open')}<p>ยังไม่มีไฟล์ในห้องนี้</p></div>`}<button type="button" class="ss-btn" data-action="attach">${icon('paperclip')} แนบไฟล์ใหม่</button></div>`;
+      }else{
+        content.innerHTML=`<div class="ss-chat-body" role="log" aria-label="บทสนทนา ${esc(room.name)}"><div class="ss-day">วันนี้ · 2 พ.ย. 2569</div>${list.length?list.map(messageHTML).join(''):`<div class="ss-empty">${icon('messages-square')}<p>เริ่มบทสนทนาแรกในห้องนี้</p></div>`}</div>`;
+      }
+      q('textarea').value=state.drafts[state.room]||'';
+      q('textarea').placeholder=room.group?'พิมพ์ข้อความถึงทีม…':`ส่งข้อความส่วนตัวถึง ${room.name}…`;
+      showSummary();updateIcons();
+    };
+    const openRoom = id => {if(!state.rooms.some(r=>r.id===id))return;state.room=id;state.tab='chat';state.directory=false;state.mobile=false;render();safeSave();};
+    const send = () => {
+      const textarea=q('textarea'), text=textarea.value.trim();if(!text||!joined())return;
+      const list=state.messages[state.room]||(state.messages[state.room]=[]);
+      list.push({id:'sent-'+Date.now(),from:'Anan',time:'14:'+String(6+list.length).padStart(2,'0'),date:'2026-11-02',text:text.slice(0,2000)});
+      state.drafts[state.room]='';render();safeSave();tell('ส่งข้อความและบันทึกในประวัติแล้ว');
+    };
+    const createModal = () => {
+      modal('สร้างกลุ่มใหม่',`<p class="ss-small">เริ่มกลุ่มของคุณ แล้วให้เพื่อนเลือกเข้าร่วมเอง</p><div class="ss-create-form" role="group" aria-label="ข้อมูลกลุ่มใหม่"><label class="ss-field">ชื่อกลุ่ม<input class="ss-input" name="group" maxlength="40" placeholder="เช่น ทีม Database Project" required></label><div class="ss-error" role="alert"></div><div class="ss-field"><span>สมาชิกเริ่มต้น</span><div class="ss-member">${avatar('Anan')}<span>Anan <span class="ss-small">(คุณเท่านั้น)</span></span></div></div><div class="ss-modal-actions"><button type="button" class="ss-btn" data-action="close-modal">ยกเลิก</button><button type="button" class="ss-btn ss-primary" data-action="create-submit">สร้างกลุ่ม</button></div></div>`);
+      const submit=()=>{const name=q('[name="group"]').value.trim();if(!name){q('.ss-error').textContent='กรุณากรอกชื่อกลุ่ม';return;}if(state.rooms.some(r=>r.group&&r.name.toLowerCase()===name.toLowerCase())){q('.ss-error').textContent='มีชื่อกลุ่มนี้แล้ว ลองใช้ชื่ออื่น';return;}const id='group-'+Date.now();state.rooms.push({id,name,members:['Anan'],group:true});state.messages[id]=[];closeModal();openRoom(id);tell('สร้างกลุ่มแล้ว · มีคุณเป็นสมาชิกคนเดียว');};
+      q('[data-action="create-submit"]').onclick=submit;
+      q('[name="group"]').onkeydown=event=>{if(event.key==='Enter'&&!event.isComposing){event.preventDefault();submit();}};
+    };
+    const searchModal = () => {
+      if(!joined())return;
+      modal('ค้นหาประวัติแชต',`<p class="ss-small" style="margin-bottom:16px">ค้นหาเฉพาะห้อง ${esc(current().name)}</p><div class="ss-search-fields"><label class="ss-field">คำค้น<input class="ss-input" name="search" placeholder="เช่น กำหนดส่ง" value=""></label><label class="ss-field">วันที่<input class="ss-input" name="date" type="date" value=""></label></div><div class="ss-search-results" aria-live="polite"></div>`,'ss-search-modal');
+      const find=()=>{
+        const word=q('[name="search"]').value.trim(), date=q('[name="date"]').value;
+        const results=(state.messages[state.room]||[]).filter(m=>(!word||(m.text||m.file?.name||'').toLowerCase().includes(word.toLowerCase()))&&(!date||m.date===date));
+        q('.ss-search-results').innerHTML=`<p class="ss-small" style="margin-top:17px">พบ ${results.length} ข้อความ</p>`+results.slice(0,5).map(m=>`<button type="button" class="ss-result" data-result-id="${esc(m.id)}"><span class="ss-small">${esc(m.from)} · 2 พ.ย. · ${esc(m.time)}</span><p>${esc(m.text||m.file?.name)}</p></button>`).join('')+(results.length?'':`<div class="ss-empty">${icon('search')}<p>ไม่พบข้อความที่ตรงกับคำค้น</p></div>`);updateIcons();
+      };
+      q('[name="search"]').oninput=find;q('[name="date"]').oninput=find;find();
+    };
+    app.addEventListener('click',event=>{
+      const target=event.target.closest('button');if(!target)return;
+      if(target.dataset.room){openRoom(target.dataset.room);return;}
+      if(target.dataset.join){const room=state.rooms.find(r=>r.id===target.dataset.join);if(room&&!room.members.includes('Anan'))room.members.push('Anan');openRoom(room.id);tell('คุณเข้าร่วม '+room.name+' แล้ว');return;}
+      if(target.dataset.tab){state.tab=target.dataset.tab;render();safeSave();return;}
+      if(target.dataset.resultId){const id=target.dataset.resultId;closeModal();state.tab='chat';render();const found=Array.from(app.querySelectorAll('[data-message-id]')).find(el=>el.dataset.messageId===id);found?.classList.add('ss-highlight');tell('แสดงข้อความที่ค้นพบในห้องแชต');return;}
+      if(target.dataset.fileId){const file=(state.messages[state.room]||[]).find(m=>m.id===target.dataset.fileId)?.file;if(file)modal('รายละเอียดไฟล์',`<div class="ss-member"><span class="ss-file-glyph">${icon('file-text')}</span><div class="ss-label"><p class="ss-name">${esc(file.name)}</p><p class="ss-small">${esc(file.size)} · ห้อง ${esc(current().name)}</p></div></div><p class="ss-small" style="margin-top:16px">ต้นแบบแสดงขั้นตอนรับไฟล์เท่านั้น ยังไม่มีการอัปโหลดหรือดาวน์โหลดไฟล์จริง</p><div class="ss-modal-actions"><button type="button" class="ss-btn ss-primary" data-action="close-modal">เข้าใจแล้ว</button></div>`);return;}
+      switch(target.dataset.action){
+        case 'send':send();break;
+        case 'create':createModal();break;
+        case 'close-modal':closeModal();break;
+        case 'menu':state.mobile=!state.mobile;render();break;
+        case 'directory':state.directory=true;state.mobile=false;render();safeSave();break;
+        case 'ai':state.ai=!state.ai;render();safeSave();break;
+        case 'close-ai':state.ai=false;render();safeSave();break;
+        case 'search':searchModal();break;
+        case 'attach':q('.ss-file-input').click();break;
+        case 'members':modal(current().group?'สมาชิกในกลุ่ม':'ผู้ร่วมแชตส่วนตัว',`${current().members.map(name=>`<div class="ss-member">${avatar(name,true)}<span class="ss-label">${esc(name)} ${name==='Anan'?'<span class="ss-small">(คุณ)</span>':''}</span><span class="ss-small">ออนไลน์</span></div>`).join('')}<p class="ss-small" style="margin-top:15px">${current().group?'สมาชิกเลือกเข้าร่วมกลุ่มด้วยตัวเอง':'ข้อความนี้มองเห็นได้เฉพาะผู้ร่วมแชตสองคน'}</p>`);break;
+        case 'connection':modal('การเชื่อมต่อเซิร์ฟเวอร์',`<p class="ss-small">ตัวอย่างหน้าตั้งค่า Desktop Client</p><label class="ss-field">Server address<input class="ss-input" value="chat.studygroup.example" aria-label="Server address"></label><label class="ss-field">Port<input class="ss-input" value="5000" inputmode="numeric" aria-label="Port"></label><p class="ss-small" style="margin-top:16px">สถานะในต้นแบบเป็นการจำลอง ยังไม่มีการเชื่อมต่อเครือข่ายจริง</p><div class="ss-modal-actions"><button type="button" class="ss-btn ss-primary" data-action="simulate-connect">ทดสอบการเชื่อมต่อ</button></div>`);break;
+        case 'simulate-connect':closeModal();tell('เชื่อมต่อสำเร็จ — สถานะจำลอง');break;
+        case 'account':modal('บัญชีของคุณ',`<div class="ss-member">${avatar('Anan')}<div><p class="ss-name">Anan</p><p class="ss-small">ชื่อผู้ใช้ไม่ซ้ำ · ออนไลน์</p></div></div><p class="ss-small" style="margin-top:18px">แชตส่วนตัวของคุณมองเห็นได้เฉพาะคู่สนทนา ส่วนแชตกลุ่มแสดงเฉพาะสมาชิกห้อง</p><div class="ss-modal-actions"><button type="button" class="ss-btn" data-action="restore-demo">คืนค่าบทสนทนาตัวอย่าง</button><button type="button" class="ss-btn ss-primary" data-action="close-modal">เสร็จสิ้น</button></div>`);break;
+        case 'restore-demo':state.rooms=initialRooms();state.messages=initialMessages();state.room='network';state.directory=false;state.tab='chat';state.drafts={};closeModal();render();safeSave();tell('คืนค่าตัวอย่างแล้ว');break;
+        case 'summarize':target.disabled=true;target.textContent='กำลังเตรียมสรุปตัวอย่าง…';setTimeout(()=>{showSummary();target.disabled=false;target.innerHTML=icon('refresh-cw')+' สรุปอีกครั้ง';updateIcons();tell('อัปเดตผลสรุปตัวอย่างแล้ว');},500);break;
+      }
+    });
+    q('textarea').addEventListener('input',()=>{state.drafts[state.room]=q('textarea').value;});
+    q('textarea').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();send();}});
+    q('.ss-file-input').addEventListener('change',()=>{
+      const file=q('.ss-file-input').files[0];if(!file)return;
+      if(file.size>5*1024*1024){tell('ไฟล์ใหญ่เกิน 5 MB กรุณาเลือกไฟล์ที่เล็กกว่า');q('.ss-file-input').value='';return;}
+      if(!joined())return;
+      const list=state.messages[state.room]||(state.messages[state.room]=[]);
+      list.push({id:'file-'+Date.now(),from:'Anan',time:'14:12',date:'2026-11-02',file:{name:file.name,size:file.size>1024*1024?(file.size/1024/1024).toFixed(1)+' MB':Math.max(1,Math.round(file.size/1024))+' KB'}});
+      q('.ss-file-input').value='';state.tab='chat';render();safeSave();tell('เพิ่มไฟล์แนบในต้นแบบแล้ว · ยังไม่มีการอัปโหลดจริง');
+    });
+    app.addEventListener('keydown',event=>{
+      const dialog=q('.ss-modal');if(!dialog)return;
+      if(event.key==='Escape'){closeModal();return;}
+      if(event.key==='Tab'){
+        const fields=Array.from(dialog.querySelectorAll('button,input,textarea')).filter(el=>!el.disabled&&!el.hidden);
+        const first=fields[0],last=fields[fields.length-1];
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+      }
+    });
+    const snapshot = () => ({design,room:state.room,tab:state.tab,directory:state.directory,ai:state.ai,rooms:state.rooms.slice(0,12),messages:Object.fromEntries(Object.entries(state.messages).map(([id,list])=>[id,list.slice(-12)]))});
+    const restore = data => {
+      if(!data||data.design!==design)return;
+      if(Array.isArray(data.rooms)&&data.rooms.every(r=>typeof r.id==='string'&&typeof r.name==='string'&&Array.isArray(r.members)))state.rooms=data.rooms;
+      if(data.messages&&typeof data.messages==='object')state.messages=data.messages;
+      if(typeof data.room==='string'&&state.rooms.some(r=>r.id===data.room))state.room=data.room;
+      if(['chat','files'].includes(data.tab))state.tab=data.tab;
+      state.ai=typeof data.ai==='boolean'?data.ai:state.ai;state.directory=!!data.directory;render();
+    };
+    render();
+    if(globalThis.Tweak){
+      const tweak=new Tweak({container:app,onChange:()=>{app.style.borderRadius=state.radius+'px';}});
+      tweak.addSlider(state,'radius',{label:'ความโค้งหน้าต่าง',min:0,max:24,unit:'px'});
+    }
+    return {snapshot,restore};
+  };
+  root.querySelectorAll('.ss-app').forEach(app=>controllers.push(bind(app,app.dataset.design)));
+  const restoreAll = saved => {const data=saved?.privateContent?.studygroup;if(Array.isArray(data))controllers.forEach(controller=>{const snapshot=controller.snapshot();controller.restore(data.find(s=>s.design===snapshot.design));});};
+  restoreAll(window.openai?.widgetState);
+  window.addEventListener('openai:set_globals',event=>{if(event.detail?.globals?.widgetState)restoreAll(event.detail.globals.widgetState);});
+})();
+</script>
