@@ -104,6 +104,7 @@ test('history survives reload, pages older messages without gaps, and search jum
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('คำค้น').fill('กำหนดส่ง')
   const today = await page.evaluate(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })
+  await dialog.getByRole('button', { name: 'กรองตามวันที่', exact: true }).click()
   await dialog.getByLabel('ตั้งแต่วันที่').fill(today)
   await dialog.getByLabel('ถึงวันที่').fill(today)
   await dialog.getByRole('button', { name: 'ค้นหา', exact: true }).click()
@@ -116,6 +117,7 @@ test('history survives reload, pages older messages without gaps, and search jum
   // A range that ended before today finds nothing; a keyword alone pages newest first.
   await page.getByRole('button', { name: 'ค้นหาข้อความ', exact: true }).click()
   await dialog.getByLabel('คำค้น').fill('กำหนดส่ง')
+  await dialog.getByRole('button', { name: 'กรองตามวันที่', exact: true }).click()
   await dialog.getByLabel('ถึงวันที่').fill('2020-01-01')
   await dialog.getByRole('button', { name: 'ค้นหา', exact: true }).click()
   await expect(dialog.getByText('ไม่พบข้อความที่ตรงกับเงื่อนไข')).toBeVisible()
@@ -179,7 +181,9 @@ test('files upload with progress, download with matching SHA-256, list in Files 
   await b.reload(); await login(b, bn); await openGroup(b, group)
   await b.getByRole('tab', { name: 'ไฟล์', exact: true }).click()
   await expect(b.locator('.ss-file-row')).toHaveCount(1)
-  await expect(b.locator('.ss-file-row')).toContainText(`SHA-256 ${sha(content).slice(0, 12)}`)
+  await expect(b.locator('.ss-file-row code')).toBeHidden()
+  await b.locator('.ss-file-row').getByText('รายละเอียดไฟล์', { exact: true }).click()
+  await expect(b.locator('.ss-file-row code')).toHaveText(sha(content))
   await b.getByRole('tab', { name: 'แชต', exact: true }).click()
   await expect(b.locator('.ss-file-card').filter({ hasText: fileName })).toHaveCount(1)
 
