@@ -15,7 +15,9 @@ from websockets.exceptions import ConnectionClosed
 from websockets.http11 import Response
 from websockets.sync.server import serve
 
+from server.ai_service import build_provider
 from server.database import Database
+from server.handlers.ai import AIHandlers
 from server.handlers.auth import AuthHandlers
 from server.handlers.chat import ChatHandlers
 from server.handlers.files import FileHandlers
@@ -130,16 +132,18 @@ class WebConnection:
 
 
 class WebServer:
-    def __init__(self, config, *, limits=None, limiter=None):
+    def __init__(self, config, *, limits=None, limiter=None, ai_provider=None):
         self.config = config
         self.limits = limits or ServerLimits()
         self.database = Database(config.database_path)
         self.registry = SessionRegistry()
         chat = ChatHandlers(self.registry)
         self.files = FileHandlers(self.registry, config.uploads_dir, chat)
+        provider = ai_provider or build_provider(config.ai_provider, config.ai_model, config.ai_api_key, config.ai_timeout)
+        self.ai = AIHandlers(self.database, provider)
         self.router = Router(AuthHandlers(self.registry, Passwords(), limiter or AuthRateLimiter(),
                                          threading.BoundedSemaphore(self.limits.hash_workers)),
-                             chat, HistoryHandlers(), self.files)
+                             chat, HistoryHandlers(), self.files, self.ai)
         self._slots = threading.BoundedSemaphore(self.limits.max_connections)
         self._connections = set()
         self._lock = threading.Lock()
@@ -208,6 +212,7 @@ class WebServer:
         return self
 
     def stop(self):
+        self.ai.shutdown()
         if self.http is None:
             return
         with self._lock:
@@ -237,6 +242,8 @@ def main():
     with WebServer(config) as server:
         scheme = "https" if config.tls_cert else "http"
         logging.info("StudyGroup Web server: %s://%s:%s", scheme, *server.address[:2])
+        provider = server.ai.provider
+        logging.info("AI summary: %s", f"{provider.name} / {provider.model}" if provider else "not configured")
         try:
             threading.Event().wait()
         except KeyboardInterrupt:

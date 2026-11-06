@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { FormEvent, ReactNode } from 'react'
-import { ArrowUp, Check, ChevronRight, Compass, Download, FileText, Layers, LockKeyhole, LogOut, Menu, MessageSquare, Paperclip, Plus, Search, Settings2, Sparkles, Users, Wifi, WifiOff, X } from 'lucide-react'
+import { ArrowUp, CalendarDays, Check, ChevronRight, Compass, Download, ListChecks, RefreshCw, MessageCircle, Handshake, FileText, Layers, LockKeyhole, LogOut, Menu, MessageSquare, Paperclip, Plus, Search, Settings2, Sparkles, Users, Wifi, WifiOff, X } from 'lucide-react'
 import { ChatController, errorText, isMember, roomTitle } from './chat'
 import type { SearchFilters } from './chat'
 import { formatSize, localDayRange, MAX_FILE_BYTES } from './files'
@@ -117,6 +117,7 @@ function dayLabel(date: Date) {
 }
 const timeFormat = new Intl.DateTimeFormat('th-TH', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 const dateTimeFormat = new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+const UNSPECIFIED = 'ไม่ระบุ'
 const percent = (transfer: Transfer) => transfer.size ? Math.min(100, Math.floor(transfer.done * 100 / transfer.size)) : 100
 const senderName = (state: State, room: Room, id: number) => id === state.user!.id ? 'คุณ' : room.members.find(member => member.id === id)?.username || `ผู้ใช้ ${id}`
 
@@ -215,6 +216,24 @@ function FilesPanel({ state, room }: { state: State; room: Room }) {
   </div>
 }
 
+function AIPanel({ state, room, close }: { state: State; room: Room; close: () => void }) {
+  const ai = state.ai[room.id], result = ai?.result, summary = result?.summary
+  const none = <p className="ss-small">{UNSPECIFIED}</p>
+  return <aside className="ss-insight" aria-label="ผู้ช่วยสรุปบทสนทนา" aria-busy={!!ai?.loading}>
+    <div className="ss-insight-head"><span className="ss-ai-title"><Sparkles /> สรุปด้วย AI</span><button className="ss-icon" onClick={close} aria-label="ปิดสรุป AI"><X /></button></div>
+    <p className="ss-ai-note">{result ? `ห้อง ${room.name} · ${result.message_count} ข้อความล่าสุดที่คุณเห็นได้ · ${timeFormat.format(new Date(result.generated_at))}` : 'เฉพาะบทสนทนาในห้องนี้ ไม่เกิน 50 ข้อความล่าสุด'}</p>
+    {ai?.loading && <p className="ss-small" role="status">กำลังให้ AI สรุปบทสนทนา… แชตต่อได้ระหว่างรอ</p>}
+    {ai?.error && <p className="ss-error" role="alert">{ai.error}</p>}
+    {summary && (result!.message_count === 0 ? <p className="ss-small">ยังไม่มีข้อความที่คุณเห็นได้ให้สรุป</p> : <div className="ss-summary-grid" aria-live="polite">
+      <section className="ss-summary-section"><h3><MessageCircle /> ประเด็นสำคัญ</h3>{summary.topics.length ? <ul>{summary.topics.map((item, i) => <li key={i}>{item}</li>)}</ul> : none}</section>
+      <section className="ss-summary-section"><h3><Handshake /> ข้อตกลง</h3>{summary.agreements.length ? <ul>{summary.agreements.map((item, i) => <li key={i}>{item}</li>)}</ul> : none}</section>
+      <section className="ss-summary-section"><h3><ListChecks /> งานและผู้รับผิดชอบ</h3>{summary.tasks.length ? <ul className="ss-task-list">{summary.tasks.map((task, i) => <li key={i}><span>{task.task}</span><span className="ss-task-meta">{task.owner} · กำหนดส่ง {task.due}</span></li>)}</ul> : none}</section>
+      <section className="ss-summary-section"><h3><CalendarDays /> กำหนดส่ง</h3>{summary.deadlines.length ? <ul className="ss-task-list">{summary.deadlines.map((item, i) => <li key={i}><span>{item.due}</span><span className="ss-task-meta">{item.item}</span></li>)}</ul> : none}</section>
+    </div>)}
+    <div className="ss-summary-foot"><button className="ss-btn ss-ai" onClick={() => void control.summarize(room.id)} disabled={state.phase !== 'authenticated' || !!ai?.loading}><RefreshCw /> {result ? 'สรุปอีกครั้ง' : 'สรุปบทสนทนา'}</button><span className={`ss-ai-disclaimer${result?.mock ? ' is-mock' : ''}`}>{result?.mock ? 'ผลจำลอง (Mock) สำหรับทดสอบ · ไม่ได้เรียก AI จริง' : result ? `สรุปโดย AI (${result.model}) · อาจคลาดเคลื่อน ควรตรวจสอบก่อนใช้ · เห็นเฉพาะคุณ` : 'ผลสรุปเห็นเฉพาะคุณ ไม่ส่งเข้าห้อง'}</span></div>
+  </aside>
+}
+
 function snippet(text: string, query: string) {
   if (text.length <= 240) return text
   const at = Math.max(0, text.toLowerCase().indexOf(query.toLowerCase()) - 60)
@@ -308,10 +327,11 @@ export default function App() {
   const [mobile, setMobile] = useState(false)
   const [modal, setModal] = useState<'create' | 'members' | 'directory' | 'connection' | 'search' | null>(null)
   const [tab, setTab] = useState<'chat' | 'files'>('chat')
+  const [aiOpen, setAiOpen] = useState(false)
   useEffect(() => () => control.close(), [])
   useEffect(() => { if (state.phase === 'authenticated') setAuthRequested(false) }, [state.phase])
   const room = state.activeRoom === null ? undefined : state.rooms[state.activeRoom]
-  useEffect(() => { setTab('chat') }, [room?.id])
+  useEffect(() => { setTab('chat'); setAiOpen(false) }, [room?.id])
   useEffect(() => { if (state.highlight !== null) setTab('chat') }, [state.highlight])
   useEffect(() => { document.title = state.user && !authRequested ? `${room ? roomTitle(state, room) + ' — ' : ''}StudyGroup` : 'StudyGroup — เข้าสู่ระบบ' }, [state.user, room, authRequested])
   if (!state.user || authRequested) return <Auth state={state} />
@@ -320,11 +340,11 @@ export default function App() {
   const reconnect = () => { setModal(null); setAuthRequested(true) }
   return <div className="ss-app"><Sidebar state={state} create={() => { setMobile(false); setModal('create') }} directory={() => { setMobile(false); setModal('directory') }} connection={() => online ? setModal('connection') : reconnect()} mobile={mobile} close={() => setMobile(false)} />
     <main className="ss-main">
-      <header className="ss-header"><button className="ss-icon ss-mobile-menu" onClick={() => setMobile(true)} aria-label="เปิดรายชื่อห้อง"><Menu /></button><div className="ss-heading"><span className="ss-roomicon">{room ? room.kind === 'group' ? '#' : <LockKeyhole /> : <MessageSquare />}</span><div><h1>{room ? roomTitle(state, room) : 'เริ่มบทสนทนา'}</h1><p className="ss-small">{room ? room.kind === 'group' ? `${room.members.length} สมาชิก · ${room.members.map(m => m.username).join(', ')}` : `แชตส่วนตัว · เฉพาะคุณและ ${roomTitle(state, room)}` : 'เลือกเพื่อนหรือห้องกลุ่มจากด้านซ้าย'}</p></div></div><div className="ss-actions"><button className="ss-icon" onClick={() => setModal('members')} disabled={!room} aria-label="ดูสมาชิก"><Users /></button>{room?.kind === 'group' && member && <button className="ss-btn ss-ai" disabled title="AI สรุปบทสนทนายังไม่เปิดใช้งาน"><Sparkles /> สรุปด้วย AI</button>}</div></header>
+      <header className="ss-header"><button className="ss-icon ss-mobile-menu" onClick={() => setMobile(true)} aria-label="เปิดรายชื่อห้อง"><Menu /></button><div className="ss-heading"><span className="ss-roomicon">{room ? room.kind === 'group' ? '#' : <LockKeyhole /> : <MessageSquare />}</span><div><h1>{room ? roomTitle(state, room) : 'เริ่มบทสนทนา'}</h1><p className="ss-small">{room ? room.kind === 'group' ? `${room.members.length} สมาชิก · ${room.members.map(m => m.username).join(', ')}` : `แชตส่วนตัว · เฉพาะคุณและ ${roomTitle(state, room)}` : 'เลือกเพื่อนหรือห้องกลุ่มจากด้านซ้าย'}</p></div></div><div className="ss-actions"><button className="ss-icon" onClick={() => setModal('members')} disabled={!room} aria-label="ดูสมาชิก"><Users /></button>{room?.kind === 'group' && member && <button className="ss-btn ss-ai" aria-label="สรุปด้วย AI" aria-expanded={aiOpen} onClick={() => { if (aiOpen) setAiOpen(false); else { setAiOpen(true); setTab('chat'); if (!state.ai[room.id]?.result && !state.ai[room.id]?.loading) void control.summarize(room.id) } }} disabled={!online} title="สรุปประเด็น ข้อตกลง งาน และกำหนดส่งด้วย AI"><Sparkles /> <span className="ss-ai-label">สรุปด้วย AI</span></button>}</div></header>
       {(!room || member) && <div className="ss-tabs"><div className="ss-tabset" role="tablist" aria-label="เนื้อหาห้อง"><button className="ss-tab" role="tab" aria-selected={tab === 'chat'} onClick={() => setTab('chat')} disabled={!room}>แชต</button><button className="ss-tab" role="tab" aria-selected={tab === 'files'} onClick={() => setTab('files')} disabled={!room}>ไฟล์</button></div><button className="ss-search-trigger" onClick={() => setModal('search')} disabled={!room || !online} aria-label="ค้นหาข้อความ" title="ค้นหาด้วยคำและช่วงวันที่ในห้องนี้"><Search size={14} /><span>ค้นหาข้อความ</span></button></div>}
       {(state.error || !online) && <div className="ss-banner" role="alert"><WifiOff size={16} /><span>{state.error || 'ขาดการเชื่อมต่อ กรุณาเข้าสู่ระบบใหม่'}</span>{!online ? <button onClick={reconnect}>เข้าสู่ระบบใหม่</button> : <button onClick={() => control.clearError()} aria-label="ปิดข้อความผิดพลาด"><X size={15} /></button>}</div>}
       {!room ? <div className="ss-empty ss-welcome"><MessageSquare /><h2>พื้นที่คุยงานของทีมคุณ</h2><p>เลือกคนออนไลน์เพื่อเริ่มแชตส่วนตัว<br />หรือสร้างกลุ่มเพื่อแบ่งงานกับเพื่อน</p><button className="ss-btn ss-primary" onClick={() => setModal('create')} disabled={!online}><Plus /> สร้างกลุ่มใหม่</button></div>
-        : member ? <>{tab === 'files' ? <FilesPanel state={state} room={room} /> : <Transcript state={state} room={room} />}<Composer state={state} room={room} /></>
+        : member ? <>{aiOpen && room.kind === 'group' && tab === 'chat' && <AIPanel state={state} room={room} close={() => setAiOpen(false)} />}{tab === 'files' ? <FilesPanel state={state} room={room} /> : <Transcript state={state} room={room} />}<Composer state={state} room={room} /></>
           : <div className="ss-join-wrap"><div className="ss-empty"><Users /><p>พื้นที่คุยงานของ {room.members.map(m => m.username).join(', ')}</p></div><section className="ss-join-panel"><h2>เข้าร่วม {room.name}</h2><p className="ss-small">เข้าร่วมก่อนจึงจะอ่านและส่งข้อความในห้องนี้ได้</p><button className="ss-btn ss-primary" disabled={!online} onClick={() => void control.joinGroup(room.id)}><Plus /> เข้าร่วมด้วยตัวเอง</button></section></div>}
     </main>
     {modal === 'create' && <Modal title="สร้างกลุ่มใหม่" close={() => setModal(null)}><GroupForm close={() => setModal(null)} /></Modal>}

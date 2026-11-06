@@ -61,7 +61,11 @@ npm --prefix web run dev
 | `STUDYGROUP_WEB_STATIC_DIR` | `web/dist`; เสิร์ฟเฉพาะไฟล์ใน directory นี้ |
 | `STUDYGROUP_WEB_TLS_CERT` | ไม่กำหนด = HTTP สำหรับ loopback / หลัง reverse proxy; ต้องตั้งคู่กับ KEY |
 | `STUDYGROUP_WEB_TLS_KEY` | private key ฝั่ง Server เท่านั้น |
-| `STUDYGROUP_DATA_DIR` | `data`; SQLite ที่ `<directory>/studygroup.db` |
+| `STUDYGROUP_DATA_DIR` | `data`; SQLite ที่ `<directory>/studygroup.db` และไฟล์แนบที่ `<directory>/uploads/` |
+| `STUDYGROUP_AI_API_KEY` | Anthropic API key ฝั่ง Server เท่านั้น ใส่ใน `.env` ไม่เข้า Git; ไม่ตั้ง = ปิด AI (ดู [ai.md](ai.md)) |
+| `STUDYGROUP_AI_MODEL` | `claude-haiku-5-5` (ค่าเริ่มต้น) หรือรุ่นอื่น เช่น `claude-sonnet-5-5` |
+| `STUDYGROUP_AI_PROVIDER` | ว่าง = `anthropic` เมื่อมี Key; `mock` สำหรับ Test/Demo ที่ติดป้ายเท่านั้น |
+| `STUDYGROUP_AI_TIMEOUT` | `45` วินาที (5–120) |
 | `STUDYGROUP_WEB_PROXY` | Vite development เท่านั้น; เปลี่ยนปลายทาง `/ws` |
 
 Origins เป็นรายการ URL คั่นด้วย comma เช่น `https://chat.example.com` ไม่มี path

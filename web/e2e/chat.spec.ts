@@ -101,8 +101,8 @@ test('public group rosters, self join, join boundary, member-only live delivery 
   await expect(c.getByRole('dialog')).toContainText(group)
   await expect(c.getByRole('dialog')).toContainText(bn)
   await c.getByRole('button', { name: 'ปิดหน้าต่าง' }).click()
-  // CP07/CP08 enabled search and files; AI stays disabled until CP09.
-  await expect(a.getByRole('button', { name: 'สรุปด้วย AI', exact: true })).toBeDisabled()
+  // CP07–CP09 enabled search, files and the AI summary for members.
+  await expect(a.getByRole('button', { name: 'สรุปด้วย AI', exact: true })).toBeEnabled()
   await expect(a.getByRole('button', { name: 'ค้นหาข้อความ', exact: true })).toBeEnabled()
   await expect(a.getByRole('tab', { name: 'ไฟล์', exact: true })).toBeEnabled()
 })

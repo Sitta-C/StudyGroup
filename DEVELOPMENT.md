@@ -11,27 +11,28 @@
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
   CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล, CP04 TLS/Authentication
   และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม; CP06 React Web App ผู้ใช้ตรวจรับแล้ว
-- งานล่าสุด: **CP07 ประวัติ/ค้นหา และ CP08 ส่ง-ดาวน์โหลดไฟล์ — DONE (หลักฐาน Local)** บน branch
-  `feat/history-files`; งานถัดไป **CP09 AI สรุปบทสนทนา — TODO** (ต้องเลือก Provider/Model/Key)
+- งานล่าสุด: **CP09 AI สรุปบทสนทนา — DONE** (Anthropic `claude-haiku-5-5`, เรียก API จริงแล้ว) บน branch
+  `feat/ai-summary` ต่อจาก CP07–CP08 (`feat/history-files`); งานถัดไป **CP10 Cloud deployment — TODO**
 - คำสั่งผู้ใช้ 6 พ.ย. 2026 เปลี่ยนจาก Tkinter เป็น `React → WebSocket → Python → SQLite`
   ใช้ branch `feat/react-websocket` ไม่มี prefix `codex/`
 - สถานะโค้ด: React/TypeScript/Vite แบบ Focus, WebSocket adapter, Python HTTP assets,
   Login/Register, ออนไลน์, Private/Group chat, Join, Draft และ Disconnect/Re-login
   ใช้ Auth/Chat/permissions และ Database เดิม ไม่มี schema migration
-- Python tests **462 passed** และ Browser E2E **10 passed** (CP06 6 + CP07/CP08 4)
-  ผ่าน production build จริง สัญญา History/Search/Files อยู่ใน docs/history-files.md
+- Python tests **476 passed** และ Browser E2E **11 passed** (CP06 6 + CP07/CP08 4 + CP09 1)
+  ผ่าน production build จริง สัญญา History/Search/Files อยู่ใน docs/history-files.md, AI ใน docs/ai.md
   หลักฐานหน้าเว็บ CP06 ใน docs/evidence/cp06-web/; Tkinter tests/ภาพเดิมเป็นประวัติก่อนย้าย UI
 - วิธีเริ่ม: `npm --prefix web ci`, `npm --prefix web run build`,
   `uv run --locked --env-file .env python -m server.web` แล้วเปิด http://127.0.0.1:8000
-- สิ่งที่ยังต้องเลือก: AI Provider/Model และ Cloud Provider
-- สิ่งที่ยังต้องเตรียมภายหลัง: AI Key/งบใช้งาน, เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
+- เลือกแล้ว: AI = Anthropic, ค่าเริ่มต้น `claude-haiku-5-5` (ตั้งด้วย `STUDYGROUP_AI_MODEL`); Key อยู่ใน `.env` ฝั่ง Server เท่านั้น
+- สิ่งที่ยังต้องเลือก: Cloud Provider
+- สิ่งที่ยังต้องเตรียมภายหลัง: เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
   และรายละเอียดเครื่อง/ภาพหลักฐาน R1–R11 สำหรับเดโม CP11
 - ผู้ใช้ยืนยันเปิดเว็บผ่าน HTTPS บน LAN ได้และให้ผ่าน CP06 ในแชต 6 พ.ย. 2026
   ปิด checkpoint ตามการตรวจรับนี้; รายละเอียดอุปกรณ์/ผลรายข้อสองเครื่องจริงยังไม่ได้บันทึก
   คงรายการเก็บหลักฐานไว้ใน docs/demo-checklist.md สำหรับ CP11
-- งานถัดไป: CP09 ทำ AI Adapter + Mock ที่ติดป้ายชัด แล้วต่อ API จริงเมื่อผู้ใช้เลือก Provider/Key
-  ใช้ `search_messages()`/`get_messages()` เดิมเป็นฐานข้อมูลที่มีสิทธิ์ จำกัดกลุ่มและ 50 ข้อความ
-  เก็บผลตรวจ CP07–CP08 บนสองเครื่องจริงตาม docs/demo-checklist.md สำหรับ CP11
+- งานถัดไป: CP10 เตรียม Dockerfile/Compose + Volume สำหรับ `data/` (DB + uploads) แล้ว Deploy จริง
+  ส่ง AI Key ผ่าน Environment/Secret ของ Cloud ไม่ใส่ใน Image
+  เก็บผลตรวจ CP07–CP09 บนสองเครื่องจริงตาม docs/demo-checklist.md สำหรับ CP11
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
 พร้อมกัน ไม่คัดลอกสถานะไปดูแลหลายชุดใน README หรือ HANDOFF
@@ -69,7 +70,7 @@
 | CP06 | React WebSocket และตรวจรับ R1–R11 | CP05 | DONE | ผู้ใช้ตรวจรับผ่านหลังเปิด HTTPS บน LAN; Python 400 / Browser 6 passed; รายละเอียดหลักฐานสองเครื่องเก็บเพิ่มสำหรับ CP11 |
 | CP07 | ประวัติและการค้นหา | CP06 | DONE | History 34 tests + TLS 1 + Browser 2 passed; Restart process จริงแล้วประวัติอยู่ครบ ดู docs/history-files.md และบันทึก CP07–CP08 |
 | CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | DONE | Files 26 tests + Browser 2 passed; 5 MiB ไป-กลับ SHA-256 ตรง, เกินขนาด/ผิดลำดับ/Hash ผิด/Path traversal/หลุดกลางทาง/เดา ID ดูบันทึก CP07–CP08 |
-| CP09 | AI สรุปบทสนทนา | CP08 | TODO | ทำ Adapter/Mock ก่อน แล้วตรวจ API จริง |
+| CP09 | AI สรุปบทสนทนา | CP08 | DONE | AI 14 tests + Browser 1 passed (fake/mock); เรียก Anthropic `claude-haiku-5-5` จริงผ่าน `scripts/ai_live_check.py` และ Browser แล้ว ดู docs/ai.md และบันทึก CP09 |
 | CP10 | Cloud deployment | CP09 | TODO | เตรียมไฟล์ Deploy ได้ก่อนเมื่อส่วน Server พร้อม |
 | CP11 | เดโมครบระบบ | CP10 | TODO | ต้องมี 3 Clients บนอย่างน้อย 2 เครื่องจริง |
 | CP12 | เอกสารและชุดส่งงาน | CP11 | TODO | ต้องอ้างผลตรวจจริง |
@@ -874,6 +875,25 @@ Browser tests: `npm --prefix web run test:e2e` ใช้ Chrome และ SQLite
   แจ้งเมื่อผลค้นหาเก่าเกินจะกระโดดไป (ทุกข้อมี Test ยกเว้นส่วน UI timeout/attempt)
 - ข้อจำกัด: ไม่มีโควตาพื้นที่ต่อผู้ใช้/ห้อง; ค้นหาไม่แยกตัวพิมพ์เฉพาะ ASCII; กระโดดไปผลค้นหาโหลดได้ ~2,000 ข้อความ
 - งานแรก session ถัดไป: ผู้ใช้ลอง CP07–CP08 บนเครื่องจริง/LAN HTTPS แล้วเริ่ม CP09 (`server/ai_service.py`)
+
+### Session CP09 — AI สรุปบทสนทนา
+
+- วันที่: 6 พฤศจิกายน 2026 (Asia/Bangkok) · Branch `feat/ai-summary` ต่อจาก `feat/history-files`
+- สถานะ: CP09 TODO → DONE · ผู้ใช้เลือก Anthropic และให้ API key (เก็บนอก Repo; ไม่อยู่ในโค้ด/เอกสาร/commit)
+- เพิ่ม `server/ai_service.py` (Prompt, `AnthropicProvider` ด้วย urllib ไม่เพิ่ม dependency, `MockProvider`, ตรวจผล),
+  `server/handlers/ai.py` (`AI_SUMMARIZE`: กลุ่มเท่านั้น, ≤50 ข้อความที่มีสิทธิ์เรียงเก่า→ใหม่, Worker 2 threads,
+  ตรวจสิทธิ์ซ้ำก่อนตอบ, ครั้งละ 1 คำขอ/ผู้ใช้ + เว้น 10 วินาที + คิวรวม 8), Config `STUDYGROUP_AI_*` ใน WebConfig,
+  React `AIPanel` ตามแบบ Focus (ประเด็น/ข้อตกลง/งาน-ผู้รับผิดชอบ/กำหนดส่ง, ป้าย AI/โมเดล, Mock ติดป้ายแดง)
+- กันคำสั่งแทรก: Transcript เป็น JSON ที่ escape `<`/`>` (Test พบว่าเดิมข้อความ `</transcript>` ปิดแท็กได้ จึงแก้)
+  และตรวจผลให้ owner เป็นผู้ส่งจริง, due ต้องปรากฏในแชต มิฉะนั้นเป็น “ไม่ระบุ”
+- คำสั่งตรวจและผล:
+  - `uv run --locked pytest -q --tb=short -W error` — **476 passed** (เดิม 462 + AI 14)
+  - `npm --prefix web run build` ผ่าน · `npm --prefix web run test:e2e` — **11 passed** (AI ใช้ mock provider เท่านั้น)
+  - เรียก API จริง: `scripts/ai_live_check.py` กับ `claude-haiku-5-5` — คนนอกได้ `FORBIDDEN`, ผลสรุปภาษาไทยครบ
+    4 หัวข้อ, owner = Anan/Ploy ตามแชต, กำหนดส่ง “ศุกร์ 6 พ.ย.” และไม่ทำตามข้อความแทรกที่ให้ Mek ทำทุกอย่าง
+  - Browser จริงกับ Server ที่มี Key: แผงสรุปแสดงผลจากโมเดลจริงทั้ง desktop และมือถือ 390px ไม่มี horizontal overflow
+- ข้อจำกัด: ผลสรุปไม่เก็บถาวร (สร้างใหม่ทุกครั้ง); โมเดลอาจสรุปไม่ครบ ป้ายใน UI ให้ตรวจสอบก่อนใช้
+- งานแรก session ถัดไป: ใส่ Key ใน `.env` เครื่องจริงแล้วลองตาม docs/demo-checklist.md ข้อ 7 จากนั้นเริ่ม CP10
 
 ### แบบบันทึกสำหรับ session ถัดไป
 

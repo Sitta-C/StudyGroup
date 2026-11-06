@@ -86,7 +86,7 @@ Logout/EOF/Error ลบ Session ตาม Registry เดิม ไม่ส่�
   ถ้ารายชื่อสมาชิกของกลุ่มเดียวเกิน 1 MiB ต้องเพิ่ม Member pagination ก่อนรองรับขนาดนั้น
   การ Join ที่ทำให้ Response เกินขนาดจะ Rollback และ Connection ยังใช้ต่อได้
 - History/Search/Files ใช้สัญญาใน [history-files.md](history-files.md) (CP07–CP08)
-  `AI_SUMMARIZE` ยังให้ `UNKNOWN_TYPE` หลัง Login จนถึง CP09
+  และ `AI_SUMMARIZE` ใช้สัญญาใน [ai.md](ai.md) (CP09)
   CP05 ตรวจ Live chat กับข้อมูลถาวรฝั่ง Server; CP06 เพิ่ม Tkinter และ Network worker แล้ว
   การตรวจสองเครื่องจริงยังต้องทำ ดู [demo-checklist.md](demo-checklist.md)
 
