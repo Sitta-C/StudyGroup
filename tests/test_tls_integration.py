@@ -18,8 +18,7 @@ import time
 from argon2 import PasswordHasher, Type
 import pytest
 
-from client.config import ClientConfig
-from client.network import connect
+from tls_peer import TLSConfig, connect
 from server.config import ServerConfig
 from server.database import create_user, find_user_for_login
 from server.main import ServerLimits, TLSServer
@@ -69,7 +68,7 @@ class Peer:
 
 @contextmanager
 def peer(server, certificates, *, host="127.0.0.1", ca="ca.crt"):
-    with connect(ClientConfig(host, server.address[1], certificates / ca), timeout=3) as transport:
+    with connect(TLSConfig(host, server.address[1], certificates / ca), timeout=3) as transport:
         yield Peer(transport)
 
 
@@ -258,7 +257,7 @@ def test_truncated_frame_cleanup(server, certificates):
 @pytest.mark.parametrize("which", ["untrusted", "hostname", "expired"])
 def test_certificate_rejection_precedes_any_credentials(server_factory, certificates, which):
     server = server_factory(certificate="server.crt" if which == "untrusted" else f"{which}.crt")
-    config = ClientConfig("127.0.0.1", server.address[1],
+    config = TLSConfig("127.0.0.1", server.address[1],
                           certificates / ("other.crt" if which == "untrusted" else "ca.crt"))
     with pytest.raises(ssl.SSLCertVerificationError):
         # connect cannot return a transport capable of sending credentials.
@@ -517,7 +516,7 @@ def test_server_module_entrypoint_serves_tls_auth_and_stops_on_ctrl_c(tmp_path, 
     try:
         assert select.select([process.stderr], [], [], 10)[0], "Server did not report startup"
         assert "StudyGroup TLS server listening" in process.stderr.readline()
-        with connect(ClientConfig("127.0.0.1", port, certificates / "ca.crt"), timeout=3) as transport:
+        with connect(TLSConfig("127.0.0.1", port, certificates / "ca.crt"), timeout=3) as transport:
             client = Peer(transport)
             success(client.register("Alice"))
             success(client.login("Alice"))

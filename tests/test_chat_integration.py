@@ -6,8 +6,7 @@ import threading
 
 import pytest
 
-from client.config import ClientConfig
-from client.network import connect
+from tls_peer import TLSConfig, connect
 from server.database import get_messages
 from server.main import TLSServer
 from shared.message_types import ErrorCode, EventType, RequestType
@@ -60,7 +59,7 @@ def clients(server, certificates):
         peers = []
         for name in ("Alice", "Bob", "Carol"):
             transport = stack.enter_context(connect(
-                ClientConfig("127.0.0.1", server.address[1], certificates / "ca.crt"), timeout=5,
+                TLSConfig("127.0.0.1", server.address[1], certificates / "ca.crt"), timeout=5,
             ))
             client = ChatPeer(transport)
             client.ok(RequestType.REGISTER, {
@@ -191,7 +190,7 @@ def test_room_id_probing_and_sender_spoofing_do_not_write_or_leak(server, client
     (RequestType.GROUP_LIST, {"room_id": 1}),
 ])
 def test_invalid_chat_fields_leave_connection_usable(server, certificates, kind, data):
-    with connect(ClientConfig("127.0.0.1", server.address[1], certificates / "ca.crt"), timeout=5) as transport:
+    with connect(TLSConfig("127.0.0.1", server.address[1], certificates / "ca.crt"), timeout=5) as transport:
         client = ChatPeer(transport)
         client.ok(RequestType.REGISTER, {"username": "Alice", "password": PASSWORD, "confirm_password": PASSWORD})
         client.ok(RequestType.LOGIN, {"username": "Alice", "password": PASSWORD})
@@ -350,7 +349,7 @@ def test_logout_and_unauthenticated_connections_receive_no_chat_events(server, c
     room = private(alice, bob)
     bob.ok(RequestType.LOGOUT)
     bob.error(RequestType.MESSAGE_SEND, {"room_id": room["id"], "text": "after logout"}, ErrorCode.AUTH_REQUIRED)
-    with connect(ClientConfig("127.0.0.1", server.address[1], certificates / "ca.crt"), timeout=5) as transport:
+    with connect(TLSConfig("127.0.0.1", server.address[1], certificates / "ca.crt"), timeout=5) as transport:
         outsider = ChatPeer(transport)
         group(alice)
         send(alice, room["id"], "offline recipient")
@@ -403,7 +402,7 @@ def test_restart_retains_rooms_members_boundaries_and_messages(server, clients, 
     direct = send(alice, dm["id"], "ส่วนตัวถาวร")
     server.stop()
     with TLSServer(server.config) as reopened:
-        with connect(ClientConfig("127.0.0.1", reopened.address[1], certificates / "ca.crt"), timeout=5) as transport:
+        with connect(TLSConfig("127.0.0.1", reopened.address[1], certificates / "ca.crt"), timeout=5) as transport:
             client = ChatPeer(transport)
             client.error(RequestType.GROUP_LIST, {}, ErrorCode.AUTH_REQUIRED)
             client.ok(RequestType.LOGIN, {"username": "Bob", "password": PASSWORD})

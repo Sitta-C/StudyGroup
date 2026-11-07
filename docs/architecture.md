@@ -97,7 +97,8 @@ Browser ใช้ toolbar ของตัวเอง ไม่มี title bar 
 Search/history (CP07), Attachments/แท็บไฟล์ (CP08) และแผงสรุปด้วย AI ในห้องกลุ่ม (CP09, [ai.md](ai.md)) ใช้งานจริงแล้ว
 Server เรียก Anthropic API ผ่าน HTTPS ใน Worker แยก; Browser ไม่เห็น Key และไม่เรียก AI เอง
 Cloud จริงเป็น CP10 เอกสาร config ไม่ใช่หลักฐาน Deploy
-โค้ด Tkinter/TCP เดิมยังอยู่เพื่อ compatibility/tests แต่ไม่ใช่ entry point หลัก
+Client ใช้ React ใน `web/` เพียงชุดเดียว ส่วน TCP adapter และตัวช่วย `tests/tls_peer.py`
+เก็บไว้ตรวจ backend ผ่าน TCP/TLS โดยไม่ใช้ GUI
 อย่ารัน `server.main` และ `server.web` พร้อมกันกับ DB เดียว เพราะ registry แยกกัน
 
 ดู [setup.md](setup.md), [protocol.md](protocol.md) และ [demo-checklist.md](demo-checklist.md)

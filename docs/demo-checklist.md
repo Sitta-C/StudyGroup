@@ -42,7 +42,6 @@ uv run --locked --env-file .env python -m server.web
   ไม่ seed ข้อมูลตัวอย่างเข้า runtime จริง วันเวลาเป็นเวลาที่ Server สร้าง
 - เทียบกับ Focus prototype โดยเอา title bar จำลองออก สี/spacing/typography ใช้ CSS ตามแบบ
   ภาพนี้ถ่ายตอน CP06 ซึ่งปุ่ม Files/Search/AI/Attachment ยัง disabled; CP07–CP08 เปิด Search/Files/Attachment แล้ว AI ยังปิด
-- ภาพเดิมใน `evidence/cp06/` เป็นหลักฐาน Tkinter ก่อน migration ไม่ใช่เว็บปัจจุบัน
 
 ## Connection / UI checks
 

@@ -8,6 +8,11 @@
 ## สถานะสำหรับเริ่ม session ถัดไป
 
 - อัปเดตล่าสุด: 7 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
+- Cleanup ล่าสุด: ลบ Desktop Client `client/`, GUI tests, tests ของ controller/worker,
+  คู่มือและภาพหน้าจอ Desktop เดิมแล้ว ใช้ React เป็น Client เพียงชุดเดียว
+  ย้าย TLS test transport ไป `tests/tls_peer.py`; TCP backend tests ยังตรวจ TLS/สิทธิ์ตามเดิม
+  บันทึก session เก่าด้านล่างเป็นประวัติ อาจอ้างถึงไฟล์หรือคำสั่งที่ลบแล้ว
+  ผลตรวจ cleanup: Python **460 passed**, Browser **23 passed**, production build ผ่าน
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
   CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล, CP04 TLS/Authentication
   และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม; CP06 React Web App ผู้ใช้ตรวจรับแล้ว
@@ -35,7 +40,7 @@
   และรัน supplemental **22 passed** (ครอบคลุม 3 กรณีใหม่; final collection 492 tests)
   Browser E2E ทั้งชุด **23 passed** และตรวจ Vite/React StrictMode เพิ่ม **2 passed**
   ผ่าน production build จริง สัญญา History/Search/Files อยู่ใน docs/history-files.md, AI ใน docs/ai.md
-  หลักฐานหน้าเว็บ CP06 ใน docs/evidence/cp06-web/; Tkinter tests/ภาพเดิมเป็นประวัติก่อนย้าย UI
+  หลักฐานหน้าเว็บ CP06 ใน docs/evidence/cp06-web/; ผลข้างต้นเป็นผลก่อนลบ Desktop Client
 - ผลตรวจรอบ CP10: Backup/Database/Permissions **90 passed** (รวม Backup ใหม่ 8 กรณี)
   และตรวจข้อมูลเดโมผ่าน WSS ก่อน/หลัง Restart, หลัง Redeploy และจาก Backup ที่กู้คืนผ่านแอปจริง
 - วิธีเริ่ม: `npm --prefix web ci`, `npm --prefix web run build`,
@@ -1184,6 +1189,29 @@ Browser tests: `npm --prefix web run test:e2e` ใช้ Chrome และ SQLite
   Backup จริงและรหัสผ่านบัญชีทดสอบยังอยู่ใน ignored `work/` ไม่เข้า commit/Docker context
 - ผลตรวจ Cloud ในรายงานเป็นผลก่อน push ครั้งนี้ ไม่ถือเป็นผลตรวจ Image รุ่นใหม่หลัง push
   สถานะ checkpoint คง CP10 DONE, CP11/CP12 TODO
+
+### Session 7 พฤศจิกายน 2026 — ลบ Desktop Client ที่เลิกใช้
+
+- ตามคำขอผู้ใช้ ลบ `client/` ทั้งชุด (UI, controller, worker, session, config และฟอนต์สำเนา),
+  `tests/gui_checks.py`, `tests/test_client_integration.py`, `docs/legacy-desktop.md`
+  และภาพหลักฐาน Desktop ใน `docs/evidence/cp06/`
+- ย้ายเฉพาะ synchronous TLS test transport ไป `tests/tls_peer.py` และเปลี่ยน integration tests
+  ให้ใช้ `TLSConfig` ที่ระบุค่าชัดเจน ไม่ต้องพึ่ง Desktop package หรือ config ของ Client
+  ปรับ config tests ให้ตรวจ Server ต่อ พร้อมคงการตรวจ CA/hostname/ใบรับรองหมดอายุใน TLS tests
+- ลบ environment ตัวอย่างของ Desktop/TCP จาก `.env.example` และอัปเดต README,
+  HANDOFF, setup, architecture, authentication, chat และ demo checklist ให้ตรงกับ React/WebSocket
+  คง TCP backend adapter และผลทดสอบใน session เก่าไว้เป็นประวัติ
+- `pyproject.toml` และ `uv.lock` ไม่มี dependency ของ Tkinter จึงไม่ต้องแก้ lock
+- ผลตรวจจริง:
+  - `uv run --locked pytest -q --tb=short -W error` — **460 passed** ใน 63.69 วินาที
+  - `uv run --locked pytest tests/test_config.py -q --tb=short -W error` — **50 passed**
+    หลังเก็บรายละเอียด config tests รอบสุดท้าย
+  - `npm --prefix web run build` — **ผ่าน**
+  - `npm --prefix web run test:e2e` — **23 passed** ใน 42.6 วินาที
+  - `git diff --check` — **ผ่าน**; ไม่เหลือ import/คำสั่งรัน Desktop ในโค้ดและคู่มือปัจจุบัน
+- รอบ Python แรกใน sandbox เปิด loopback ไม่ได้ จึงรันใหม่ด้วยสิทธิ์เปิดพอร์ตทดสอบแล้วผ่านทั้งชุด
+  Tests ใช้ข้อมูลชั่วคราว ไม่มีการเรียก paid AI API หรือแก้ข้อมูล runtime จริง
+- งานถัดไปยังเป็น CP11/CP12 ตามแผนเดิม
 
 ### แบบบันทึกสำหรับ session ถัดไป
 

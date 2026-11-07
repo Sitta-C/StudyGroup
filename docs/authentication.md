@@ -23,42 +23,18 @@ Token ใน localStorage อ่านได้ด้วย JavaScript จึง
 HTTP/WS ใช้เฉพาะ loopback dev; LAN/production ใช้ HTTPS/WSS พร้อม certificate ที่เชื่อถือได้
 Web config แยก `STUDYGROUP_WEB_*` จาก TLS/TCP config เดิม
 
-## เปิด Legacy TCP Server
+## TCP/TLS adapter สำหรับ backend tests
 
-เตรียม environment และ Local CA ตาม [setup.md](setup.md) แล้วรัน:
+`server.main` และ `server.config.ServerConfig` ยังใช้ตรวจ handlers ผ่าน TCP/TLS จริง
+ตัวช่วยเชื่อมต่ออยู่ใน `tests/tls_peer.py` และใช้เฉพาะ integration tests
+ตรวจทั้ง Certificate chain และ Hostname ด้วย `ssl.create_default_context()` และ TLS 1.2 ขึ้นไป
+Tests สร้าง CA, keys และ SQLite ชั่วคราว ไม่ใช้ `.env` หรือข้อมูลจริง
 
 ```bash
-uv sync --locked
-uv run --locked --env-file .env python -m server.main
+uv run --locked pytest tests/test_tls_integration.py tests/test_chat_integration.py -q
 ```
 
-Server ใช้ Host/Port, Certificate/Key และ Data directory จาก `ServerConfig`
-สร้างหรือเปิด SQLite เดิมเมื่อเริ่มทำงาน กด Ctrl+C เพื่อหยุด Listener และรอ Cleanup
-Workers ทั้งหมด Chat handlers ใช้สัญญาใน [chat.md](chat.md)
-เปิด Desktop Client อีก Terminal ด้วย `uv run --locked --env-file .env python -m client.main`
-ดูวงจร GUI/Worker และการเชื่อมต่อใหม่ใน [architecture.md](architecture.md)
-
-Client transport ที่ใช้ได้แล้ว:
-
-```python
-from client.config import ClientConfig
-from client.network import connect
-from shared.message_types import RequestType
-from shared.protocol import make_request
-
-with connect(ClientConfig.from_env()) as connection:
-    request = make_request(RequestType.USERS_LIST, {})
-    connection.send_packet(request)
-    response = connection.recv_packet()  # AUTH_REQUIRED จนกว่าจะ Login
-```
-
-`connect()` คืน Transport หลังตรวจ Certificate chain และ Hostname ตาม `config.host`
-สำเร็จเท่านั้น ใช้ `ssl.create_default_context()` และ TLS 1.2 ขึ้นไป ไม่มีตัวเลือกปิด
-Verification; CA ว่างใน Config ใช้ System trust store ค่าเริ่มต้นใช้ Local CA
-อย่าส่ง Credentials ผ่าน Plain TCP หรือคัดลอก Server key/CA key ไป Client
-Transport `connect()` ยังเป็น Blocking API สำหรับผู้เรียกเดียว
-Desktop ใช้ `NetworkWorker` ซึ่งเชื่อมต่อเบื้องหลังและใช้ nonblocking TLS ใน Thread เจ้าของ
-ส่งผลผ่าน Event queue ให้ Main thread จับคู่ Pending requests ไม่มีการเก็บ Password ลงไฟล์หรือ Retry อัตโนมัติ
+แอปจริงใช้ `server.web` ตาม [setup.md](setup.md) และให้ Browser จัดการ HTTPS/WSS
 
 ## สัญญาคำขอ
 

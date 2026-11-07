@@ -38,5 +38,3 @@ npm --prefix web run test:e2e
 ```
 
 ใช้ Python 3.14 + uv, Node.js 22.12+ หรือ 24 LTS และ Chrome สำหรับ Browser tests
-Tkinter/TCP Client เดิมเก็บไว้สำหรับ compatibility; วิธีรันเก่าอยู่ใน
-[legacy-desktop.md](docs/legacy-desktop.md)

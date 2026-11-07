@@ -1,4 +1,4 @@
-"""Browser server configuration, independent of the legacy TCP/TLS client."""
+"""Browser server configuration, independent of the TCP/TLS test adapter."""
 
 from dataclasses import dataclass, field
 import math

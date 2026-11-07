@@ -1,1 +1,0 @@
-"""StudyGroup desktop client."""

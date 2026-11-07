@@ -2,7 +2,7 @@
 
 สถาปัตยกรรมปัจจุบันคือ **React → WebSocket → Python → SQLite**
 Python เสิร์ฟทั้งหน้าเว็บที่ build แล้วและ `/ws` บนพอร์ตเดียว
-Browser ไม่ต้องติดตั้ง Python/Tkinter และไม่ต้องกรอก Host/Port/CA ในหน้า Login
+Browser ไม่ต้องติดตั้ง Python และไม่ต้องกรอก Host/Port/CA ในหน้า Login
 
 ## เตรียมครั้งแรก
 
@@ -71,8 +71,8 @@ npm --prefix web run dev
 Origins เป็นรายการ URL คั่นด้วย comma เช่น `https://chat.example.com` ไม่มี path
 ไม่รับ `*`, `null` หรือ URL ที่มี username/password และต้องตรง scheme/host/port ที่ Browser เปิดจริง
 Relative paths อ้างจาก root โปรเจกต์ ค่าที่ผิดรายงานชื่อตัวแปรแล้วหยุดเริ่ม Server
-`STUDYGROUP_HOST/PORT/TLS_CERT/TLS_KEY/TLS_CA` เป็นของ TCP/Tkinter เดิม
-จึงไม่ส่งผลต่อ Web Server; `STUDYGROUP_PORT=5001` เดิมไม่ต้องเปลี่ยนกลับ
+`STUDYGROUP_HOST/PORT/TLS_CERT/TLS_KEY` ใช้เฉพาะ TCP adapter สำหรับ backend tests
+จึงไม่ส่งผลต่อ Web Server; ตั้งค่าการใช้งานจริงด้วย `STUDYGROUP_WEB_*`
 
 ## ใช้สองเครื่อง / เตรียม Deploy
 
@@ -135,6 +135,6 @@ Browser tests เปิด server พอร์ต 8765 และใช้ SQLite
 ทดสอบแชตหลาย Browser contexts, privacy, disconnect, draft, IME และมือถือ
 ไม่แทนการตรวจสองเครื่องจริงตาม [demo-checklist.md](demo-checklist.md)
 
-โค้ดเดิม `client/` และ `server.main` เก็บไว้สำหรับ compatibility และการทดสอบเดิม
-วิธีรันอยู่ใน [legacy-desktop.md](legacy-desktop.md) อย่ารัน Server เดิมและ Web Server
-กับ Database เดียวพร้อมกัน เพราะ registry ของแต่ละ process แยกกัน
+ใช้ React ใน `web/` เป็น Client เพียงชุดเดียว ส่วน `server.main` ยังเป็น TCP adapter
+สำหรับ backend integration tests ซึ่งใช้ TLS และ SQLite ชั่วคราว
+อย่ารัน `server.main` และ `server.web` กับ Database เดียวพร้อมกัน เพราะ registry แยกกัน
