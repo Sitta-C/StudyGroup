@@ -21,10 +21,11 @@ Web จำการเข้าสู่ระบบ 7 วันด้วย res
 ผู้ใช้ตรวจรับ CP06 แล้ว CP07 โหลดประวัติหลังเปิดใหม่/โหลดหน้าเก่า/ค้นหาด้วยคำและวันที่
 และ CP08 ส่ง-ดาวน์โหลดไฟล์ ≤ 5 MB แบบ Chunk พร้อมตรวจ SHA-256 ใช้งานได้แล้ว (ผ่านการทดสอบ Local)
 CP09 สรุปบทสนทนากลุ่มด้วย AI (Anthropic) ใช้ได้เมื่อใส่ `STUDYGROUP_AI_API_KEY` ใน `.env` ดู [docs/ai.md](docs/ai.md)
-Cloud เป็น CP10
+Deploy บน Railway พร้อม Volume แล้ว ดู [คู่มือ Cloud และ Backup/Restore](docs/railway.md)
 รายละเอียดหลักฐานสองเครื่องสำหรับเดโมเก็บต่อใน CP11
 
 - [วิธีติดตั้ง รัน พัฒนา React และตั้งค่า HTTPS/WSS](docs/setup.md)
+- [Railway และการสำรอง/กู้คืน SQLite พร้อมไฟล์แนบ](docs/railway.md)
 - [สถาปัตยกรรม](docs/architecture.md) · [Protocol](docs/protocol.md) · [ประวัติ/ค้นหา/ไฟล์](docs/history-files.md) · [AI](docs/ai.md)
 - [Checklist R1–R11 และการตรวจสองเครื่อง](docs/demo-checklist.md)
 - [Checkpoint และผลทดสอบล่าสุด](DEVELOPMENT.md) · [ข้อกำหนด](HANDOFF.md)

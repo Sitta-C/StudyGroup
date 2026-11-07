@@ -106,7 +106,8 @@ Client ต้องเชื่อถือ CA สำหรับ LAN ตาม�
 
 Production ใช้ Python process เดียวกับ SQLite บน persistent disk, สำรอง `data/`
 และเสิร์ฟ build เดียวกับรุ่น backend ตั้ง reverse proxy ให้ส่ง Upgrade/Origin และมี idle timeout
-ยาวกว่า WebSocket ping 20 วินาที ยังไม่มีการ Deploy Cloud จริงและยังไม่เลือก Provider (CP10)
+ยาวกว่า WebSocket ping 20 วินาที ปัจจุบัน Deploy บน Railway Trial + Volume แล้ว
+ใช้ HTTPS/WSS ของ Provider ดู [Config, Backup/Restore และผลตรวจ Cloud](railway.md)
 
 ## ตรวจเมื่อเปิดไม่ได้
 

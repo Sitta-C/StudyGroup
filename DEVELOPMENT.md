@@ -11,8 +11,11 @@
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
   CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล, CP04 TLS/Authentication
   และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม; CP06 React Web App ผู้ใช้ตรวจรับแล้ว
-- งานล่าสุด: **CP09 AI สรุปบทสนทนา — DONE** (Anthropic `claude-haiku-5-5`, เรียก API จริงแล้ว) บน branch
-  `feat/ai-summary` ต่อจาก CP07–CP08 (`feat/history-files`); งานถัดไป **CP10 Cloud deployment — TODO**
+- **CP10 Cloud deployment — DONE**; ตรวจ Railway Trial + Volume จริง 7 พ.ย. 2026:
+  HTTPS/WSS, Mount `/app/data`, ข้อมูลหลัง Restart/Redeploy และ Backup/Restore ผ่าน
+  ผู้ใช้ยืนยัน iPhone / Chrome / Cellular ส่งข้อความได้ปกติ ดู [หลักฐาน CP10](docs/evidence/cp10-railway/verification.json)
+- CP09 AI สรุปบทสนทนา — DONE จาก Anthropic จริงใน Local; Railway ตั้งค่า Anthropic แล้ว
+  แต่รอบ CP10 ไม่เรียก paid AI API การสาธิต AI จริงบน Cloud ยังต้องเก็บใน CP11
 - UI ล่าสุด: ปรับแอปจริงตามต้นแบบ **Minimal** ที่ผู้ใช้เลือก บน branch
   `style/studygroup-ui`; เก็บ UX review ทั้ง 8 ข้อแล้ว build และ Browser **14 tests** ผ่าน
   ตรวจภาพ desktop/mobile แล้ว ดูบันทึก session Minimal / UX review ด้านล่าง
@@ -21,6 +24,8 @@
 - Auth ล่าสุด: **จำการเข้าสู่ระบบด้วย localStorage — DONE**; opaque resume token อายุ 7 วัน
   Server เก็บ digest ใน memory ไม่แก้ SQLite; refresh/ปิดเปิด browser กลับเข้าได้
   แท็บล่าสุดที่ถือ token เดียวกันเข้าแทนตัวเก่า Logout เพิกถอน token และ restart server ต้อง Login ใหม่
+  ตรวจ Cloud ด้วยการปิด/เปิด WebSocket แล้ว `RESUME_SESSION` ผ่าน; token ก่อน Restart
+  ได้ `AUTH_FAILED` ตามขอบเขต ส่วน Browser refresh/ปิดเปิดผ่านจากผล Local รอบก่อน
 - คำสั่งผู้ใช้ 6 พ.ย. 2026 เปลี่ยนจาก Tkinter เป็น `React → WebSocket → Python → SQLite`
   ใช้ branch `feat/react-websocket` ไม่มี prefix `codex/`
 - สถานะโค้ด: React/TypeScript/Vite แบบ Minimal, WebSocket adapter, Python HTTP assets,
@@ -31,18 +36,24 @@
   Browser E2E ทั้งชุด **23 passed** และตรวจ Vite/React StrictMode เพิ่ม **2 passed**
   ผ่าน production build จริง สัญญา History/Search/Files อยู่ใน docs/history-files.md, AI ใน docs/ai.md
   หลักฐานหน้าเว็บ CP06 ใน docs/evidence/cp06-web/; Tkinter tests/ภาพเดิมเป็นประวัติก่อนย้าย UI
+- ผลตรวจรอบ CP10: Backup/Database/Permissions **90 passed** (รวม Backup ใหม่ 8 กรณี)
+  และตรวจข้อมูลเดโมผ่าน WSS ก่อน/หลัง Restart, หลัง Redeploy และจาก Backup ที่กู้คืนผ่านแอปจริง
 - วิธีเริ่ม: `npm --prefix web ci`, `npm --prefix web run build`,
   `uv run --locked --env-file .env python -m server.web` แล้วเปิด http://127.0.0.1:8000
 - เลือกแล้ว: AI = Anthropic, ค่าเริ่มต้น `claude-haiku-5-5` (ตั้งด้วย `STUDYGROUP_AI_MODEL`); Key อยู่ใน `.env` ฝั่ง Server เท่านั้น
-- สิ่งที่ยังต้องเลือก: Cloud Provider
-- สิ่งที่ยังต้องเตรียมภายหลัง: เครื่อง Cloud/สิทธิ์เข้าถึง/TLS,
-  และรายละเอียดเครื่อง/ภาพหลักฐาน R1–R11 สำหรับเดโม CP11
+- Cloud ที่เลือกและ Deploy แล้ว: **Railway Trial + Volume** ใช้ `Dockerfile` Build React + Python
+  Railway จัดการ public HTTPS/WSS; URL: https://studygroup-production-b33d.up.railway.app
+  Cloud source ตอนตรวจคือ `a4939e12ec4cf79e749e3bdf6742e5c20832233a`
+  Redeploy ที่ตรวจ `b88cfd56-d888-4bb8-a281-680e9dc8baa9` เป็น Active; ผลนี้เก็บก่อน push helper CP10
+  คู่มือสำรอง/กู้คืนและตรวจซ้ำ: [docs/railway.md](docs/railway.md)
+- สิ่งที่ยังต้องเก็บ: ผล AI จริงบน Cloud และรายละเอียดเครื่อง/เครือข่าย/ภาพ R1–R11 สำหรับ CP11
+  ผล iPhone เป็นหลักฐานเครือข่าย ยังไม่แทนคอมพิวเตอร์จริงอย่างน้อยสองเครื่องตามโจทย์
 - ผู้ใช้ยืนยันเปิดเว็บผ่าน HTTPS บน LAN ได้และให้ผ่าน CP06 ในแชต 6 พ.ย. 2026
   ปิด checkpoint ตามการตรวจรับนี้; รายละเอียดอุปกรณ์/ผลรายข้อสองเครื่องจริงยังไม่ได้บันทึก
   คงรายการเก็บหลักฐานไว้ใน docs/demo-checklist.md สำหรับ CP11
-- งานถัดไป: CP10 เตรียม Dockerfile/Compose + Volume สำหรับ `data/` (DB + uploads) แล้ว Deploy จริง
-  ส่ง AI Key ผ่าน Environment/Secret ของ Cloud ไม่ใส่ใน Image
-  เก็บผลตรวจ CP07–CP09 บนสองเครื่องจริงตาม docs/demo-checklist.md สำหรับ CP11
+- งานถัดไป: CP11 เก็บผล A/B/C บนคอมพิวเตอร์จริงอย่างน้อยสองเครื่อง พร้อม R1–R11,
+  AI จริงบน Cloud และภาพ/วิดีโอตาม [docs/demo-checklist.md](docs/demo-checklist.md)
+  CP12 จัดชุดส่งงานหลังมีผลเดโมครบ; งาน CP10 รวม helper สำรอง/กู้คืนและคู่มือ Railway แล้ว
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
 พร้อมกัน ไม่คัดลอกสถานะไปดูแลหลายชุดใน README หรือ HANDOFF
@@ -81,7 +92,7 @@
 | CP07 | ประวัติและการค้นหา | CP06 | DONE | History 34 tests + TLS 1 + Browser 2 passed; Restart process จริงแล้วประวัติอยู่ครบ ดู docs/history-files.md และบันทึก CP07–CP08 |
 | CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | DONE | Files 26 tests + Browser 2 passed; 5 MiB ไป-กลับ SHA-256 ตรง, เกินขนาด/ผิดลำดับ/Hash ผิด/Path traversal/หลุดกลางทาง/เดา ID ดูบันทึก CP07–CP08 |
 | CP09 | AI สรุปบทสนทนา | CP08 | DONE | AI 14 tests + Browser 1 passed (fake/mock); เรียก Anthropic `claude-haiku-5-5` จริงผ่าน `scripts/ai_live_check.py` และ Browser แล้ว ดู docs/ai.md และบันทึก CP09 |
-| CP10 | Cloud deployment | CP09 | TODO | เตรียมไฟล์ Deploy ได้ก่อนเมื่อส่วน Server พร้อม |
+| CP10 | Cloud deployment | CP09 | DONE | Railway HTTPS/WSS, Volume `/app/data`, Restart/Redeploy และกู้คืน Backup ทั้งบน Cloud/นอก Cloud ผ่าน; SHA-256 ไฟล์ตรง ผู้ใช้ยืนยัน iPhone/Chrome/Cellular ส่งได้ ดูหลักฐาน CP10 และคู่มือ Railway |
 | CP11 | เดโมครบระบบ | CP10 | TODO | ต้องมี 3 Clients บนอย่างน้อย 2 เครื่องจริง |
 | CP12 | เอกสารและชุดส่งงาน | CP11 | TODO | ต้องอ้างผลตรวจจริง |
 
@@ -243,8 +254,9 @@ Timeout/Rate limit พร้อมบันทึก Provider/Model และผ
 
 ### CP10 Cloud deployment
 
-**งาน:** เตรียม Dockerfile/Compose, React build, Python Web Server, HTTPS/WSS proxy,
-Persistent volume สำหรับ SQLite และ uploads บน Cloud เครื่องเดียวกัน
+**งาน:** เตรียม Dockerfile, React build, Python Web Server และ Persistent volume สำหรับ
+SQLite กับ uploads ใน Cloud deployment เดียวกัน ใช้ HTTPS/WSS ของ Railway ตาม Provider ที่ผู้ใช้เลือก
+ส่วน Compose/HTTPS proxy แยกใช้เมื่อ Deploy บน VM ไม่จำเป็นสำหรับ Railway service นี้
 พร้อมขั้นตอน Backup/Restore ที่ครอบคลุมฐานข้อมูลและไฟล์แนบสอดคล้องกัน
 
 **ผ่านเมื่อ:** Deploy และเชื่อม Browser Clients ไปยัง Cloud จริงได้ผ่าน HTTPS/WSS
@@ -1057,6 +1069,121 @@ Browser tests: `npm --prefix web run test:e2e` ใช้ Chrome และ SQLite
   ด้วย JavaScript และหาก logout ระหว่าง server เข้าไม่ถึงจะล้างได้เฉพาะ Browser จนกว่า
   token ฝั่ง Server หมดอายุหรือ server restart; token หมดอายุไม่ตัด socket ที่เปิดค้างอยู่
 - หลังตรวจงาน ผู้ใช้สั่ง commit และ push เข้า `main` โดยตรง งานถัดไปยังเป็น CP10 Cloud deployment
+
+### Session CP10 — ตรวจสถานะหลัง Deploy Railway Trial + Volume
+
+- วันที่: 7 พฤศจิกายน 2026 (Asia/Bangkok) · Branch `main`; เริ่มจาก Working tree สะอาด
+- เป้าหมาย: กระทบยอด checkpoint หลังผู้ใช้ยืนยันว่า Deploy Railway สำเร็จแล้ว
+  สถานะ CP10 `TODO` → `IN_PROGRESS`; CP11/CP12 ยัง `TODO` เพราะยังไม่มีหลักฐานตรวจรับครบ
+- สิ่งที่สำเร็จและแหล่งหลักฐาน:
+  - Git มี `Dockerfile`/`.dockerignore` จาก `3365216`; Build React ด้วย Node 24 แล้วรวม
+    Python 3.14 + Dependencies ตาม `uv.lock`, รัน `python -m server.web` ที่พอร์ต 8000
+    Docker context ไม่รวม `.env`, `data/`, `certs/` หรือไฟล์กุญแจตาม ignore rules
+  - ผู้ใช้ยืนยันในแชตว่า Deploy เรียบร้อยและพบพฤติกรรมต้อง Login หลัง Refresh
+    เป็นหลักฐานผู้ใช้เข้าถึงระบบจริง ส่วน Auth resume ที่แก้ภายหลังอยู่ใน `ba431d2`
+    ยังไม่ถือว่ามีผลตรวจ resume บน Cloud จนกว่าจะยืนยันรุ่นและทดสอบอีกครั้ง
+  - ภาพ Deploy Logs ที่ผู้ใช้แนบในแชตแสดง Deployment `48a7960f` เป็น Active,
+    Volume `studygroup-volume` และ Log วันที่ 7 พ.ย. 2026 เวลา 13:21:38 GMT+7:
+    `Mounting volume`, `StudyGroup Web server: http://0.0.0.0:8000`
+    และ `AI summary: not configured`; ภาพนี้ไม่ยืนยัน Mount Path หรือการเก็บข้อมูลหลัง Restart
+  - Public URL: https://studygroup-production-b33d.up.railway.app
+- ผลตรวจภายนอกใน session นี้ (อ่านอย่างเดียว ไม่สมัคร/Login/ส่งข้อความหรือแก้ข้อมูลจริง):
+  - `curl --connect-timeout 5 --max-time 15 --fail --silent --show-error https://studygroup-production-b33d.up.railway.app/health`
+    — exit 0, `{"status":"ok"}`
+  - HTTPS `GET /` ด้วย Python `urllib.request` — HTTP **200**, HTML title **StudyGroup**
+  - `websockets.sync.client.connect()` ไป `wss://studygroup-production-b33d.up.railway.app/ws`
+    พร้อม Origin `https://studygroup-production-b33d.up.railway.app` — handshake ผ่าน, **TLSv1.3**
+    ปิด Connection เมื่อจบ ไม่ส่งคำขอที่เปลี่ยนข้อมูล
+  - Web fetch tool เข้า URL ไม่ได้และ curl ใน Sandbox resolve DNS ไม่ได้;
+    ตรวจซ้ำด้วยสิทธิ์ Network ที่รองรับแล้วได้ผลข้างต้น จึงไม่ใช้ข้อจำกัดเครื่องมือตัดสินว่า Server ล่ม
+  - แก้เฉพาะ DEVELOPMENT.md; ตรวจ `git diff --check` และความสอดคล้องของสถานะ/งานถัดไป
+    ไม่รัน functional suite ซ้ำสำหรับการแก้เอกสาร ผลทดสอบ Auth ล่าสุดยังอ้างบันทึก session ก่อนหน้า
+- ขอบเขตและงานค้างก่อน CP10 `DONE`:
+  - ตรวจ Railway Variables/Mount Path ว่า `STUDYGROUP_DATA_DIR=/app/data` ตรง Volume จริง
+    และ Port/Origin ตรง public URL; รอบนี้ไม่ได้อ่าน Variables, Secrets หรือ Image ที่ Deploy อยู่
+  - สร้างข้อมูลเดโมแยก แล้ว Restart/Redeploy ตรวจบัญชี/ห้อง/สมาชิก/ข้อความและไฟล์ดาวน์โหลด
+    พร้อมเทียบ SHA-256; หลัง Server restart ต้อง Login ใหม่ตามขอบเขต resume token ที่เก็บใน memory
+  - จัดทำและทดลอง Backup/Restore โดยเก็บ SQLite กับ uploads ให้สอดคล้องกัน
+    แล้วตรวจว่าข้อความ/ไฟล์กลับมาใช้ได้จริง
+  - ตรวจ Browser Clients คนละเครือข่าย เก็บอุปกรณ์/OS/Browser/เวลา/ภาพและผล WSS จริง;
+    การตรวจ HTTP/WSS จากเครื่อง Agent รอบนี้ยังไม่แทนเดโมผู้ใช้สองเครื่อง
+  - ยังไม่มีผล AI จริงบน Railway หรือยืนยันว่ารุ่น Auth resume ล่าสุด Deploy แล้ว;
+    CP09 คง DONE จากหลักฐาน Local เดิม แต่ต้องตรวจทั้งสองส่วนบน Cloud สำหรับเดโม CP11
+- งานแรก session ถัดไป: ตรวจ Cloud persistence และ Backup/Restore ให้ครบก่อนปิด CP10
+  แล้วทำ CP11 ตาม docs/demo-checklist.md; ไม่เปลี่ยน CP10 เป็น DONE จากการเริ่ม Server ได้เพียงอย่างเดียว
+
+### Session CP10 — ตรวจ Volume, Restart/Redeploy และ Backup/Restore จริง
+
+- วันที่: 7 พฤศจิกายน 2026 (Asia/Bangkok) · Local `main` ที่ `ba431d2`
+  เริ่มจาก DEVELOPMENT.md ที่แก้ค้างจากรอบตรวจสถานะ; ไม่ commit/push หรือทับ source บน Cloud
+- เป้าหมายและสถานะ: ทำรายการที่เหลือของ CP10 ตามคำขอผู้ใช้ `IN_PROGRESS` → **DONE**
+  CP11/CP12 ยัง `TODO`; หลักฐานรวมที่ไม่ใส่ข้อมูลลับอยู่ใน
+  [docs/evidence/cp10-railway/verification.json](docs/evidence/cp10-railway/verification.json)
+- ตรวจ Railway Console/Files/Deployments จริง:
+  - Service หนึ่ง Replica, HTTP `0.0.0.0:8000`, Origin ตรง public URL
+    `STUDYGROUP_DATA_DIR` และ `RAILWAY_VOLUME_MOUNT_PATH` เป็น `/app/data`
+    ตรวจ `os.path.ismount('/app/data')` ได้ `True`; ไม่เปิด SQLite ให้ Client ต่อโดยตรง
+  - Cloud source `a4939e12ec4cf79e749e3bdf6742e5c20832233a` ใหม่กว่า Local และมี Auth resume
+    ไม่พบ `/app/.env`; ตรวจเฉพาะ boolean ว่าตั้ง AI Key แล้ว โดยไม่พิมพ์ Key
+    Log ระบุ Anthropic / `claude-haiku-5-5`; รอบนี้ไม่เรียก paid AI API
+  - HTTPS `/health` 200, `/.env`, `/data/studygroup.db`, `/certs/server.key` ได้ 404
+    WSS ใช้ TLS 1.3; ปิด/เปิด connection แล้ว `RESUME_SESSION` ผ่าน
+- สร้างข้อมูลทดสอบแยกด้วย `scripts/cloud_demo_check.py --prepare`:
+  - Run `11071229454e`, บัญชี cp10a/b/c สามบัญชี, Group 6, Private 7, Attachment 7
+    ข้อความไทย/emoji และไฟล์ 65,536 bytes; ไม่อ่านห้องหรือส่งข้อความถึงผู้ใช้จริง
+  - ตรวจ Login, Online, สมาชิกเข้าถึง Group/Private history, Search, ไฟล์ bytes/SHA-256
+    และ C ที่ไม่ใช่สมาชิกได้ `FORBIDDEN` สำหรับห้องทั้งสองและไฟล์
+  - SHA-256 ไฟล์ `4ca86fb8ff172d3031435f23a9a4ff0fec1fae2e7b518bb86cad5fbffc0b50ac`
+- Backup/Restore ที่ทำจริง:
+  - Trial UI แจ้งว่าต้องอัปเกรด Pro สำหรับ platform backup; ไม่อัปเกรด
+    เพิ่ม `scripts/data_backup.py` ใช้ SQLite online backup API รวม committed WAL
+    กับไฟล์ ready ตาม snapshot พร้อม Manifest/size/SHA-256, archive mode `0600`
+    ไม่รวม `.env`, partial uploads หรือไฟล์อื่น; Restore รับ directory ใหม่เท่านั้น
+  - อัปโหลด helper ที่ผ่าน Tests ผ่าน Console → Files ไป Volume แล้วรัน:
+    `python /app/data/data_backup.py backup --data-dir /app/data --output /app/data/backups/cp10-20261107-11071229454e.zip`
+  - Snapshot มี users 8, rooms 5, room_members 12, messages 23, attachments/files 7
+    Archive 4,443,059 bytes, SHA-256
+    `377c4aa5bea055c56508ca994ca55b2253f7cf77af55c8874f86f849527e0db5`
+  - กู้คืนบน Cloud ไป `/tmp/cp10-restored-11071229454e` แล้วเปิด WebServer แยก
+    ที่ `127.0.0.1:8765` ด้วย Python ของแอปและปิด AI; fixture checks ผ่านทั้งหมด
+  - ดาวน์โหลด ZIP นอก Cloud เก็บใน ignored `work/cp10/` และเทียบ archive hash ตรง
+    กู้คืนไป `work/cp10/offcloud-restored` แล้วเปิดแอป loopback ตรวจชุดเดิมผ่านทั้งหมด
+    หยุด instance ทดสอบทั้งสองแล้ว ไม่สลับ/เขียนทับฐานข้อมูล Production
+- Restart/Redeploy ที่ทำจริงผ่าน Railway UI โดยใช้ config/source เดิม:
+  - Restart Deployment `5ae809c6-ba41-4ed1-87ea-346cfaea63be` Log เริ่มแอปใหม่
+    เวลา 19:36:38.561 GMT+7; Login เดิม/ประวัติ/สมาชิก/ไฟล์และสิทธิ์คนนอกผ่าน
+    token ก่อน Restart ได้ `AUTH_FAILED` ตาม registry ใน memory ไม่ใช่ข้อมูลบัญชีหาย
+  - Redeploy สร้าง Deployment ใหม่ `b88cfd56-d888-4bb8-a281-680e9dc8baa9`
+    เวลา 19:37:57.402 GMT+7; UI สุดท้าย **ACTIVE / Deployment successful**
+    fixture checks ผ่านทั้งหมดโดยใช้ IDs และ hash เดิม
+- หลักฐานเครือข่ายจากผู้ใช้: **iPhone / Chrome / Cellular — ส่งได้ปกติ** ในแชตนี้
+  ไม่ระบุ OS version/รายละเอียดอีกฝั่ง จึงไม่เติมข้อมูลสมมติ และไม่นับแทน
+  คอมพิวเตอร์จริงสองเครื่องสำหรับ CP11
+- ไฟล์/การตรวจใน Local:
+  - เพิ่ม Backup CLI, cloud fixture CLI, `tests/test_data_backup.py`, คู่มือ `docs/railway.md`
+    และปรับ README/setup/checklist/HANDOFF ให้ตรงผลจริง
+  - Dockerfile เพิ่ม backup helper สำหรับ Image รุ่นถัดไป; ยังไม่ build/push Image ใหม่นี้
+    Image ที่ตรวจใช้ helper อัปโหลดบน Volume แทน เพิ่ม `work`/`backups` ใน Docker ignore
+    และ `/backups/` ใน Git ignore ป้องกัน Backup/รหัสผ่านทดสอบเข้า source หรือ build context
+  - `.venv/bin/python -m pytest tests/test_data_backup.py tests/test_database.py tests/test_permissions.py -q --tb=short -W error`
+    — **90 passed**, รวม Backup ใหม่ 8 กรณี: WAL snapshot, ไฟล์หาย/เปลี่ยน/symlink,
+    ปฏิเสธเขียนทับข้อมูล และ ZIP traversal/corruption/symlink
+  - ตรวจ end-to-end ผ่าน public WSS และแอปจาก Backup จริงตามรายงาน ไม่เรียกสิ่งนี้ว่า Browser E2E
+    ผล Browser suite เดิมยังอ้าง session ก่อนหน้า
+  - `git diff --check`, ลิงก์เอกสาร Local, Evidence JSON, hash ของทุก phase
+    และ Git/Docker exclusion สำหรับ Backup/credentials ผ่าน
+- งานแรก session ถัดไป: เริ่ม CP11 ตาม `docs/demo-checklist.md` เตรียม A/B/C
+  บนคอมพิวเตอร์จริงอย่างน้อยสองเครื่อง เก็บ R1–R11 และสาธิต AI จริงบน Cloud
+
+### Session CP10 — เตรียม commit/push ตามคำสั่งผู้ใช้
+
+- วันที่: 7 พฤศจิกายน 2026 (Asia/Bangkok)
+- ดึง `origin/main` และ fast-forward รวม `a4939e1` (favicon ใหม่) ก่อน commit งาน CP10
+  ไม่เขียนทับงานบน remote และไม่ใช้ force push
+- รวม helper, Tests, เอกสารและหลักฐาน CP10 ที่ไม่มีข้อมูลลับ
+  Backup จริงและรหัสผ่านบัญชีทดสอบยังอยู่ใน ignored `work/` ไม่เข้า commit/Docker context
+- ผลตรวจ Cloud ในรายงานเป็นผลก่อน push ครั้งนี้ ไม่ถือเป็นผลตรวจ Image รุ่นใหม่หลัง push
+  สถานะ checkpoint คง CP10 DONE, CP11/CP12 TODO
 
 ### แบบบันทึกสำหรับ session ถัดไป
 

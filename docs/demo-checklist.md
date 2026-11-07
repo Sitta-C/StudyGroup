@@ -91,4 +91,8 @@ uv run --locked --env-file .env python -m server.web
 7. (CP09) ในห้องกลุ่มกด “สรุปด้วย AI” บนเครื่องที่ Server มี Key จริง ได้ประเด็น/ข้อตกลง/งาน/กำหนดส่ง
    ป้ายแสดงชื่อโมเดล C (คนนอก) ไม่เห็นปุ่ม และสมาชิกคนอื่นไม่เห็นผลสรุปของผู้ขอ
 
-ผล CP07–CP09 ล่าสุดเป็นผล Local (Python + Browser E2E + เรียก API จริงจากสคริปต์) ดู DEVELOPMENT; Cloud (CP10) ยังไม่ตรวจรับ
+CP10 ตรวจ Railway จริงแล้ว: HTTPS/WSS, Volume, Restart/Redeploy และ Backup/Restore
+พร้อมการอ่านประวัติ ค้นหา ดาวน์โหลดเทียบ SHA-256 และปฏิเสธคนนอกผ่าน ดู [หลักฐาน](evidence/cp10-railway/verification.json)
+และ [คู่มือ Cloud](railway.md) ผู้ใช้ยืนยัน iPhone / Chrome / Cellular ส่งได้ปกติเมื่อ 7 พ.ย. 2026
+หลักฐานนี้ยังไม่แทนเดโม R1–R11 บนคอมพิวเตอร์จริงสองเครื่องของ CP11
+AI จริงบน Cloud และผลรายอุปกรณ์ทั้งชุดยังต้องตรวจสำหรับ CP11; ผล CP09 เดิมเป็น Local API จริง

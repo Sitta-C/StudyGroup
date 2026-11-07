@@ -1,0 +1,183 @@
+{
+  "checkpoint": "CP10",
+  "status": "DONE",
+  "date": "2026-11-07",
+  "timezone": "Asia/Bangkok",
+  "public_url": "https://studygroup-production-b33d.up.railway.app",
+  "evidence_methods": [
+    "Railway authenticated Console/Files/Deployments UI",
+    "public HTTPS/WSS with generated CP10 fixtures",
+    "downloaded backup restored into isolated local WebServer",
+    "user-reported browser test on cellular"
+  ],
+  "deployment": {
+    "source_commit_observed": "a4939e12ec4cf79e749e3bdf6742e5c20832233a",
+    "restart_deployment": "5ae809c6-ba41-4ed1-87ea-346cfaea63be",
+    "restart_log_time": "2026-11-07T19:36:38.561+07:00",
+    "redeploy_deployment": "b88cfd56-d888-4bb8-a281-680e9dc8baa9",
+    "redeploy_created_at": "2026-11-07T19:37:57.402+07:00",
+    "final_ui_status": "ACTIVE / Deployment successful",
+    "new_source_pushed": false
+  },
+  "safe_config_observed": {
+    "PORT": "8000",
+    "STUDYGROUP_WEB_PORT": "8000",
+    "STUDYGROUP_WEB_HOST": "0.0.0.0",
+    "STUDYGROUP_WEB_ORIGINS": "https://studygroup-production-b33d.up.railway.app",
+    "STUDYGROUP_DATA_DIR": "/app/data",
+    "RAILWAY_VOLUME_MOUNT_PATH": "/app/data",
+    "volume_ismount": true,
+    "replicas": 1,
+    "app_dotenv_present": false,
+    "ai_configured": true,
+    "paid_ai_invoked_this_check": false
+  },
+  "security_and_resume": {
+    "http_statuses": {
+      "/health": 200,
+      "/.env": 404,
+      "/data/studygroup.db": 404,
+      "/certs/server.key": 404
+    },
+    "resume_after_connection_reopen": "PASS",
+    "tls": "TLSv1.3",
+    "result": "PASS"
+  },
+  "restart_auth": {
+    "pre_restart_token_response": "AUTH_FAILED",
+    "expected": true,
+    "reason": "Resume registry is in memory; password login remains available."
+  },
+  "backup": {
+    "method": "SQLite online backup API plus referenced ready attachments",
+    "filename": "cp10-20261107-11071229454e.zip",
+    "bytes": 4443059,
+    "sha256": "377c4aa5bea055c56508ca994ca55b2253f7cf77af55c8874f86f849527e0db5",
+    "file_mode": "0o600",
+    "counts": {
+      "users": 8,
+      "rooms": 5,
+      "room_members": 12,
+      "messages": 23,
+      "attachments": 7
+    },
+    "files": 7,
+    "copies": [
+      "Railway Volume /app/data/backups",
+      "downloaded private local work/cp10"
+    ],
+    "isolated_cloud_restore": {
+      "destination": "/tmp/cp10-restored-11071229454e",
+      "webserver": "http://127.0.0.1:8765",
+      "fixture_checks": "PASS (observed Console result)",
+      "ai_enabled": false,
+      "test_server_stopped": true
+    },
+    "offcloud_restore": "PASS; detailed fixture result below",
+    "production_database_replaced": false,
+    "platform_backup_ui_observed": "Requires upgrade to Pro; no upgrade performed"
+  },
+  "fixture_results": {
+    "before_restart": {
+      "run_id": "11071229454e",
+      "url": "https://studygroup-production-b33d.up.railway.app",
+      "accounts": 3,
+      "checks": [
+        "login",
+        "online",
+        "group_history",
+        "private_history",
+        "search",
+        "file_sha256",
+        "outsider_forbidden"
+      ],
+      "group_id": 6,
+      "private_id": 7,
+      "attachment_id": 7,
+      "file_bytes": 65536,
+      "file_sha256": "4ca86fb8ff172d3031435f23a9a4ff0fec1fae2e7b518bb86cad5fbffc0b50ac",
+      "result": "PASS"
+    },
+    "after_restart": {
+      "run_id": "11071229454e",
+      "url": "https://studygroup-production-b33d.up.railway.app",
+      "accounts": 3,
+      "checks": [
+        "login",
+        "online",
+        "group_history",
+        "private_history",
+        "search",
+        "file_sha256",
+        "outsider_forbidden"
+      ],
+      "group_id": 6,
+      "private_id": 7,
+      "attachment_id": 7,
+      "file_bytes": 65536,
+      "file_sha256": "4ca86fb8ff172d3031435f23a9a4ff0fec1fae2e7b518bb86cad5fbffc0b50ac",
+      "result": "PASS"
+    },
+    "after_redeploy": {
+      "run_id": "11071229454e",
+      "url": "https://studygroup-production-b33d.up.railway.app",
+      "accounts": 3,
+      "checks": [
+        "login",
+        "online",
+        "group_history",
+        "private_history",
+        "search",
+        "file_sha256",
+        "outsider_forbidden"
+      ],
+      "group_id": 6,
+      "private_id": 7,
+      "attachment_id": 7,
+      "file_bytes": 65536,
+      "file_sha256": "4ca86fb8ff172d3031435f23a9a4ff0fec1fae2e7b518bb86cad5fbffc0b50ac",
+      "result": "PASS"
+    },
+    "downloaded_backup_restored_offcloud": {
+      "run_id": "11071229454e",
+      "url": "http://127.0.0.1:54667",
+      "accounts": 3,
+      "checks": [
+        "login",
+        "online",
+        "group_history",
+        "private_history",
+        "search",
+        "file_sha256",
+        "outsider_forbidden"
+      ],
+      "group_id": 6,
+      "private_id": 7,
+      "attachment_id": 7,
+      "file_bytes": 65536,
+      "file_sha256": "4ca86fb8ff172d3031435f23a9a4ff0fec1fae2e7b518bb86cad5fbffc0b50ac",
+      "result": "PASS"
+    }
+  },
+  "cross_network": {
+    "source": "user-reported in this chat",
+    "device": "iPhone",
+    "browser": "Chrome",
+    "network": "Cellular",
+    "result_original": "ส่งได้ปกติ",
+    "os_version": "not supplied",
+    "counterparty_device_details": "not supplied",
+    "satisfies_cp11_two_physical_computers": false
+  },
+  "local_tests": {
+    "command": ".venv/bin/python -m pytest tests/test_data_backup.py tests/test_database.py tests/test_permissions.py -q --tb=short -W error",
+    "passed": 90,
+    "failed": 0,
+    "backup_cases_included": 8
+  },
+  "remaining": [
+    "CP11: full R1–R11 demonstration with three clients on at least two physical computers, including real cloud AI",
+    "CP12: final submission materials"
+  ],
+  "privacy": "No passwords, session tokens, database rows, attachment contents or API keys included. Real backup and fixture credentials are excluded from Git and Docker context."
+}

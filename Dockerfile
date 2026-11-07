@@ -37,6 +37,7 @@ RUN uv sync \
 
 COPY server/ ./server/
 COPY shared/ ./shared/
+COPY scripts/data_backup.py ./scripts/data_backup.py
 COPY --from=frontend /frontend/dist/ ./web/dist/
 
 RUN groupadd --gid 10001 studygroup \

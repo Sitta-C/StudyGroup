@@ -21,7 +21,8 @@ TLS Server, Authentication, รายชื่อออนไลน์ และ
 มี React Web App แบบ Focus และ WebSocket adapter แล้ว ผู้ใช้ตรวจรับ CP06 แล้ว
 CP07 ประวัติ/ค้นหา และ CP08 ส่ง-ดาวน์โหลดไฟล์พัฒนาและผ่านการทดสอบ Local แล้ว ดู [docs/history-files.md](docs/history-files.md)
 CP09 AI สรุปบทสนทนาใช้ Anthropic (`claude-haiku-5-5` ค่าเริ่มต้น) เรียกโมเดลจริงได้แล้ว ดู [docs/ai.md](docs/ai.md)
-งานถัดไป CP10 Cloud; หลักฐานรายอุปกรณ์สองเครื่องเก็บต่อสำหรับ CP11
+Deploy Railway พร้อม Volume และตรวจ Backup/Restore แล้ว ดู [คู่มือ Cloud](docs/railway.md)
+งานถัดไปคือเดโม CP11 และเก็บหลักฐานรายอุปกรณ์สองเครื่อง
 ดูสถานะ checkpoint และผลทดสอบล่าสุดใน [DEVELOPMENT.md](DEVELOPMENT.md)
 สัญญา Chat/Group ที่ใช้จริงอยู่ใน [docs/chat.md](docs/chat.md)
 โค้ด HTML ใน Prototype เป็นแบบอ้างอิงหน้าจอ ไม่ใช่แอปที่พัฒนาเสร็จแล้ว
@@ -75,7 +76,7 @@ Schema, Transaction และ Permission API ที่พัฒนาแล้�
 - React + TypeScript + CSS สำหรับ Focus UI ใช้ Browser เป็น Client
 - WebSocket (`wss://` เมื่อใช้ HTTPS) สำหรับข้อความและคำขอฟีเจอร์ต่าง ๆ
 - Python เสิร์ฟ build ของ React และ `/ws` บนพอร์ตเดียว ใช้ SQLite/Auth/Chat handlers เดิม
-- Cloud VM/VPS หนึ่งเครื่องรัน Server และเก็บ SQLite พร้อมไฟล์แนบในพื้นที่ถาวร
+- Railway Docker service หนึ่ง Replica รัน Server และเก็บ SQLite พร้อมไฟล์แนบใน Volume เดียว
 - Username + Password โดย Server ตรวจรหัสผ่านและผูกตัวตนกับ Socket
 - เรียก AI API จาก Server เพื่อสรุปข้อความในห้องกลุ่ม ไม่ต้องฝึกโมเดลเอง
 - เก็บ API Key และกุญแจ TLS ที่ Server เท่านั้น
@@ -88,7 +89,7 @@ Schema, Transaction และ Permission API ที่พัฒนาแล้�
 - หนึ่งบัญชีล็อกอินได้ครั้งละหนึ่งการเชื่อมต่อ และชื่อผู้ใช้ไม่เปลี่ยนใน MVP
 - สมาชิกใหม่เห็นข้อความและไฟล์ที่ส่งตั้งแต่ตนเข้าร่วมกลุ่มเป็นต้นไป ให้ใช้ขอบเขตนี้กับประวัติ การค้นหา และ AI ด้วย
 - จำกัดไฟล์แนบไม่เกิน 5 MiB ต่อไฟล์ และสรุปข้อความล่าสุดที่ผู้ใช้มีสิทธิ์ไม่เกิน 50 ข้อความ
-- AI ใช้ Anthropic Messages API รุ่นตั้งค่าได้ด้วย `STUDYGROUP_AI_MODEL` (CP09); ยังไม่ได้เลือกผู้ให้บริการ Cloud ไม่ผูกข้อมูลลับลงโค้ด
+- AI ใช้ Anthropic Messages API รุ่นตั้งค่าได้ด้วย `STUDYGROUP_AI_MODEL` (CP09); Cloud ใช้ Railway Trial + Volume ไม่ผูกข้อมูลลับลงโค้ด
 - งาน Python และการทดสอบ Local เริ่มได้ทันที ส่วนการใช้บริการภายนอกจริงต้องมีค่าบริการ/บัญชี/Key/ที่อยู่ Server จากผู้ใช้ตามที่จำเป็น
 
 ## 3. เกณฑ์จาก Term Project
@@ -317,7 +318,7 @@ React ใช้ Browser WebSocket แบบ asynchronous ส่งผล/Event �
 
 **ประวัติและค้นหา:** เก็บข้อความก่อนตอบรับสำเร็จ ค้นหาในห้องปัจจุบันตามคำและช่วงวันที่ รองรับ Pagination โดยใช้ Message ID/เวลา แปลงวันที่ของผู้ใช้เป็นช่วง UTC ก่อน Query และใช้เงื่อนไขสิทธิ์เดียวกับประวัติปกติ
 
-**Cloud:** เตรียม Dockerfile และ Compose สำหรับ Python + React build เสิร์ฟ HTTP/WebSocket พอร์ต 8000 หลัง HTTPS/WSS reverse proxy หรือ TLS ตรง และ Mount `data/` ถาวร SQLite อยู่เครื่องเดียวกับ Server ภายใน Volume ไม่มี Database Port สาธารณะ Deploy จริงเมื่อมี Provider/เครื่อง/Domain/Certificate และสิทธิ์ที่จำเป็น การมีไฟล์ Deploy อย่างเดียวยังไม่ถือว่าทำฟีเจอร์ Cloud สำเร็จ
+**Cloud:** Deploy Railway Docker service แล้ว โดย Python + React build เสิร์ฟ HTTP/WebSocket พอร์ต 8000 หลัง HTTPS/WSS ของ Railway และ Mount `/app/data` ถาวร SQLite อยู่เครื่องเดียวกับ Server ภายใน Volume ไม่มี Database Port สาธารณะ ตรวจ Restart/Redeploy และ Backup/Restore จริงแล้ว ดู [คู่มือ Railway](docs/railway.md) ส่วน Compose เก็บไว้เป็นทางเลือกสำหรับ VM
 
 ## 10. GUI ที่ต้องพัฒนา
 
