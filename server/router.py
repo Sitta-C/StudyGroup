@@ -22,9 +22,12 @@ class Router:
             raise ProtocolError(ErrorCode.INVALID_PACKET, "Expected a client request")
         request_id, kind = request["id"], request["type"]
         try:
-            if kind not in (RequestType.REGISTER, RequestType.LOGIN) and connection.user is None:
+            public_auth = (RequestType.REGISTER, RequestType.LOGIN)
+            if self.auth.registry.resume_enabled:
+                public_auth += (RequestType.RESUME_SESSION,)
+            if kind not in public_auth and connection.user is None:
                 raise AuthError(ErrorCode.AUTH_REQUIRED, "Login required")
-            if kind in (RequestType.REGISTER, RequestType.LOGIN, RequestType.LOGOUT, RequestType.USERS_LIST):
+            if kind in (*public_auth, RequestType.LOGOUT, RequestType.USERS_LIST):
                 self.auth.handle(connection, db, request)
                 if kind == RequestType.LOGOUT:
                     # The socket may stay open; unfinished uploads end with the session.

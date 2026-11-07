@@ -26,7 +26,7 @@ from server.main import ServerLimits
 from server.passwords import Passwords
 from server.rate_limit import AuthRateLimiter
 from server.router import Router
-from server.sessions import SessionRegistry
+from server.sessions import RESUME_TTL, SessionRegistry
 from server.web_config import WebConfig
 from shared.protocol import HEADER, MAX_FRAME_BYTES, encode_packet, recv_packet
 from shared.validation import ProtocolError
@@ -112,6 +112,8 @@ class WebConnection:
                     except TimeoutError:
                         continue
                     request = decode_message(message)
+                    if self._stopping.is_set():
+                        break
                     last_received = time.monotonic()
                     self.server.router.dispatch(self, db, request)
         except ProtocolError:
@@ -136,7 +138,7 @@ class WebServer:
         self.config = config
         self.limits = limits or ServerLimits()
         self.database = Database(config.database_path)
-        self.registry = SessionRegistry()
+        self.registry = SessionRegistry(resume_ttl=RESUME_TTL)
         chat = ChatHandlers(self.registry)
         self.files = FileHandlers(self.registry, config.uploads_dir, chat)
         provider = ai_provider or build_provider(config.ai_provider, config.ai_model, config.ai_api_key, config.ai_timeout)

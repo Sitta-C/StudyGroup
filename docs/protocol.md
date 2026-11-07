@@ -59,7 +59,7 @@ ID ใช้จับคู่ผลเท่านั้น ไม่ใช่�
 
 | กลุ่ม | `RequestType` |
 | --- | --- |
-| Auth | `REGISTER`, `LOGIN`, `LOGOUT` |
+| Auth | `REGISTER`, `LOGIN`, `RESUME_SESSION` (Web), `LOGOUT` |
 | Users/Rooms | `USERS_LIST`, `PRIVATE_ROOM_OPEN`, `PRIVATE_ROOM_LIST`, `GROUP_CREATE`, `GROUP_LIST`, `GROUP_JOIN` |
 | Chat/History | `MESSAGE_SEND`, `HISTORY_GET`, `HISTORY_SEARCH` |
 | Files | `FILE_BEGIN`, `FILE_CHUNK`, `FILE_END`, `FILE_GET` |

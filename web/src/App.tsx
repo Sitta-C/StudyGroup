@@ -4,6 +4,7 @@ import { ArrowRight, CalendarDays, Check, ChevronRight, Compass, Download, ListC
 import { ChatController, errorText, isMember, roomTitle } from './chat'
 import type { SearchFilters } from './chat'
 import { formatSize, localDayRange, MAX_FILE_BYTES } from './files'
+import { SESSION_STORAGE_KEY } from './session'
 import type { Attachment, Message, Room, State, Transfer } from './types'
 
 const control = new ChatController()
@@ -400,7 +401,12 @@ export default function App() {
   const [modal, setModal] = useState<'create' | 'members' | 'directory' | 'connection' | 'search' | null>(null)
   const [tab, setTab] = useState<'chat' | 'files'>('chat')
   const [aiOpen, setAiOpen] = useState(false)
-  useEffect(() => () => control.close(), [])
+  useEffect(() => {
+    void control.restoreSession()
+    const changed = (event: StorageEvent) => { if (event.key === SESSION_STORAGE_KEY || event.key === null) control.storedSessionChanged() }
+    window.addEventListener('storage', changed)
+    return () => { window.removeEventListener('storage', changed); control.close() }
+  }, [])
   useEffect(() => {
     const desktop = window.matchMedia('(min-width: 761px)')
     const changed = () => { setCompact(!desktop.matches); if (desktop.matches) setMobile(false) }

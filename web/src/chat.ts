@@ -1,5 +1,7 @@
 import { ClientError, Transport } from './transport'
 import { MAX_FILE_BYTES, fromBase64, sha256Hex, toBase64 } from './files'
+import { clearSession, readSession, saveSession } from './session'
+import type { StoredSession } from './session'
 import type { Attachment, EventPacket, Message, Page, Room, State, Transfer, User } from './types'
 
 const empty = (): State => ({ phase: 'disconnected', authBusy: false, user: null, users: [], rooms: {}, messages: {}, history: {}, ai: {}, uploads: {}, downloads: {}, drafts: {}, unread: {}, notices: {}, sending: {}, activeRoom: null, groupsLoading: false, highlight: null, error: '', info: '' })
@@ -47,13 +49,59 @@ export class ChatController {
   clearError() { this.patch({ error: '' }) }
   setDraft(room: number, text: string) { this.patch({ drafts: { ...this.state.drafts, [room]: text } }) }
 
-  async authenticate(register: boolean, username: string, password: string, confirm: string) {
-    if (this.state.authBusy || this.state.phase === 'authenticated') return
+  private beginAuthentication() {
     const epoch = ++this.epoch
     this.revision = -1
     this.groupFlight = null
     this.opening.clear()
     this.patch({ authBusy: true, phase: 'connecting', error: '', info: '' })
+    return epoch
+  }
+
+  private authenticated(result: StoredSession & { user: User }, epoch: number) {
+    const retained = this.state.user?.id === result.user.id ? this.state : empty()
+    // Reload history after restoring a session; never replay pending sends/files.
+    this.state = { ...retained, messages: {}, history: {}, ai: {}, unread: {}, uploads: {}, downloads: {}, highlight: null }
+    const saved = saveSession(result)
+    this.patch({ user: result.user, authBusy: false, phase: 'authenticated', users: [], error: '',
+      info: saved ? '' : 'เข้าสู่ระบบแล้ว แต่เบราว์เซอร์ไม่อนุญาตให้จำการเข้าสู่ระบบ' })
+    void this.loadUsers(epoch)
+    void this.refreshGroups()
+    void this.loadPrivateRooms(epoch)
+    const active = this.state.activeRoom === null ? undefined : this.state.rooms[this.state.activeRoom]
+    if (active && isMember(this.state, active)) void this.loadHistory(active.id)
+  }
+
+  async restoreSession() {
+    if (this.state.authBusy || this.state.phase === 'authenticated') return
+    const session = readSession()
+    if (!session) return
+    const epoch = this.beginAuthentication()
+    try {
+      await this.transport.connect()
+      if (epoch !== this.epoch) return
+      this.patch({ phase: 'connected' })
+      const result = await this.transport.request('RESUME_SESSION', { resume_token: session.resume_token })
+      if (epoch === this.epoch) this.authenticated(result, epoch)
+    } catch (error) {
+      if (epoch !== this.epoch) return
+      const invalid = error instanceof ClientError && error.code === 'AUTH_FAILED'
+      if (invalid) clearSession(session.resume_token)
+      this.patch({ authBusy: false, error: invalid ? '' : errorText(error),
+        info: invalid ? 'การเข้าสู่ระบบหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง' : '' })
+    }
+  }
+
+  storedSessionChanged() {
+    // Do not auto-resume here: tabs would repeatedly take over from each other.
+    this.close()
+    this.state = empty()
+    this.patch({ info: readSession() ? 'มีการเข้าสู่ระบบใหม่ในแท็บอื่น กรุณาโหลดหน้านี้ใหม่เพื่อใช้งาน' : 'ออกจากระบบแล้ว' })
+  }
+
+  async authenticate(register: boolean, username: string, password: string, confirm: string) {
+    if (this.state.authBusy || this.state.phase === 'authenticated') return
+    const epoch = this.beginAuthentication()
     try {
       await this.transport.connect()
       if (epoch !== this.epoch) return
@@ -65,16 +113,7 @@ export class ChatController {
       }
       const result = await this.transport.request('LOGIN', { username, password })
       if (epoch !== this.epoch) return
-      const retained = this.state.user?.id === result.user.id ? this.state : empty()
-      // Drafts survive a re-login; messages are reloaded from Server history so
-      // nothing missed while disconnected leaves a gap in the transcript.
-      this.state = { ...retained, messages: {}, history: {}, ai: {}, unread: {}, uploads: {}, downloads: {}, highlight: null }
-      this.patch({ user: result.user, authBusy: false, phase: 'authenticated', users: [], error: '', info: '' })
-      void this.loadUsers(epoch)
-      void this.refreshGroups()
-      void this.loadPrivateRooms(epoch)
-      const active = this.state.activeRoom === null ? undefined : this.state.rooms[this.state.activeRoom]
-      if (active && isMember(this.state, active)) void this.loadHistory(active.id)
+      this.authenticated(result, epoch)
     } catch (error) {
       if (epoch === this.epoch) this.patch({ authBusy: false, error: errorText(error) })
     }
@@ -384,11 +423,18 @@ export class ChatController {
       error: intentional ? '' : errorText(error) })
   }
   async logout() {
-    try { if (this.state.phase === 'authenticated') await this.transport.request('LOGOUT') }
-    catch { /* Closing the connection also revokes its server-side session. */ }
+    const session = readSession()
+    clearSession()
+    try {
+      if (this.state.phase !== 'authenticated' && session) {
+        await this.transport.connect()
+        await this.transport.request('RESUME_SESSION', { resume_token: session.resume_token })
+      }
+      await this.transport.request('LOGOUT')
+    } catch { /* Local logout still completes when the server is unreachable. */ }
     this.close()
     this.state = empty()
     this.patch({ info: 'ออกจากระบบแล้ว' })
   }
-  close() { this.epoch++; this.transport.close() }
+  close() { this.epoch++; this.transport.close(); this.patch({ authBusy: false, phase: 'disconnected' }) }
 }

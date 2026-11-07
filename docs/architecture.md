@@ -27,6 +27,7 @@ Browser ไม่อ่าน SQLite โดยตรงและไม่มี 
 | --- | --- |
 | `web/src/App.tsx`, `style.css` | React components และ Focus design tokens, dialogs และ responsive sidebar |
 | `web/src/chat.ts` | Session ในหน่วยความจำ, rooms/users/messages/drafts/unread และการรวม sender echo |
+| `web/src/session.ts` | อ่าน/บันทึก resume token อายุ 7 วันใน localStorage และรับมือ storage ใช้ไม่ได้ |
 | `web/src/transport.ts` | WebSocket, Request IDs, pending requests, deadlines และส่ง events ให้ controller |
 | `server/web_config.py` | Web host/port, static root, Origin allowlist, TLS และ data path |
 | `server/web.py` | HTTP assets + WebSocket adapter, connection lifecycle และ bounded outbox |
@@ -47,8 +48,10 @@ WebSocket หนึ่ง **text message = JSON envelope v1 หนึ่งร�
 ปฏิเสธ Origin ที่ไม่อยู่ใน allowlist ก่อน Login Session ผูกกับ Connection
 Logout/close/error ล้าง registry และประกาศออนไลน์ใหม่
 
-Auth ใช้ Argon2id และ rate limit เดิม ไม่มี cookie/token ที่เก็บใน Browser storage
-หนึ่งบัญชีมี Connection ที่ Login ได้ครั้งละหนึ่งตัว
+Auth ใช้ Argon2id และ rate limit เดิม Browser เก็บ resume token/expiry ใน localStorage
+Server เก็บ digest ใน memory แยกจากออนไลน์ หนึ่งบัญชีมี Connection ที่ Login ได้ครั้งละหนึ่งตัว
+Resume ด้วย token เดียวกันให้แท็บล่าสุดแทนตัวเก่า; password login ซ้อนยังถูกปฏิเสธ
+Logout เพิกถอน token; socket ปิดล้างเฉพาะออนไลน์ Restart server ต้อง Login ใหม่
 `connection.user` เป็น Actor; ห้องส่วนตัวจำกัดคู่สนทนา กลุ่มจำกัดสมาชิก
 ทุกคนดูรายชื่อกลุ่ม/สมาชิกได้ แต่เนื้อหาไม่ส่งให้คนนอก และ Join มีขอบเขตประวัติเดิม
 Static root จำกัดไว้ที่ `web/dist` ตรวจ path traversal/symlink escape ไม่เสิร์ฟ `.env`/Database
@@ -69,7 +72,9 @@ Browser connect timeout 10 วินาที, request timeout 15 วินา�
 6. คำตอบเปิดห้องเก่าไม่เปลี่ยน selection ที่ผู้ใช้เลือกภายหลัง
 
 ข้อมูล React อยู่ในหน่วยความจำของแท็บ ไม่มีการบันทึก password, drafts หรือข้อความลง
-localStorage/sessionStorage Refresh/ปิดแท็บล้างข้อมูล UI ต้อง Login ใหม่
+localStorage/sessionStorage ยกเว้น resume token/expiry อายุ 7 วันใน localStorage
+Refresh/ปิดแท็บล้างข้อมูล UI แต่เปิดใหม่แล้ว resume ได้โดยไม่กรอกรหัสผ่าน
+ถ้า token หมดอายุ/ถูกเพิกถอนหรือ server restart ให้กลับหน้า Login
 SQLite เก็บบัญชี/ห้อง/ข้อความถาวร และไฟล์แนบอยู่ใน `data/uploads/` หลัง Login React โหลด
 Private rooms (`PRIVATE_ROOM_LIST`) และหน้าล่าสุดของห้องที่เปิด (`HISTORY_GET`) ตาม [history-files.md](history-files.md)
 

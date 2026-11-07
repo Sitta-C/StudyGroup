@@ -244,10 +244,10 @@ StudyGroup/
   ไม่ Trim/Normalize และ Confirm ต้องตรงกัน สมัครแล้ว Login แยกตามสัญญา CP04
 - ส่ง Credentials หลัง TLS handshake และตรวจ Certificate chain/Hostname ของ Server แล้วเท่านั้น LAN/production ให้ Browser เชื่อถือ CA/certificate อย่างชัดเจน ไม่ข้าม Certificate warning; HTTP/WS อนุญาตเฉพาะ loopback development
 - ก่อน Login อนุญาตเฉพาะคำขอที่จำเป็น เช่น REGISTER และ LOGIN หลัง Login ผูก `user_id` กับ Connection Object ไม่เชื่อ `sender_id` หรือ Username ที่ Client อ้างมาในคำขอแชต
-- ปฏิเสธการ Login ซ้อนของบัญชีเดียวกันโดยไม่ตัด Session เดิม การตรวจและลงทะเบียน Session ต้องทำอย่างเป็นอะตอม ภายใต้ Lock
+- ปฏิเสธ password Login ซ้อนของบัญชีเดียวกันโดยไม่ตัด Session เดิม ยกเว้น Web `RESUME_SESSION` ด้วย token ปัจจุบันให้แท็บล่าสุดแทนตัวเก่า ตามที่ผู้ใช้ยืนยัน 7 พ.ย. 2026 การตรวจและลงทะเบียน Session ต้องทำอย่างเป็นอะตอม ภายใต้ Lock
 - Logout, Socket EOF และ Error ต้อง Cleanup Session และแจ้งรายชื่อออนไลน์ใหม่ ล้าง Registry เฉพาะเมื่อยังอ้างถึง Connection เดียวกัน ป้องกัน Cleanup เก่าไปล้าง Session ใหม่
 - ข้อความ Login ผิดใช้ข้อความรวม จำกัดความถี่การลอง Login และไม่เขียนรหัสผ่าน/Key ลง Log
-- MVP ไม่เก็บ Password บนเครื่อง Client และไม่ทำ Remember Password เมื่อเชื่อมต่อใหม่ให้ Login ใหม่ ไม่ต้องมี JWT สำหรับทุก Packet เพราะตัวตนผูกกับ Socket อยู่แล้ว
+- ไม่เก็บ Password บนเครื่อง Client; Web จำ opaque resume token อายุ 7 วันใน localStorage พร้อม expiry ฝั่ง Server เก็บ digest ใน memory ไม่แก้ SQLite เมื่อ restart server ต้อง Login ใหม่ ไม่ต้องมี JWT สำหรับทุก Packet เพราะตัวตนผูกกับ Socket อยู่แล้ว Legacy TCP ยังคง Login ใหม่เมื่อเชื่อมต่อใหม่
 - รายชื่อออนไลน์หมายถึงผู้ที่ Login และยังมี Connection ไม่ใช่รายชื่อบัญชีทั้งหมดใน Database
 
 ทุกการส่ง/อ่านข้อความ โหลดประวัติ ค้นหาไฟล์ ดาวน์โหลด และสรุป AI ต้องตรวจสิทธิ์ที่ Server ห้องส่วนตัวจำกัดคู่สนทนา ห้องกลุ่มจำกัดสมาชิก รายชื่อกลุ่มและสมาชิกเปิดดูได้ตาม R9 แต่เนื้อหายังต้องตรวจสิทธิ์

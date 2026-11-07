@@ -7,7 +7,7 @@
 
 ## สถานะสำหรับเริ่ม session ถัดไป
 
-- อัปเดตล่าสุด: 6 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
+- อัปเดตล่าสุด: 7 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
 - ผ่านแล้ว: CP00 เตรียม Local environment ด้วย uv, CP01 Packages และ Config,
   CP02 Socket Protocol, CP03 SQLite/สิทธิ์เข้าถึงข้อมูล, CP04 TLS/Authentication
   และ CP05 Chat Server สำหรับแชตส่วนตัวและกลุ่ม; CP06 React Web App ผู้ใช้ตรวจรับแล้ว
@@ -18,13 +18,17 @@
   ตรวจภาพ desktop/mobile แล้ว ดูบันทึก session Minimal / UX review ด้านล่าง
 - ภาพโปรไฟล์ล่าสุด: เปลี่ยนจากแผ่นปกตัวอย่างเป็นภาพเดี่ยวจากเว็บตูน 6 ภาพ
   พร้อมกรอบใบหน้ารายภาพและลิงก์ต้นทาง; build และ Browser layout test ผ่านหลังเปลี่ยนภาพ
+- Auth ล่าสุด: **จำการเข้าสู่ระบบด้วย localStorage — DONE**; opaque resume token อายุ 7 วัน
+  Server เก็บ digest ใน memory ไม่แก้ SQLite; refresh/ปิดเปิด browser กลับเข้าได้
+  แท็บล่าสุดที่ถือ token เดียวกันเข้าแทนตัวเก่า Logout เพิกถอน token และ restart server ต้อง Login ใหม่
 - คำสั่งผู้ใช้ 6 พ.ย. 2026 เปลี่ยนจาก Tkinter เป็น `React → WebSocket → Python → SQLite`
   ใช้ branch `feat/react-websocket` ไม่มี prefix `codex/`
 - สถานะโค้ด: React/TypeScript/Vite แบบ Minimal, WebSocket adapter, Python HTTP assets,
   Login/Register, ออนไลน์, Private/Group chat, Join, Draft และ Disconnect/Re-login
   ใช้ Auth/Chat/permissions และ Database เดิม ไม่มี schema migration
-- Python tests ล่าสุดจากรอบก่อน **476 passed** และ Browser E2E รอบ UX **14 passed**
-  (CP06 6 + CP07/CP08 4 + CP09 1 + UX regression 3; รอบ UX แก้เฉพาะ frontend ไม่รัน Python ซ้ำ)
+- ผลตรวจรอบ resume: Python full suite **489 passed** แล้วเพิ่ม 3 กรณีทดสอบ
+  และรัน supplemental **22 passed** (ครอบคลุม 3 กรณีใหม่; final collection 492 tests)
+  Browser E2E ทั้งชุด **23 passed** และตรวจ Vite/React StrictMode เพิ่ม **2 passed**
   ผ่าน production build จริง สัญญา History/Search/Files อยู่ใน docs/history-files.md, AI ใน docs/ai.md
   หลักฐานหน้าเว็บ CP06 ใน docs/evidence/cp06-web/; Tkinter tests/ภาพเดิมเป็นประวัติก่อนย้าย UI
 - วิธีเริ่ม: `npm --prefix web ci`, `npm --prefix web run build`,
@@ -71,9 +75,9 @@
 | CP01 | Packages และ Config | CP00 | DONE | `tests/test_config.py`: 69 passed; import, defaults และ Config จาก Local `.env` ผ่าน ดูบันทึก CP01 |
 | CP02 | Socket Protocol | CP01 | DONE | `tests/test_protocol.py`: 83 passed ผ่าน TCP loopback จริง; ดูสัญญาใน docs/protocol.md และบันทึก CP02 |
 | CP03 | SQLite และสิทธิ์เข้าถึงข้อมูล | CP02 | DONE | Database 51 + Permissions 31 passed ด้วย Temporary SQLite; Constraints/Reopen/Rollback/Join contention ผ่าน ดู docs/database.md และบันทึก CP03 |
-| CP04 | TLS และ Authentication | CP03 | DONE | Auth 19 + TLS integration 60 passed ผ่าน TCP/TLS จริง รวม CA/Hostname/Expired cert, Login ซ้อน, Cleanup และ CLI; ดู docs/authentication.md และบันทึก CP04 |
+| CP04 | TLS และ Authentication | CP03 | DONE | Auth/TLS เดิมผ่าน; เพิ่ม Web resume token อายุ 7 วันใน localStorage พร้อม atomic takeover/revoke/expiry ดู docs/authentication.md และบันทึก resume |
 | CP05 | Server สำหรับแชตส่วนตัวและกลุ่ม | CP04 | DONE | Chat integration 39 passed ผ่าน TCP/TLS จริงด้วย Clients A/B/C; Private/Group/Join boundary/Actor spoofing/Event isolation/Restart ผ่าน ดู docs/chat.md และบันทึก CP05 |
-| CP06 | React WebSocket และตรวจรับ R1–R11 | CP05 | DONE | ผู้ใช้ตรวจรับผ่านหลังเปิด HTTPS บน LAN; Python 400 / Browser 6 passed; รายละเอียดหลักฐานสองเครื่องเก็บเพิ่มสำหรับ CP11 |
+| CP06 | React WebSocket และตรวจรับ R1–R11 | CP05 | DONE | ผู้ใช้ตรวจรับผ่านหลังเปิด HTTPS บน LAN; Browser ล่าสุด 23 passed รวมปิดเปิด Chrome และจำ session; รายละเอียดหลักฐานสองเครื่องเก็บเพิ่มสำหรับ CP11 |
 | CP07 | ประวัติและการค้นหา | CP06 | DONE | History 34 tests + TLS 1 + Browser 2 passed; Restart process จริงแล้วประวัติอยู่ครบ ดู docs/history-files.md และบันทึก CP07–CP08 |
 | CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | DONE | Files 26 tests + Browser 2 passed; 5 MiB ไป-กลับ SHA-256 ตรง, เกินขนาด/ผิดลำดับ/Hash ผิด/Path traversal/หลุดกลางทาง/เดา ID ดูบันทึก CP07–CP08 |
 | CP09 | AI สรุปบทสนทนา | CP08 | DONE | AI 14 tests + Browser 1 passed (fake/mock); เรียก Anthropic `claude-haiku-5-5` จริงผ่าน `scripts/ai_live_check.py` และ Browser แล้ว ดู docs/ai.md และบันทึก CP09 |
@@ -1014,6 +1018,45 @@ Browser tests: `npm --prefix web run test:e2e` ใช้ Chrome และ SQLite
 - ผลตรวจ: production build ผ่าน; desktop AI scroll regression **5 passed** จากการรันซ้ำ 5 รอบ
   และ Browser E2E ทั้งชุด **14 passed** บน source สุดท้าย; `git diff --check` ผ่าน
 - Commit และ push branch เพื่อเปิด PR เทียบ `main` ตามคำสั่งผู้ใช้ ไม่ merge เอง
+
+### Session Auth — จำการเข้าสู่ระบบด้วย localStorage
+
+- วันที่: 7 พฤศจิกายน 2026 (Asia/Bangkok)
+- ผู้ใช้ยืนยัน token อายุ 7 วันนับจาก password login และเมื่อเปิดหลายแท็บ
+  ให้แท็บล่าสุดที่ถือ token เดียวกันเข้าแทนตัวเก่า ไม่มี SQLite migration
+- Server ออก opaque token สุ่ม 32 bytes เก็บ SHA-256 digest/user/expiry ใน memory
+  แยกจาก connection registry; `RESUME_SESSION` ตรวจ token/expiry/rate limit แล้ว
+  เปลี่ยน owner ภายใต้ lock พร้อม signal ให้ connection เดิมปิด ไม่ทำ network I/O ใน lock
+  Resume ไม่ต่ออายุ token; password login ใหม่หลัง offline เพิกถอน token เก่า
+- EOF/error/ปิดแท็บล้างออนไลน์และ partial uploads โดยยังจำ token;
+  `LOGOUT` เพิกถอน token ปัจจุบัน Stale cleanup/queued logout ของ connection เก่า
+  ไม่ล้างตัวตนหรือ token ของ owner ใหม่ Legacy TCP ไม่เปิด resume และคงสัญญาเดิม
+- Browser เก็บเฉพาะ `resume_token`/`expires_at` ใน `studygroup.session.v1`
+  เมื่อ mount อ่าน token และ resume แล้วโหลดห้อง/ประวัติ ไม่ replay ข้อความหรือไฟล์ค้าง
+  Storage event ล้างผู้ใช้เมื่อ logout/เปลี่ยนบัญชีในอีกแท็บ โดยไม่ auto-resume แย่งกันไปมา
+  Token ผิด/หมดอายุ/Server restart กลับหน้า Login; network error เก็บ token ไว้
+  JSON เสีย/Storage ใช้ไม่ได้ยังเปิดหน้า Login และใช้งานปกติได้
+- ปรับ Auth/architecture/protocol/README/HANDOFF ให้ตรงพฤติกรรม และปรับ history/files E2E
+  จาก manual login หลัง reload เป็นรอ automatic resume
+- ผลตรวจจริง:
+  - `npm --prefix web run build` — ผ่าน
+  - `uv run --locked pytest tests/test_web.py tests/test_auth.py tests/test_tls_integration.py tests/test_protocol.py -q --tb=short`
+    — **198 passed** ก่อนเพิ่มกรณี concurrent resume และ token rotation
+  - `uv run --locked pytest -q --tb=short -W error` — **489 passed** (108.68 วินาที)
+  - หลัง full suite เพิ่ม 3 tests; `uv run --locked pytest tests/test_auth.py -q --tb=short -W error tests/test_web.py::test_password_login_after_disconnect_revokes_previous_unexpired_token`
+    — **22 passed** รวม concurrent resume/stale logout, failed queue และ token rotation;
+    final collection **492 tests** ครอบคลุมครบระหว่างสองรอบ ไม่รัน full suite ซ้ำโดยไม่มี source เปลี่ยน
+  - `npm --prefix web run test:e2e` — **23 passed** (44.0 วินาที) รวม 9 session tests
+    ปิด Chrome process จริงแล้วเปิดใหม่ด้วย temporary persistent profile, reload/เปิดแท็บ,
+    takeover/logout/copy token เดิม, storage เสีย/ถูกบล็อก และ socket error ชั่วคราว
+  - Vite dev + React StrictMode: ใช้ config ชั่วคราวนอก repo รัน session reload/takeover
+    — **2 passed** (5.4 วินาที); `git diff --check` ผ่าน
+- Tests ใช้ temporary SQLite/profile และ mock AI ไม่อ่าน/แก้ข้อมูลจริงหรือเรียก paid API
+  Sandbox รอบแรกเปิด localhost ไม่ได้ จึงรัน integration/E2E ด้วยสิทธิ์ที่รองรับ localhost
+- ข้อจำกัดตามที่ตกลง: restart server ต้อง Login ใหม่ Token ที่อยู่ใน localStorage อ่านได้
+  ด้วย JavaScript และหาก logout ระหว่าง server เข้าไม่ถึงจะล้างได้เฉพาะ Browser จนกว่า
+  token ฝั่ง Server หมดอายุหรือ server restart; token หมดอายุไม่ตัด socket ที่เปิดค้างอยู่
+- หลังตรวจงาน ผู้ใช้สั่ง commit และ push เข้า `main` โดยตรง งานถัดไปยังเป็น CP10 Cloud deployment
 
 ### แบบบันทึกสำหรับ session ถัดไป
 

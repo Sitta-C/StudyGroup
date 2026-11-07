@@ -60,10 +60,58 @@ class QueuedConnection:
     def __init__(self):
         self.user = None
         self.packets = []
+        self.closed = False
 
     def enqueue(self, packet):
         self.packets.append(packet)
         return True
+
+    def request_close(self):
+        self.closed = True
+
+
+def test_concurrent_resume_has_one_owner_and_stale_logout_cannot_revoke_token():
+    registry = SessionRegistry(resume_ttl=60, clock=lambda: 100)
+    user = {"id": 1, "username": "Alice"}
+    old = QueuedConnection()
+    assert registry.login(old, user, make_response("login", {"user": user}))
+    remembered = old.packets[0]["data"]["result"]
+    peers = [QueuedConnection() for _ in range(8)]
+    barrier = threading.Barrier(len(peers))
+
+    def resume(peer):
+        barrier.wait(timeout=5)
+        return registry.resume(peer, remembered["resume_token"], "resume")
+
+    with ThreadPoolExecutor(max_workers=len(peers)) as pool:
+        assert all(pool.map(resume, peers))
+    live = [peer for peer in peers if not peer.closed]
+    assert len(live) == 1
+    assert registry.users() == [user]
+    assert old.closed and old.user is None
+    assert all(peer.packets[0]["data"]["result"] == remembered for peer in peers)
+    # Both ordinary cleanup and a queued logout from an obsolete owner are harmless.
+    for stale in [old, *(peer for peer in peers if peer.closed)]:
+        stale.user = dict(user)
+        assert not registry.logout(stale, make_response("late-logout", {}))
+    latest = QueuedConnection()
+    assert registry.resume(latest, remembered["resume_token"], "again")
+    assert live[0].closed
+    assert registry.logout(latest, make_response("logout", {}))
+    assert not registry.resume(QueuedConnection(), remembered["resume_token"], "revoked")
+
+
+def test_failed_resume_queue_leaves_existing_connection_and_token_intact():
+    registry = SessionRegistry(resume_ttl=60, clock=lambda: 100)
+    user = {"id": 1, "username": "Alice"}
+    old = QueuedConnection()
+    assert registry.login(old, user, make_response("login", {"user": user}))
+    token = old.packets[0]["data"]["result"]["resume_token"]
+    failed = QueuedConnection()
+    failed.enqueue = lambda _: False
+    assert not registry.resume(failed, token, "failed")
+    assert failed.user is None and old.user == user and not old.closed
+    assert registry.resume(QueuedConnection(), token, "working")
 
 
 def test_registry_atomic_duplicate_login_and_stale_cleanup():

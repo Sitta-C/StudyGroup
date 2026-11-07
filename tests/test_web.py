@@ -1,8 +1,9 @@
 """Browser transport over real HTTP/WebSocket/WSS and temporary SQLite."""
 
-from dataclasses import replace
+import hashlib
 import http.client
 import json
+from dataclasses import replace
 from pathlib import Path
 import ssl
 
@@ -10,6 +11,7 @@ import pytest
 from websockets.exceptions import ConnectionClosed, InvalidStatus
 from websockets.sync.client import connect
 
+from server.sessions import RESUME_TTL
 from server.web import WebServer
 from server.web_config import WebConfig
 from shared.config import ConfigError
@@ -208,15 +210,109 @@ def test_restart_preserves_accounts_rooms_and_messages(web_factory):
     first = web_factory()
     with peer(first) as ws:
         client = BrowserPeer(ws)
-        client.login("Alice")
+        client.ok(R.REGISTER, {"username": "Alice", "password": PASSWORD, "confirm_password": PASSWORD})
+        remembered = client.ok(R.LOGIN, {"username": "Alice", "password": PASSWORD})
         room = client.ok(R.GROUP_CREATE, {"name": "คงอยู่หลัง restart"})["room"]
         client.ok(R.MESSAGE_SEND, {"room_id": room["id"], "text": "persisted"})
     first.stop()
     second = web_factory(data_dir=first.config.data_dir)
     with peer(second) as ws:
         client = BrowserPeer(ws)
+        assert client.request(R.RESUME_SESSION, {"resume_token": remembered["resume_token"]})["error"]["code"] == "AUTH_FAILED"
         assert client.request(R.USERS_LIST)["error"]["code"] == "AUTH_REQUIRED"
         client.ok(R.LOGIN, {"username": "Alice", "password": PASSWORD})
         assert client.ok(R.GROUP_LIST)["groups"] == [room]
     with second.database.connect() as db:
         assert db.execute("SELECT text FROM messages").fetchone()[0] == "persisted"
+
+
+def remembered_login(client, username="RememberAlice"):
+    client.ok(R.REGISTER, {"username": username, "password": PASSWORD, "confirm_password": PASSWORD})
+    return client.ok(R.LOGIN, {"username": username, "password": PASSWORD})
+
+
+def test_resume_survives_close_takes_over_old_socket_and_logout_revokes(web):
+    with peer(web) as wa, peer(web) as wb, peer(web) as wc:
+        a, b, c = (BrowserPeer(ws) for ws in (wa, wb, wc))
+        remembered = remembered_login(a)
+        room = a.ok(R.GROUP_CREATE, {"name": "Remembered room"})["room"]
+        a.ok(R.MESSAGE_SEND, {"room_id": room["id"], "text": "before refresh"})
+        # A password login from another browser still cannot displace this one.
+        assert b.request(R.LOGIN, {"username": "RememberAlice", "password": PASSWORD})["error"]["code"] == "ALREADY_LOGGED_IN"
+        assert b.ok(R.RESUME_SESSION, {"resume_token": remembered["resume_token"]}) == remembered
+        assert b.ok(R.GROUP_LIST)["groups"] == [room]
+        with pytest.raises(ConnectionClosed):
+            while True:
+                wa.recv(timeout=3)
+        # Delayed cleanup of the replaced socket must not clear the new identity.
+        assert b.ok(R.USERS_LIST)["users"] == [remembered["user"]]
+        wb.close()
+        assert c.ok(R.RESUME_SESSION, {"resume_token": remembered["resume_token"]}) == remembered
+        assert c.ok(R.HISTORY_GET, {"room_id": room["id"], "limit": 50})["messages"][0]["text"] == "before refresh"
+        c.ok(R.LOGOUT)
+        assert c.request(R.RESUME_SESSION, {"resume_token": remembered["resume_token"]})["error"]["code"] == "AUTH_FAILED"
+        assert c.request(R.USERS_LIST)["error"]["code"] == "AUTH_REQUIRED"
+        assert web.registry.users() == []
+
+
+@pytest.mark.parametrize("token", [None, 123, [], {}, "", "a" * 42, "a" * 44, "💥" * 43, "a" * 43])
+def test_invalid_resume_token_does_not_authenticate(web, token):
+    with peer(web) as ws:
+        client = BrowserPeer(ws)
+        assert client.request(R.RESUME_SESSION, {"resume_token": token})["error"]["code"] == "AUTH_FAILED"
+        assert client.request(R.USERS_LIST)["error"]["code"] == "AUTH_REQUIRED"
+        assert web.registry.users() == []
+
+
+def test_resume_expiry_is_absolute_and_new_password_login_replaces_old_token(web):
+    now = [2_000_000_000]
+    web.registry._clock = lambda: now[0]
+    with peer(web) as wa, peer(web) as wb:
+        a, b = BrowserPeer(wa), BrowserPeer(wb)
+        remembered = remembered_login(a)
+        assert remembered["expires_at"] == now[0] + RESUME_TTL
+        assert len(remembered["resume_token"]) == 43
+        assert hashlib.sha256(remembered["resume_token"].encode("ascii")).digest() in web.registry._resume
+        now[0] += RESUME_TTL - 1
+        assert b.ok(R.RESUME_SESSION, {"resume_token": remembered["resume_token"]}) == remembered
+        wb.close()
+    now[0] += 1
+    with peer(web) as ws:
+        client = BrowserPeer(ws)
+        assert client.request(R.RESUME_SESSION, {"resume_token": remembered["resume_token"]})["error"]["code"] == "AUTH_FAILED"
+        fresh = client.ok(R.LOGIN, {"username": "RememberAlice", "password": PASSWORD})
+        assert fresh["resume_token"] != remembered["resume_token"]
+        assert fresh["expires_at"] == now[0] + RESUME_TTL
+
+
+def test_password_login_after_disconnect_revokes_previous_unexpired_token(web):
+    with peer(web) as wa:
+        a = BrowserPeer(wa)
+        remembered = remembered_login(a)
+        # Explicit cleanup models the disconnected owner before a new login.
+        old = next(c for c in web._connections if c.user is not None)
+        web.registry.logout(old)
+    with peer(web) as wb, peer(web) as wc:
+        b, c = BrowserPeer(wb), BrowserPeer(wc)
+        fresh = b.ok(R.LOGIN, {"username": "RememberAlice", "password": PASSWORD})
+        assert fresh["resume_token"] != remembered["resume_token"]
+        assert c.request(R.RESUME_SESSION, {"resume_token": remembered["resume_token"]})["error"]["code"] == "AUTH_FAILED"
+        assert b.ok(R.USERS_LIST)["users"] == [remembered["user"]]
+        events = b.drain("USERS_UPDATED")
+        assert events and all(set(event) == {"users", "revision"} for event in events)
+        assert c.ok(R.RESUME_SESSION, {"resume_token": fresh["resume_token"]}) == fresh
+
+
+def test_resume_validates_fields_and_is_rate_limited_without_disturbing_login(web):
+    from server.rate_limit import AuthRateLimiter
+
+    with peer(web) as wa, peer(web) as wb:
+        a, b = BrowserPeer(wa), BrowserPeer(wb)
+        remembered = remembered_login(a)
+        web.router.auth.limiter = AuthRateLimiter(address_limit=1)
+        assert b.request(R.RESUME_SESSION, {})["error"]["code"] == "INVALID_INPUT"
+        assert b.request(R.RESUME_SESSION, {"resume_token": remembered["resume_token"], "user_id": 1})["error"]["code"] == "INVALID_INPUT"
+        assert b.request(R.RESUME_SESSION, {"resume_token": "x" * 43})["error"]["code"] == "AUTH_FAILED"
+        assert b.request(R.RESUME_SESSION, {"resume_token": remembered["resume_token"]})["error"]["code"] == "RATE_LIMITED"
+        assert a.ok(R.USERS_LIST)["users"] == [remembered["user"]]
+        assert a.request(R.RESUME_SESSION, {"resume_token": remembered["resume_token"]})["error"]["code"] == "ALREADY_LOGGED_IN"

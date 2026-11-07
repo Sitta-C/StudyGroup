@@ -82,9 +82,9 @@ test('history survives reload, pages older messages without gaps, and search jum
   expect(sent.every(result => result.ok)).toBeTruthy()
   await expect(page.locator('.ss-bubble')).toHaveCount(71)
 
-  // Close the app completely (reload drops all in-memory state) and log in again.
+  // Reload drops app memory; the stored token restores authentication.
   await page.reload()
-  await login(page, owner)
+  await expect(page.getByRole('navigation')).toBeVisible()
   await openGroup(page, group)
   await expect(page.locator('.ss-bubble')).toHaveCount(50)
   await expect(page.locator('.ss-bubble').last()).toHaveText('ข้อความหมายเลข 070')
@@ -97,7 +97,7 @@ test('history survives reload, pages older messages without gaps, and search jum
 
   // Keyword search with a local-date range, then jump to an old result after a fresh reload.
   await page.reload()
-  await login(page, owner)
+  await expect(page.getByRole('navigation')).toBeVisible()
   await openGroup(page, group)
   await expect(page.locator('.ss-bubble')).toHaveCount(50)
   await page.getByRole('button', { name: 'ค้นหาข้อความ', exact: true }).click()
@@ -144,7 +144,7 @@ test('new members see history only from their join point and outsiders cannot re
   await b.getByRole('button', { name: 'เข้าร่วมด้วยตัวเอง' }).click()
   await expect(b.getByText('คุณจะเห็นข้อความตั้งแต่ตอนที่เข้าร่วมกลุ่มเป็นต้นไป')).toBeVisible()
   await send(a, 'หลัง Late เข้าร่วม')
-  await b.reload(); await login(b, bn); await openGroup(b, group)
+  await b.reload(); await expect(b.getByRole('navigation')).toBeVisible(); await openGroup(b, group)
   await expect(b.locator('.ss-bubble')).toHaveText(['หลัง Late เข้าร่วม'])
   // An outsider guessing room IDs gets FORBIDDEN for history and search.
   const outsider = await rawClient(a, name('Out'), group, [
@@ -178,7 +178,7 @@ test('files upload with progress, download with matching SHA-256, list in Files 
   await a.getByRole('button', { name: 'ปิดข้อความแจ้งไฟล์' }).click()
 
   // Files tab lists permitted files; history keeps them after a reload.
-  await b.reload(); await login(b, bn); await openGroup(b, group)
+  await b.reload(); await expect(b.getByRole('navigation')).toBeVisible(); await openGroup(b, group)
   await b.getByRole('tab', { name: 'ไฟล์', exact: true }).click()
   await expect(b.locator('.ss-file-row')).toHaveCount(1)
   await expect(b.locator('.ss-file-row code')).toBeHidden()

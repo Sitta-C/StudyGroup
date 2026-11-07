@@ -1,5 +1,6 @@
 """Credential handlers. Internal database rows never cross the wire."""
 
+import re
 import sqlite3
 
 from server.database import create_user, find_user_for_login, normalize_username
@@ -38,6 +39,15 @@ class AuthHandlers:
             return
         if connection.user is not None:
             raise AuthError(ErrorCode.ALREADY_LOGGED_IN, "Connection is already logged in")
+        if kind == RequestType.RESUME_SESSION:
+            fields(data, ("resume_token",))
+            if not self.limiter.allow(connection.address):
+                raise AuthError(ErrorCode.RATE_LIMITED, "Too many authentication attempts; try later")
+            token = data["resume_token"]
+            if (not isinstance(token, str) or re.fullmatch(r"[A-Za-z0-9_-]{43}", token) is None
+                    or not self.registry.resume(connection, token, request_id)):
+                raise AuthError(ErrorCode.AUTH_FAILED, "Session expired or invalid; login again")
+            return
         fields(data, ("username", "password", "confirm_password")
                if kind == RequestType.REGISTER else ("username", "password"))
         # Consume the address budget even for invalid input. Account keys use

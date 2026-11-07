@@ -14,6 +14,8 @@ uv run --locked --env-file .env python -m server.web
 เปิด **http://127.0.0.1:8000** — checkout ใหม่ที่ไม่มี `.env` ให้คัดลอกจาก `.env.example` ก่อน
 บัญชีและข้อความอยู่ที่ `data/studygroup.db` ฝั่ง Python ใช้ข้อมูลเดิมได้
 ไม่ต้องกรอกที่อยู่ Server ในหน้า Login
+Web จำการเข้าสู่ระบบ 7 วันด้วย resume token ใน localStorage จึง refresh/ปิดเปิด browser ได้
+โดยไม่กรอกรหัสผ่านใหม่ Logout ล้าง token และ restart server ต้อง Login ใหม่
 
 มีออนไลน์/แชตส่วนตัว/สร้างกลุ่ม/ดูสมาชิก/Join เอง/ข้อความสด/Draft และแจ้งเมื่อหลุดแล้ว
 ผู้ใช้ตรวจรับ CP06 แล้ว CP07 โหลดประวัติหลังเปิดใหม่/โหลดหน้าเก่า/ค้นหาด้วยคำและวันที่

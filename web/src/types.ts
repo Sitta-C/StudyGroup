@@ -9,7 +9,8 @@ export type AiResult = { room_id: number; summary: Summary; message_count: numbe
 export type AiState = { loading: boolean; error: string; result: AiResult | null }
 export type FileChunk = { attachment_id: number; name: string; size: number; sha256: string; offset: number; data: string; done: boolean }
 export type Results = {
-  REGISTER: { user: User }; LOGIN: { user: User }; LOGOUT: Record<string, never>
+  REGISTER: { user: User }; LOGIN: { user: User; resume_token: string; expires_at: number }
+  RESUME_SESSION: Results['LOGIN']; LOGOUT: Record<string, never>
   USERS_LIST: { users: User[] }; PRIVATE_ROOM_OPEN: { room: Room }
   GROUP_CREATE: { room: Room }; GROUP_JOIN: { room: Room }
   GROUP_LIST: { groups: Room[]; next_after_id: number | null }
