@@ -1,5 +1,9 @@
 # StudyGroup architecture
 
+ดู [แผนที่ระบบและเส้นทางอ่านโค้ด](architecture/README.md) สำหรับแผนภาพทั้งโปรเจกต์ 11 มุมมอง,
+ตำแหน่ง implementation ของ protocol ทั้ง 18 คำขอ และลิงก์แก้ภาพใน Mermaid Live
+หรือ [เปิดชุดแผนภาพแบบขยายดูได้](architecture/index.html)
+
 เป้าหมายที่ผู้ใช้เลือกเมื่อ 6 พ.ย. 2026: **React → WebSocket → Python → SQLite**
 Browser ทำ UI แบบ Focus ส่วน Python ตรวจตัวตน/สิทธิ์และเก็บข้อมูลที่ Server
 Local เปิด HTTP/WS เฉพาะ loopback; LAN/Production ใช้ HTTPS/WSS

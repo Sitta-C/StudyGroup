@@ -1,0 +1,56 @@
+---
+title: StudyGroup - Project Network Map
+---
+flowchart TB
+  subgraph browser["BROWSER · React / TypeScript"]
+    ui["App.tsx<br/>Views and user actions"]
+    state["chat.ts · ChatController<br/>Rooms, drafts, history, files, AI"]
+    transport["transport.ts · Transport<br/>Request IDs and pending promises"]
+    ui -->|"calls controller methods"| state
+    state -->|"request type + data"| transport
+  end
+  subgraph python["PYTHON PROCESS · python -m server.web"]
+    web["web.py · WebConnection<br/>WebSocket /ws + outbox owner"]
+    codec["shared/protocol.py + validation.py<br/>Strict JSON envelope v1"]
+    router["router.py · Router.dispatch<br/>Authentication gate"]
+    auth["handlers/auth.py<br/>Register, login, resume, presence"]
+    chat["handlers/chat.py<br/>Private rooms, groups, text"]
+    history["handlers/history.py<br/>History and search"]
+    files["handlers/files.py<br/>Chunk upload and download"]
+    ai["handlers/ai.py<br/>Group summary worker pool"]
+    access["permissions.py + database.py<br/>Membership, visibility, transactions"]
+    registry["sessions.py · SessionRegistry<br/>Identity, resume digests, live events"]
+    web -->|"decode text message"| codec
+    codec -->|"validated request"| router
+    router -->|"auth commands"| auth
+    router -->|"room and text commands"| chat
+    router -->|"read commands"| history
+    router -->|"file commands"| files
+    router -->|"AI_SUMMARIZE"| ai
+    auth -->|"bind identity / enqueue presence"| registry
+    auth -->|"read / create account"| access
+    chat -->|"authorize / commit"| access
+    history -->|"query visible messages"| access
+    files -->|"authorize / commit metadata"| access
+    ai -->|"read / recheck visible input"| access
+    chat -->|"publish after commit"| registry
+    files -->|"publish after commit"| registry
+    registry -->|"enqueue events; no socket I/O"| web
+  end
+  db[("SQLite<br/>studygroup.db")]
+  disk[("Filesystem<br/>uploads/")]
+  provider["ai_service.py → Anthropic<br/>HTTPS POST /v1/messages"]
+  transport -->|"WS / WSS · JSON text"| web
+  web -->|"RESPONSE + events"| transport
+  transport -->|"resolve promise / onEvent"| state
+  access -->|"SQL via sqlite3"| db
+  files -->|"write partial / read bytes"| disk
+  ai -->|"provider.complete in worker"| provider
+  classDef client fill:#e9e6ff,stroke:#6554c0,color:#241b47
+  classDef server fill:#e4f1ff,stroke:#3478b6,color:#12314e
+  classDef store fill:#e5f5ed,stroke:#328263,color:#123b2c
+  classDef external fill:#fff1dc,stroke:#b77b25,color:#5a360a
+  class ui,state,transport client
+  class web,codec,router,auth,chat,history,files,ai,access,registry server
+  class db,disk store
+  class provider external

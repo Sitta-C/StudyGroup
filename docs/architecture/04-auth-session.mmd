@@ -1,0 +1,41 @@
+---
+title: StudyGroup - Login, Resume and Logout
+---
+sequenceDiagram
+  autonumber
+  participant B as Browser · chat.ts
+  participant W as WebConnection / Router
+  participant A as AuthHandlers
+  participant D as SQLite + Passwords
+  participant S as SessionRegistry
+  B->>W: Open /ws (Origin validated at handshake)
+  B->>W: LOGIN {username, password, id}
+  W->>A: dispatch on unauthenticated connection
+  A->>A: Validate input, rate limit, acquire hash slot
+  A->>D: Lookup normalized username, verify Argon2id
+  D-->>A: User / generic authentication failure
+  A->>S: login(connection, user, response)
+  S->>S: Atomically bind user, store token digest in RAM
+  S-->>W: Enqueue RESPONSE with token + expiry, then USERS_UPDATED
+  W-->>B: RESPONSE and presence event
+  B->>B: session.ts saves token + expiry in localStorage
+  B->>W: USERS_LIST, GROUP_LIST, PRIVATE_ROOM_LIST
+  opt Refresh or reopen with saved token
+    B->>W: New /ws + RESUME_SESSION {resume_token, id}
+    W->>A: Validate token and rate limit
+    A->>S: resume(connection, token, id)
+    S->>S: Check digest + expiry, replace prior live connection
+    S-->>W: Enqueue RESPONSE + updated presence
+    W-->>B: Restore identity, reload server state
+  end
+  alt Explicit LOGOUT
+    B->>B: Clear saved token locally
+    B->>W: LOGOUT {id}
+    W->>A: logout request
+    A->>S: Revoke token, remove online identity
+    B->>B: Clear UI state after request attempt
+  else Socket closes
+    W->>S: Remove online identity, retain resume digest
+  end
+  Note over B,S: Resume expires after 7 days, server restart loses all resume digests.
+  Note over A,S: REGISTER creates an account only. Duplicate password login is rejected.

@@ -1,0 +1,30 @@
+---
+title: StudyGroup - Send, Publish and Read History
+---
+sequenceDiagram
+  autonumber
+  participant A as Sender · ChatController
+  participant W as WebConnection / Router
+  participant C as ChatHandlers
+  participant D as database.py + permissions.py
+  participant S as SessionRegistry / outboxes
+  participant B as Authorized recipient
+  A->>W: MESSAGE_SEND {room_id, text, id}
+  W->>C: dispatch, actor = connection.user
+  C->>C: Acquire publish_lock
+  C->>D: BEGIN IMMEDIATE, require_member, INSERT message
+  D-->>C: message row + visible recipient IDs, COMMIT
+  C-->>W: Enqueue RESPONSE {message} for sender
+  C->>S: publish MESSAGE_NEW to permitted live user IDs
+  S-->>W: Enqueue sender echo
+  W-->>A: RESPONSE + MESSAGE_NEW
+  S-->>B: Recipient connection sends MESSAGE_NEW
+  A->>A: Merge by message_id, clear unchanged draft after ACK
+  Note over A,D: Disconnect after COMMIT can lose ACK. Keep draft, do not auto-replay.
+  A->>W: HISTORY_GET or HISTORY_SEARCH {room_id, before_id, ...}
+  W->>D: HistoryHandlers → search_messages
+  D->>D: Apply membership + join boundary + ready attachment filter
+  D-->>W: Keyset page + next_before_id
+  W-->>A: RESPONSE matched by request id
+  Note over A,D: GET returns oldest-first within page, SEARCH returns newest-first.
+  Note over C,S: GROUP_CREATE / GROUP_JOIN commit before GROUPS_UPDATED invalidation.

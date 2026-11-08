@@ -1,0 +1,37 @@
+---
+title: StudyGroup - Local, Development and Recorded Railway Deployment
+---
+flowchart TB
+  subgraph cloud["RAILWAY · topology recorded in docs/railway.md on 7 Nov 2026"]
+    browser["User browser"]
+    edge["Railway public edge<br/>TLS termination"]
+    app["One Python process / one replica<br/>server.web on 0.0.0.0:8000<br/>Serves React build and /ws"]
+    volume[("Persistent volume · /app/data<br/>studygroup.db + uploads/")]
+    anthropic["Anthropic API<br/>Optional provider"]
+    backup["scripts/data_backup.py<br/>SQLite snapshot + ready attachments<br/>Verified ZIP and SHA-256"]
+    browser -->|"HTTPS assets + WSS commands"| edge
+    edge -->|"HTTP / WS inside service"| app
+    app -->|"SQL + filesystem I/O"| volume
+    app -->|"HTTPS /v1/messages"| anthropic
+    volume -->|"read consistent snapshot"| backup
+  end
+  subgraph local["LOCAL · default loopback; optional direct TLS for LAN"]
+    localBrowser["Browser"]
+    localApp["server.web · 127.0.0.1:8000<br/>web/dist + /ws<br/>Optional TLS cert/key"]
+    localBrowser -->|"HTTP/WS; HTTPS/WSS when TLS configured"| localApp
+  end
+  subgraph dev["FRONTEND DEVELOPMENT · Vite"]
+    devBrowser["Browser · localhost:5173"]
+    vite["Vite dev server<br/>React source + hot reload"]
+    devApp["Python · localhost:8000<br/>WebSocket handlers"]
+    devBrowser -->|"HTTP UI + /ws"| vite
+    vite -->|"Proxy /ws; preserve request Origin"| devApp
+  end
+  classDef server fill:#e4f1ff,stroke:#3478b6,color:#12314e
+  classDef storage fill:#e5f5ed,stroke:#328263,color:#123b2c
+  classDef client fill:#e9e6ff,stroke:#6554c0,color:#241b47
+  classDef external fill:#fff1dc,stroke:#b77b25,color:#5a360a
+  class app,localApp,devApp,vite,edge server
+  class volume,backup storage
+  class browser,localBrowser,devBrowser client
+  class anthropic external

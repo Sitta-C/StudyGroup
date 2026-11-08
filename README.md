@@ -27,6 +27,7 @@ Deploy บน Railway พร้อม Volume แล้ว ดู [คู่ม�
 - [วิธีติดตั้ง รัน พัฒนา React และตั้งค่า HTTPS/WSS](docs/setup.md)
 - [Railway และการสำรอง/กู้คืน SQLite พร้อมไฟล์แนบ](docs/railway.md)
 - [สถาปัตยกรรม](docs/architecture.md) · [Protocol](docs/protocol.md) · [ประวัติ/ค้นหา/ไฟล์](docs/history-files.md) · [AI](docs/ai.md)
+- [แผนที่ระบบและเส้นทางอ่านโค้ด 11 มุมมอง + Mermaid Live](docs/architecture/README.md) · [เปิดชุดแผนภาพ](docs/architecture/index.html)
 - [Checklist R1–R11 และการตรวจสองเครื่อง](docs/demo-checklist.md)
 - [Checkpoint และผลทดสอบล่าสุด](DEVELOPMENT.md) · [ข้อกำหนด](HANDOFF.md)
 - [ต้นแบบ Focus/Workspace](docs/prototypes/README.md)

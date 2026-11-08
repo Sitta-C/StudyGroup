@@ -1,0 +1,10 @@
+C4Context
+  title StudyGroup - C4 System Context
+  Person(student, "Student", "Chats and shares study materials")
+  System(studygroup, "StudyGroup", "Browser-based group and private chat")
+  System_Ext(anthropic, "Anthropic API", "Generates optional group summaries")
+  Rel(student, studygroup, "Chats and shares files", "HTTPS/WSS")
+  Rel(studygroup, anthropic, "Requests group summary", "JSON/HTTPS")
+  UpdateRelStyle(student, studygroup, $offsetX="65", $offsetY="-30")
+  UpdateRelStyle(studygroup, anthropic, $offsetX="65", $offsetY="-30")
+  UpdateLayoutConfig($c4ShapeInRow="1", $c4BoundaryInRow="1")

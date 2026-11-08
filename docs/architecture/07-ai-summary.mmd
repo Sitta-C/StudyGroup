@@ -1,0 +1,27 @@
+---
+title: StudyGroup - Optional AI Group Summary
+---
+sequenceDiagram
+  autonumber
+  participant B as Browser · summarize
+  participant W as WebConnection / Router
+  participant H as AIHandlers.handle
+  participant D as SQLite / permissions
+  participant J as AI worker · _run
+  participant A as AnthropicProvider
+  B->>W: AI_SUMMARIZE {room_id, id} (75s client deadline)
+  W->>H: Authenticated request
+  H->>D: Check group membership, read ≤ 50 visible messages
+  D-->>H: Ordered text + attachment names + metadata
+  H->>H: Check provider, busy user, 10s cooldown, max pending 8
+  H->>J: Submit job to pool (2 workers)
+  Note over W,J: Connection thread can continue processing chat while AI runs.
+  J->>A: complete(system, build_prompt(room_name, lines))
+  A->>A: urllib.request POST /v1/messages over HTTPS
+  A-->>J: Provider text / mapped availability error
+  J->>J: parse_summary, validate structured topics, agreements, tasks, deadlines
+  J->>D: New DB connection: recheck member + last visible message
+  J->>W: Enqueue RESPONSE only if same user is still on same connection
+  W-->>B: RESPONSE matched by original id
+  Note over B,A: API key stays on server. File bytes are not sent to the provider.
+  Note over H,A: Empty input returns empty summary, mock provider is explicit test/demo mode.

@@ -1,0 +1,33 @@
+---
+title: StudyGroup - Protocols and Adapter Boundaries
+---
+flowchart TB
+  subgraph primary["PRIMARY · Browser runtime"]
+    browser["Browser + OS<br/>DNS, TCP/IP and TLS managed below app"]
+    http["HTTP(S) · page + assets + health<br/>web.py · http_request"]
+    ws["HTTP Upgrade /ws → WebSocket<br/>Origin check, framing, ping/pong<br/>websockets.sync library"]
+    envelope["App protocol v1 · JSON text<br/>v + id + type + data<br/>One envelope per WS message"]
+    browser -->|"GET / · /assets/ · /fonts/ · /health"| http
+    browser -->|"Transport.connect"| ws
+    ws -->|"text message; body ≤ 1 MiB"| envelope
+  end
+  subgraph tests["BACKEND TEST ADAPTER · not the browser path"]
+    peer["tests/tls_peer.py<br/>Verified TCP/TLS test peer"]
+    tcp["server/main.py + connection.py<br/>TLS socket listener / worker"]
+    frame["shared/protocol.py<br/>4-byte big-endian length + UTF-8 JSON"]
+    peer -->|"TLS 1.2+ · test port"| tcp
+    tcp -->|"recv_exact / recv_packet"| frame
+  end
+  validation["Shared strict codec + validate_packet<br/>Web adapter synthesizes the header internally<br/>No 4-byte header on the browser wire"]
+  router["Router.dispatch → feature handlers<br/>Same command names and response contract"]
+  ai["AI provider client · ai_service.py<br/>urllib.request POST over HTTPS<br/>Separate outbound connection"]
+  envelope -->|"decode_message"| validation
+  frame -->|"recv_packet"| validation
+  validation -->|"valid request"| router
+  router -->|"AI worker only"| ai
+  classDef primary fill:#e9e6ff,stroke:#6554c0,color:#241b47
+  classDef test fill:#f1f3f5,stroke:#78828d,color:#303943,stroke-dasharray:5 4
+  classDef core fill:#e4f1ff,stroke:#3478b6,color:#12314e
+  class browser,http,ws,envelope primary
+  class peer,tcp,frame test
+  class validation,router,ai core

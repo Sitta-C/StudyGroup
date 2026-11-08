@@ -1,0 +1,48 @@
+---
+title: StudyGroup - Persistent Relational Model
+---
+erDiagram
+  users ||--o{ rooms : creates
+  users ||--o{ room_members : joins
+  rooms ||--o{ room_members : contains
+  rooms ||--o{ messages : stores
+  users ||--o{ messages : sends
+  messages ||--o| attachments : has
+  users {
+    INTEGER id PK
+    TEXT username
+    TEXT username_normalized UK
+    TEXT password_hash
+    TEXT created_at
+  }
+  rooms {
+    INTEGER id PK
+    TEXT kind "private or group"
+    TEXT name
+    INTEGER created_by FK
+    INTEGER private_user_low FK
+    INTEGER private_user_high FK
+  }
+  room_members {
+    INTEGER room_id PK,FK
+    INTEGER user_id PK,FK
+    TEXT joined_at
+    INTEGER visible_after_message_id
+  }
+  messages {
+    INTEGER id PK
+    INTEGER room_id FK
+    INTEGER sender_id FK
+    TEXT kind "text or file"
+    TEXT text
+    TEXT created_at
+  }
+  attachments {
+    INTEGER id PK
+    INTEGER message_id FK,UK
+    TEXT stored_name UK
+    TEXT original_name
+    INTEGER size_bytes
+    TEXT sha256
+    TEXT status "pending, ready, failed"
+  }

@@ -1,0 +1,21 @@
+C4Container
+  title StudyGroup - C4 Containers
+  Person(student, "Student", "Uses the web interface")
+  System_Boundary(studygroup, "StudyGroup") {
+    Container(spa, "Browser application", "React / TypeScript", "UI and in-memory client state")
+    Container(server, "Python application", "websockets.sync / Python", "Static HTTP and WebSocket commands")
+    ContainerDb(sqlite, "Application database", "SQLite / local file", "Accounts, rooms, messages and metadata")
+    ContainerDb(uploads, "Attachment storage", "Local filesystem", "Partial and published file bytes")
+  }
+  System_Ext(anthropic, "Anthropic API", "Optional AI summary provider")
+  Rel(student, spa, "Interacts with", "Browser UI")
+  Rel(spa, server, "Sends commands / loads UI", "WS(S) + HTTP(S)")
+  Rel(server, sqlite, "Reads and commits records", "sqlite3 / SQL")
+  Rel(server, uploads, "Writes and reads attachment bytes", "Filesystem I/O")
+  Rel(server, anthropic, "Requests group summaries", "JSON/HTTPS")
+  UpdateRelStyle(student, spa, $offsetX="-55", $offsetY="-10")
+  UpdateRelStyle(spa, server, $offsetX="-20", $offsetY="-80")
+  UpdateRelStyle(server, sqlite, $offsetX="-55", $offsetY="-20")
+  UpdateRelStyle(server, uploads, $offsetX="65", $offsetY="-5")
+  UpdateRelStyle(server, anthropic, $offsetX="55", $offsetY="0")
+  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")

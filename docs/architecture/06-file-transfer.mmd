@@ -1,0 +1,36 @@
+---
+title: StudyGroup - File Transfer over the Chat WebSocket
+---
+sequenceDiagram
+  autonumber
+  participant B as Browser · chat.ts / files.ts
+  participant F as Router → FileHandlers
+  participant P as uploads/.partial + uploads/
+  participant D as SQLite / permissions
+  participant S as SessionRegistry
+  B->>B: Read file ≤ 5 MiB, calculate SHA-256
+  B->>F: FILE_BEGIN {room_id, name, size, sha256}
+  F->>D: require_member
+  F->>P: Create server-named partial file
+  F-->>B: transfer_id, chunk_size = 32 KiB, chunks
+  loop Ordered chunks (up to 4 requests in flight)
+    B->>F: FILE_CHUNK {transfer_id, index, data: Base64}
+    F->>F: Check connection owner, index and decoded byte count
+    F->>P: Append bytes, update incremental hash
+    F-->>B: RESPONSE {received}
+  end
+  B->>F: FILE_END {transfer_id}
+  F->>F: Verify full size and SHA-256
+  F->>P: flush + fsync + rename to server-generated stored_name
+  F->>D: Under chat publish_lock: recheck access, commit file message + ready attachment
+  F-->>B: RESPONSE {message with attachment metadata}
+  F->>S: Publish MESSAGE_NEW after commit
+  loop Download by byte offset (up to 2 requests in flight)
+    B->>F: FILE_GET {attachment_id, offset}
+    F->>D: require_attachment, apply history visibility rule
+    F->>P: Read at most 128 KiB
+    F-->>B: Base64 data + size + sha256 + done
+  end
+  B->>B: Assemble bytes, verify SHA-256, save Blob locally
+  Note over B,F: All commands are JSON text on /ws. Base64 is encoding, TLS encrypts transport.
+  Note over F,P: Error / logout / disconnect removes unfinished uploads, sweep handles expiry.

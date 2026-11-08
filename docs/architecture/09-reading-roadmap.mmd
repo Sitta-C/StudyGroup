@@ -1,0 +1,39 @@
+---
+title: StudyGroup - Roadmap for Reading the Code
+---
+flowchart TB
+  start["START · README.md + docs/architecture/<br/>Understand runtime and choose one user action"]
+  contract["1 · Read the contract<br/>shared/message_types.py + validation.py<br/>web/src/types.ts + docs/protocol.md"]
+  ui["2 · Find the user action<br/>web/src/App.tsx → ChatController in chat.ts"]
+  wire["3 · Follow one request ID<br/>Transport.request → /ws → decode_message<br/>Router.dispatch in server/router.py"]
+  auth["AUTH path<br/>handlers/auth.py → passwords.py<br/>rate_limit.py → sessions.py"]
+  chat["ROOM / MESSAGE path<br/>handlers/chat.py → database.py<br/>publish_lock → registry.publish"]
+  history["HISTORY / SEARCH path<br/>handlers/history.py → search_messages<br/>before_id + join visibility"]
+  files["FILE path<br/>chat.ts upload/download → files.py<br/>Transfer → partial → commit"]
+  ai["AI path<br/>handlers/ai.py → worker _run<br/>ai_service.py → HTTPS provider"]
+  access["4 · Explain who can see the data<br/>permissions.py → schema.sql → database.py"]
+  response["5 · Follow the result back<br/>connection.enqueue → WebConnection.run<br/>Transport.onmessage → controller → React"]
+  checks["6 · Read the behavior checks<br/>tests/test_web.py + feature integration tests<br/>web/e2e/*.spec.ts"]
+  ops["7 · Understand run / deploy / recovery<br/>web_config.py · Dockerfile · vite.config.ts<br/>docs/railway.md · scripts/data_backup.py"]
+  start -->|"learn packet vocabulary"| contract
+  contract -->|"trace from the screen"| ui
+  ui -->|"follow request(type, data)"| wire
+  wire -->|"select feature"| auth
+  wire -->|"select feature"| chat
+  wire -->|"select feature"| history
+  wire -->|"select feature"| files
+  wire -->|"select feature"| ai
+  auth -->|"identity and account storage"| access
+  chat -->|"membership and commits"| access
+  history -->|"visible read predicate"| access
+  files -->|"attachment visibility"| access
+  ai -->|"permitted input and recheck"| access
+  access -->|"inspect returned DTO"| response
+  response -->|"confirm edge cases"| checks
+  checks -->|"inspect environment"| ops
+  classDef entry fill:#e9e6ff,stroke:#6554c0,color:#241b47
+  classDef feature fill:#e4f1ff,stroke:#3478b6,color:#12314e
+  classDef data fill:#e5f5ed,stroke:#328263,color:#123b2c
+  class start,contract,ui,wire,response entry
+  class auth,chat,history,files,ai feature
+  class access,checks,ops data
