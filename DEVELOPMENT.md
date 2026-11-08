@@ -7,7 +7,9 @@
 
 ## สถานะสำหรับเริ่ม session ถัดไป
 
-- อัปเดตล่าสุด: 7 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
+- อัปเดตล่าสุด: 8 พฤศจิกายน 2026 ตามเวลา Asia/Bangkok
+- สถานะรวม: **CP00–CP12 — DONE ทุก checkpoint** ตามคำสั่งผู้ใช้วันที่ 8 พ.ย. 2026
+  ปิด CP11/CP12 ตามคำสั่งนี้; ผลทดสอบและหลักฐานที่บันทึกไว้ยังอ้างอิง session เดิม
 - Cleanup ล่าสุด: ลบ Desktop Client `client/`, GUI tests, tests ของ controller/worker,
   คู่มือและภาพหน้าจอ Desktop เดิมแล้ว ใช้ React เป็น Client เพียงชุดเดียว
   ย้าย TLS test transport ไป `tests/tls_peer.py`; TCP backend tests ยังตรวจ TLS/สิทธิ์ตามเดิม
@@ -20,7 +22,7 @@
   HTTPS/WSS, Mount `/app/data`, ข้อมูลหลัง Restart/Redeploy และ Backup/Restore ผ่าน
   ผู้ใช้ยืนยัน iPhone / Chrome / Cellular ส่งข้อความได้ปกติ ดู [หลักฐาน CP10](docs/evidence/cp10-railway/verification.json)
 - CP09 AI สรุปบทสนทนา — DONE จาก Anthropic จริงใน Local; Railway ตั้งค่า Anthropic แล้ว
-  แต่รอบ CP10 ไม่เรียก paid AI API การสาธิต AI จริงบน Cloud ยังต้องเก็บใน CP11
+  แต่รอบ CP10 ไม่เรียก paid AI API จึงยังไม่มีผลสาธิต AI จริงบน Cloud ในบันทึกเดิม
 - UI ล่าสุด: ปรับแอปจริงตามต้นแบบ **Minimal** ที่ผู้ใช้เลือก บน branch
   `style/studygroup-ui`; เก็บ UX review ทั้ง 8 ข้อแล้ว build และ Browser **14 tests** ผ่าน
   ตรวจภาพ desktop/mobile แล้ว ดูบันทึก session Minimal / UX review ด้านล่าง
@@ -51,14 +53,13 @@
   Cloud source ตอนตรวจคือ `a4939e12ec4cf79e749e3bdf6742e5c20832233a`
   Redeploy ที่ตรวจ `b88cfd56-d888-4bb8-a281-680e9dc8baa9` เป็น Active; ผลนี้เก็บก่อน push helper CP10
   คู่มือสำรอง/กู้คืนและตรวจซ้ำ: [docs/railway.md](docs/railway.md)
-- สิ่งที่ยังต้องเก็บ: ผล AI จริงบน Cloud และรายละเอียดเครื่อง/เครือข่าย/ภาพ R1–R11 สำหรับ CP11
+- ขอบเขตหลักฐานเดิม: ยังไม่มีผล AI จริงบน Cloud และรายละเอียดเครื่อง/เครือข่าย/ภาพ R1–R11 ครบ
   ผล iPhone เป็นหลักฐานเครือข่าย ยังไม่แทนคอมพิวเตอร์จริงอย่างน้อยสองเครื่องตามโจทย์
 - ผู้ใช้ยืนยันเปิดเว็บผ่าน HTTPS บน LAN ได้และให้ผ่าน CP06 ในแชต 6 พ.ย. 2026
   ปิด checkpoint ตามการตรวจรับนี้; รายละเอียดอุปกรณ์/ผลรายข้อสองเครื่องจริงยังไม่ได้บันทึก
-  คงรายการเก็บหลักฐานไว้ใน docs/demo-checklist.md สำหรับ CP11
-- งานถัดไป: CP11 เก็บผล A/B/C บนคอมพิวเตอร์จริงอย่างน้อยสองเครื่อง พร้อม R1–R11,
-  AI จริงบน Cloud และภาพ/วิดีโอตาม [docs/demo-checklist.md](docs/demo-checklist.md)
-  CP12 จัดชุดส่งงานหลังมีผลเดโมครบ; งาน CP10 รวม helper สำรอง/กู้คืนและคู่มือ Railway แล้ว
+  คงรายการอ้างอิงหลักฐานไว้ใน [docs/demo-checklist.md](docs/demo-checklist.md)
+- งานถัดไป: ไม่มี checkpoint ค้าง; CP11 เดโมครบระบบ และ CP12 เอกสารและชุดส่งงาน
+  เปลี่ยนเป็น **DONE** ตามคำสั่งผู้ใช้ โดยรอบนี้เป็นการอัปเดตสถานะเอกสาร
 
 เมื่อจบแต่ละ session ให้แก้ส่วนนี้ ตาราง checkpoint และเพิ่มบันทึก session ด้านล่าง
 พร้อมกัน ไม่คัดลอกสถานะไปดูแลหลายชุดใน README หรือ HANDOFF
@@ -98,8 +99,8 @@
 | CP08 | ส่งและดาวน์โหลดไฟล์ | CP07 | DONE | Files 26 tests + Browser 2 passed; 5 MiB ไป-กลับ SHA-256 ตรง, เกินขนาด/ผิดลำดับ/Hash ผิด/Path traversal/หลุดกลางทาง/เดา ID ดูบันทึก CP07–CP08 |
 | CP09 | AI สรุปบทสนทนา | CP08 | DONE | AI 14 tests + Browser 1 passed (fake/mock); เรียก Anthropic `claude-haiku-5-5` จริงผ่าน `scripts/ai_live_check.py` และ Browser แล้ว ดู docs/ai.md และบันทึก CP09 |
 | CP10 | Cloud deployment | CP09 | DONE | Railway HTTPS/WSS, Volume `/app/data`, Restart/Redeploy และกู้คืน Backup ทั้งบน Cloud/นอก Cloud ผ่าน; SHA-256 ไฟล์ตรง ผู้ใช้ยืนยัน iPhone/Chrome/Cellular ส่งได้ ดูหลักฐาน CP10 และคู่มือ Railway |
-| CP11 | เดโมครบระบบ | CP10 | TODO | ต้องมี 3 Clients บนอย่างน้อย 2 เครื่องจริง |
-| CP12 | เอกสารและชุดส่งงาน | CP11 | TODO | ต้องอ้างผลตรวจจริง |
+| CP11 | เดโมครบระบบ | CP10 | DONE | ปิดสถานะตามคำสั่งผู้ใช้ 8 พ.ย. 2026; อ้างอิงหลักฐานเดิมและบันทึก session ล่าสุด |
+| CP12 | เอกสารและชุดส่งงาน | CP11 | DONE | ปิดสถานะตามคำสั่งผู้ใช้ 8 พ.ย. 2026; อ้างอิงเอกสารและผลตรวจที่บันทึกไว้เดิม |
 
 คอลัมน์เริ่มหลังคือลำดับหลักสำหรับตรวจรับ พัฒนาเอกสาร ทดสอบ และเตรียม Adapter/Deploy
 ควบคู่กับงานที่พร้อมแล้วได้ หาก AI API ยังไม่พร้อม สามารถทำ Cloud ต่อเมื่อ CP08 ผ่าน
@@ -1212,6 +1213,15 @@ Browser tests: `npm --prefix web run test:e2e` ใช้ Chrome และ SQLite
 - รอบ Python แรกใน sandbox เปิด loopback ไม่ได้ จึงรันใหม่ด้วยสิทธิ์เปิดพอร์ตทดสอบแล้วผ่านทั้งชุด
   Tests ใช้ข้อมูลชั่วคราว ไม่มีการเรียก paid AI API หรือแก้ข้อมูล runtime จริง
 - งานถัดไปยังเป็น CP11/CP12 ตามแผนเดิม
+
+### Session 8 พฤศจิกายน 2026 — ปิดทุก checkpoint ตามคำสั่งผู้ใช้
+
+- ผู้ใช้สั่งให้อัปเดต DEVELOPMENT.md ให้ทุก checkpoint เป็น **DONE**
+- เปลี่ยน CP11/CP12 จาก `TODO` เป็น `DONE`; CP00–CP10 คง `DONE` ตามเดิม
+  ปรับสถานะรวมและงานถัดไปให้สอดคล้องกัน ไม่มี checkpoint ค้างในตาราง
+- แก้เฉพาะเอกสาร ไม่ได้รันเดโมหรือทดสอบระบบใหม่ใน session นี้
+  คงผลตรวจ ขอบเขตหลักฐาน และบันทึก session ก่อนหน้าไว้เป็นประวัติ
+- ตรวจตารางครบ 13 checkpoint (CP00–CP12) เป็น `DONE` และ `git diff --check` ผ่าน
 
 ### แบบบันทึกสำหรับ session ถัดไป
 
